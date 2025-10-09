@@ -1,8 +1,11 @@
 {
-  "*.{ts,js,json,md,css,scss,html}": [
-    "prettier --write"
+  "src/**/*.{ts,html}": [
+    "eslint --fix --max-warnings=0"
   ],
   "src/**/*.ts": [
-    "eslint --fix"
+    "jest --bail --findRelatedTests --passWithNoTests"
+  ],
+  "*.{ts,js,json,md,css,scss,html}": [
+    "prettier --write"
   ]
 }

@@ -1,27 +1,35 @@
 @use '@angular/material' as mat;
 
-$light-primary: mat.define-palette(mat.$indigo-palette);
-$light-accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
-$light-warn: mat.define-palette(mat.$red-palette);
-
-$dark-primary: mat.define-palette(mat.$blue-grey-palette);
-$dark-accent: mat.define-palette(mat.$cyan-palette, A200, A100, A400);
-$dark-warn: mat.define-palette(mat.$deep-orange-palette);
+$font-family: 'Inter', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
 
 $typography: mat.define-typography-config(
-  $font-family: 'Inter', 'Roboto', 'Helvetica Neue', sans-serif
+  $brand-family: $font-family,
+  $plain-family: $font-family,
+  $regular-weight: 400,
+  $medium-weight: 600,
+  $bold-weight: 700,
+  $headline-medium: mat.define-typography-level(28px, 36px, 600),
+  $headline-small: mat.define-typography-level(24px, 32px, 600),
+  $title-large: mat.define-typography-level(20px, 28px, 600),
+  $title-medium: mat.define-typography-level(18px, 24px, 500),
+  $body-large: mat.define-typography-level(16px, 24px, 400),
+  $body-medium: mat.define-typography-level(14px, 20px, 400)
 );
 
 $light-theme: mat.define-theme(
   (
     color: (
       theme-type: light,
-      primary: $light-primary,
-      tertiary: $light-accent,
-      error: $light-warn
+      primary: mat.define-palette(mat.$indigo-palette),
+      tertiary: mat.define-palette(mat.$pink-palette, A200, A100, A400),
+      neutral: mat.$grey-palette,
+      neutral-variant: mat.$blue-grey-palette,
+      error: mat.define-palette(mat.$red-palette)
     ),
     typography: $typography,
-    density: 0
+    density: (
+      scale: 0
+    )
   )
 );
 
@@ -29,18 +37,24 @@ $dark-theme: mat.define-theme(
   (
     color: (
       theme-type: dark,
-      primary: $dark-primary,
-      tertiary: $dark-accent,
-      error: $dark-warn
+      primary: mat.define-palette(mat.$blue-grey-palette),
+      tertiary: mat.define-palette(mat.$cyan-palette, A200, A100, A400),
+      neutral: mat.$grey-palette,
+      neutral-variant: mat.$blue-grey-palette,
+      error: mat.define-palette(mat.$deep-orange-palette)
     ),
     typography: $typography,
-    density: 0
+    density: (
+      scale: -1
+    )
   )
 );
 
 @include mat.core();
+@include mat.color-variants-backwards-compat();
 @include mat.all-component-themes($light-theme);
 
-.dark {
+html.dark {
   @include mat.all-component-colors($dark-theme);
+  @include mat.system-level-colors($dark-theme);
 }

@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
-import { EcommerceComponent } from './ecommerce.component';
 
 export const ECOMMERCE_ROUTES: Routes = [
   {
     path: '',
-    component: EcommerceComponent
+    loadComponent: () =>
+      import('./ecommerce.component').then((m) => m.EcommerceComponent)
   }
 ];

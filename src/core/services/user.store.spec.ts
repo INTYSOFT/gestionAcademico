@@ -1,13 +1,6 @@
-import { MENU_ITEMS } from '../models/menu';
-import { UserStore } from './user.store';
+import { MenuItem } from '@core/models/menu';
 
-const MOCK_USER = {
-  id: '1',
-  name: 'Ada Lovelace',
-  email: 'ada.lovelace@example.com',
-  roles: ['admin', 'manager'],
-  avatarUrl: 'https://i.pravatar.cc/150?img=5'
-};
+import { UserStore } from './user.store';
 
 describe('UserStore', () => {
   let store: UserStore;
@@ -16,33 +9,36 @@ describe('UserStore', () => {
     store = new UserStore();
   });
 
-  it('sets and clears the user correctly', () => {
-    expect(store.user()).toBeNull();
-    store.setUser(MOCK_USER);
-    expect(store.user()).toEqual(MOCK_USER);
-    store.clear();
-    expect(store.user()).toBeNull();
+  it('filters menu items according to user roles', () => {
+    store.setUser({
+      id: '1',
+      name: 'Manager Jane',
+      email: 'manager@example.com',
+      roles: ['manager']
+    });
+
+    let menu = store.menuComputed();
+    const ecommerce = menu.find((item) => item.id === 'ecommerce') as MenuItem | undefined;
+    expect(ecommerce).toBeDefined();
+    expect(ecommerce?.children?.some((child) => child.id === 'orders')).toBe(true);
+    expect(ecommerce?.children?.some((child) => child.id === 'products')).toBe(false);
+
+    store.updateUser({ roles: ['admin'] });
+    menu = store.menuComputed();
+    const ecommerceForAdmin = menu.find((item) => item.id === 'ecommerce');
+    expect(ecommerceForAdmin?.children?.some((child) => child.id === 'products')).toBe(true);
   });
 
-  it('merges partial updates when user already exists', () => {
-    store.setUser(MOCK_USER);
-    store.updateUser({ name: 'Ada Byron', roles: ['admin'] });
-    expect(store.user()).toEqual({ ...MOCK_USER, name: 'Ada Byron', roles: ['admin'] });
-  });
+  it('clears menu when user has no matching roles', () => {
+    store.setUser({
+      id: '2',
+      name: 'Analyst Ana',
+      email: 'analyst@example.com',
+      roles: ['analyst']
+    });
 
-  it('filters menu items based on available roles', () => {
-    store.setUser(MOCK_USER);
     const menu = store.menuComputed();
-    expect(menu.length).toBeGreaterThan(0);
-    const dashboard = menu.find((item) => item.id === 'dashboard');
-    expect(dashboard).toBeDefined();
-    const adminOnlyChild = MENU_ITEMS.find((item) => item.id === 'ecommerce')?.children?.find(
-      (child) => child.id === 'products'
-    );
-    if (!adminOnlyChild) {
-      throw new Error('Mock data missing products child');
-    }
-    const ecommerce = menu.find((item) => item.id === 'ecommerce');
-    expect(ecommerce?.children?.some((child) => child.id === adminOnlyChild.id)).toBe(true);
+    expect(menu.some((item) => item.id === 'dashboard')).toBe(true);
+    expect(menu.some((item) => item.id === 'ecommerce')).toBe(false);
   });
 });

@@ -12,6 +12,14 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:4200',
     trace: 'on-first-retry'
   },
+  webServer: {
+    command: 'npm run start',
+    url: 'http://127.0.0.1:4200',
+    reuseExistingServer: !process.env.CI,
+    stdout: 'pipe',
+    stderr: 'pipe',
+    timeout: 120_000
+  },
   projects: [
     {
       name: 'Chromium',

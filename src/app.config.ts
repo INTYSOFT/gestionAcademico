@@ -1,18 +1,16 @@
-import { ApplicationConfig, Component, importProvidersFrom } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { ApplicationConfig, Component, LOCALE_ID, importProvidersFrom, provideZoneChangeDetection } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { provideZoneChangeDetection } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
+import { provideRouter, RouterOutlet, withComponentInputBinding } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatTableModule } from '@angular/material/table';
+import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatDividerModule } from '@angular/material/divider';
+import { MatTableModule } from '@angular/material/table';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { routes } from './app.routes';
 import { authHttpInterceptor } from './core/interceptors/auth.interceptor';
 import { errorHttpInterceptor } from './core/interceptors/error.interceptor';
@@ -26,8 +24,9 @@ import { provideOidcConfig } from './core/auth/oidc.config';
 })
 export class AppComponent {}
 
-export const appConfig: ApplicationConfig = {
+export const createAppConfig = (locale: string): ApplicationConfig => ({
   providers: [
+    { provide: LOCALE_ID, useValue: locale },
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withInterceptors([authHttpInterceptor, errorHttpInterceptor])),
@@ -45,4 +44,4 @@ export const appConfig: ApplicationConfig = {
       MatDividerModule
     )
   ]
-};
+});

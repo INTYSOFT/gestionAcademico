@@ -30,9 +30,21 @@
         <source>Panel administrativo</source>
         <target>Admin panel</target>
       </trans-unit>
+      <trans-unit id="topbar.profile" datatype="html">
+        <source>Perfil</source>
+        <target>Profile</target>
+      </trans-unit>
       <trans-unit id="topbar.logout" datatype="html">
         <source>Cerrar sesión</source>
         <target>Sign out</target>
+      </trans-unit>
+      <trans-unit id="topbar.theme.light" datatype="html">
+        <source>Cambiar a modo claro</source>
+        <target>Switch to light mode</target>
+      </trans-unit>
+      <trans-unit id="topbar.theme.dark" datatype="html">
+        <source>Cambiar a modo oscuro</source>
+        <target>Switch to dark mode</target>
       </trans-unit>
       <trans-unit id="dashboard.title" datatype="html">
         <source>Dashboard</source>
@@ -46,6 +58,18 @@
         <source>Exportar reporte</source>
         <target>Export report</target>
       </trans-unit>
+      <trans-unit id="dashboard.revenue" datatype="html">
+        <source>Ingresos totales</source>
+        <target>Total revenue</target>
+      </trans-unit>
+      <trans-unit id="dashboard.orders" datatype="html">
+        <source>Pedidos procesados</source>
+        <target>Orders processed</target>
+      </trans-unit>
+      <trans-unit id="dashboard.visits" datatype="html">
+        <source>Visitas del sitio</source>
+        <target>Site visits</target>
+      </trans-unit>
       <trans-unit id="dashboard.table.title" datatype="html">
         <source>Actividad reciente</source>
         <target>Recent activity</target>
@@ -58,9 +82,57 @@
         <source>Acción</source>
         <target>Action</target>
       </trans-unit>
+      <trans-unit id="dashboard.table.status" datatype="html">
+        <source>Estado</source>
+        <target>Status</target>
+      </trans-unit>
       <trans-unit id="dashboard.table.when" datatype="html">
         <source>Hace</source>
         <target>When</target>
+      </trans-unit>
+      <trans-unit id="dashboard.activity.order" datatype="html">
+        <source>Cerró un nuevo pedido empresarial</source>
+        <target>Closed a new enterprise order</target>
+      </trans-unit>
+      <trans-unit id="dashboard.activity.ticket" datatype="html">
+        <source>Resolvió un ticket prioritario</source>
+        <target>Resolved a priority ticket</target>
+      </trans-unit>
+      <trans-unit id="dashboard.activity.payment" datatype="html">
+        <source>Confirmó un pago manual</source>
+        <target>Confirmed a manual payment</target>
+      </trans-unit>
+      <trans-unit id="dashboard.activity.minutesAgo" datatype="html">
+        <source>hace 5 min</source>
+        <target>5 min ago</target>
+      </trans-unit>
+      <trans-unit id="dashboard.activity.minutesAgoLong" datatype="html">
+        <source>hace 25 min</source>
+        <target>25 min ago</target>
+      </trans-unit>
+      <trans-unit id="dashboard.activity.hourAgo" datatype="html">
+        <source>hace 1 h</source>
+        <target>1 h ago</target>
+      </trans-unit>
+      <trans-unit id="dashboard.status.success" datatype="html">
+        <source>Completado</source>
+        <target>Completed</target>
+      </trans-unit>
+      <trans-unit id="dashboard.status.warning" datatype="html">
+        <source>Atención</source>
+        <target>Needs attention</target>
+      </trans-unit>
+      <trans-unit id="dashboard.status.info" datatype="html">
+        <source>Seguimiento</source>
+        <target>Follow up</target>
+      </trans-unit>
+      <trans-unit id="dashboard.tooltip.positive" datatype="html">
+        <source>Tendencia positiva vs. el mes anterior</source>
+        <target>Positive trend vs. last month</target>
+      </trans-unit>
+      <trans-unit id="dashboard.tooltip.negative" datatype="html">
+        <source>Tendencia negativa vs. el mes anterior</source>
+        <target>Negative trend vs. last month</target>
       </trans-unit>
       <trans-unit id="dashboard.tasks.title" datatype="html">
         <source>Tareas rápidas</source>
@@ -94,9 +166,17 @@
         <source>Inventario</source>
         <target>Inventory</target>
       </trans-unit>
+      <trans-unit id="ecommerce.totalItems" datatype="html">
+        <source>{{ dataSource.data.length }} artículos</source>
+        <target>{{ dataSource.data.length }} items</target>
+      </trans-unit>
       <trans-unit id="ecommerce.table.product" datatype="html">
         <source>Producto</source>
         <target>Product</target>
+      </trans-unit>
+      <trans-unit id="ecommerce.table.category" datatype="html">
+        <source>Categoría</source>
+        <target>Category</target>
       </trans-unit>
       <trans-unit id="ecommerce.table.price" datatype="html">
         <source>Precio</source>
@@ -110,21 +190,41 @@
         <source>Acciones</source>
         <target>Actions</target>
       </trans-unit>
+      <trans-unit id="ecommerce.table.edit" datatype="html">
+        <source>Editar</source>
+        <target>Edit</target>
+      </trans-unit>
+      <trans-unit id="ecommerce.table.delete" datatype="html">
+        <source>Eliminar</source>
+        <target>Delete</target>
+      </trans-unit>
+      <trans-unit id="ecommerce.paginator" datatype="html">
+        <source>Paginador</source>
+        <target>Paginator</target>
+      </trans-unit>
       <trans-unit id="signin.title" datatype="html">
-        <source>Inicia sesión</source>
-        <target>Sign in</target>
+        <source>Bienvenido</source>
+        <target>Welcome</target>
       </trans-unit>
-      <trans-unit id="signin.email" datatype="html">
-        <source>Correo electrónico</source>
-        <target>Email</target>
-      </trans-unit>
-      <trans-unit id="signin.password" datatype="html">
-        <source>Contraseña</source>
-        <target>Password</target>
+      <trans-unit id="signin.subtitle" datatype="html">
+        <source>Inicia sesión con tu proveedor {{ providerName() }} para continuar.</source>
+        <target>Sign in with your {{ providerName() }} account to continue.</target>
       </trans-unit>
       <trans-unit id="signin.action" datatype="html">
-        <source>Acceder</source>
-        <target>Access</target>
+        <source>Iniciar sesión</source>
+        <target>Sign in</target>
+      </trans-unit>
+      <trans-unit id="auth.callback.title" datatype="html">
+        <source>Validando acceso</source>
+        <target>Validating access</target>
+      </trans-unit>
+      <trans-unit id="auth.callback.message" datatype="html">
+        <source>Procesando la respuesta del proveedor de identidad.</source>
+        <target>Processing the identity provider response.</target>
+      </trans-unit>
+      <trans-unit id="auth.callback.error" datatype="html">
+        <source>No se pudo validar la sesión.</source>
+        <target>Session validation failed.</target>
       </trans-unit>
     </body>
   </file>
