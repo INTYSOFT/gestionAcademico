@@ -1,62 +1,53 @@
 {
-  "name": "gestion-academico-admin",
-  "version": "0.0.1",
-  "private": true,
+  "name": "app-gestionacademica",
+  "version": "0.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "serve:prod": "ng serve --configuration production",
-    "build": "ng build --configuration production",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "lint": "ng lint",
-    "e2e": "playwright test",
-    "prepare": "husky install",
-    "format": "prettier --write \"**/*.{ts,js,html,scss,css,json,md}\"",
-    "release:check": "npm run lint && npm run test && npm run e2e"
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "serve:ssr:app-gestionacademica": "node dist/app-gestionacademica/server/server.mjs"
   },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
+  },
+  "private": true,
   "dependencies": {
-    "@angular/animations": "^20.0.0",
-    "@angular/cdk": "^20.0.0",
-    "@angular/common": "^20.0.0",
-    "@angular/compiler": "^20.0.0",
-    "@angular/core": "^20.0.0",
-    "@angular/forms": "^20.0.0",
-    "@angular/localize": "^20.0.0",
-    "@angular/material": "^20.0.0",
-    "@angular/platform-browser": "^20.0.0",
-    "@angular/router": "^20.0.0",
-    "angular-auth-oidc-client": "^19.0.0",
-    "rxjs": "^7.8.1",
-    "tailwindcss": "^3.4.10",
-    "tslib": "^2.6.2",
-    "zone.js": "^0.14.10"
+    "@angular/common": "^20.3.0",
+    "@angular/compiler": "^20.3.0",
+    "@angular/core": "^20.3.0",
+    "@angular/forms": "^20.3.0",
+    "@angular/platform-browser": "^20.3.0",
+    "@angular/platform-server": "^20.3.0",
+    "@angular/router": "^20.3.0",
+    "@angular/ssr": "^20.3.5",
+    "express": "^5.1.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^20.0.0",
-    "@angular-eslint/builder": "^20.0.0",
-    "@angular-eslint/eslint-plugin": "^20.0.0",
-    "@angular-eslint/eslint-plugin-template": "^20.0.0",
-    "@angular-eslint/schematics": "^20.0.0",
-    "@angular-eslint/template-parser": "^20.0.0",
-    "@angular/cli": "^20.0.0",
-    "@types/jest": "^29.5.12",
-    "@types/node": "^20.14.9",
-    "@typescript-eslint/eslint-plugin": "^8.0.1",
-    "@typescript-eslint/parser": "^8.0.1",
-    "autoprefixer": "^10.4.20",
-    "eslint": "^9.5.0",
-    "eslint-import-resolver-typescript": "^3.6.1",
-    "eslint-plugin-import": "^2.29.1",
-    "husky": "^9.0.11",
-    "jest": "^29.7.0",
-    "jest-preset-angular": "^15.0.0",
-    "lint-staged": "^15.2.7",
-    "playwright": "^1.45.0",
-    "postcss": "^8.4.41",
-    "prettier": "^3.3.2",
-    "typescript": "^5.5.4",
-    "commitlint": "^19.3.0",
-    "@commitlint/config-conventional": "^19.2.2"
+    "@angular/build": "^20.3.5",
+    "@angular/cli": "^20.3.5",
+    "@angular/compiler-cli": "^20.3.0",
+    "@types/express": "^5.0.1",
+    "@types/jasmine": "~5.1.0",
+    "@types/node": "^20.17.19",
+    "jasmine-core": "~5.9.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "typescript": "~5.9.2"
   }
 }

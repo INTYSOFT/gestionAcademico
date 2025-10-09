@@ -1,7 +1,0 @@
-export interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  roles: string[];
-  picture?: string;
-}

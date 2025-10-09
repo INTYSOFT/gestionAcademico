@@ -1,17 +1,6 @@
-import { enableProdMode } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { environment } from './environments/environment';
-import { appConfig } from './app.config';
-import { AppComponent } from './app.component';
-import { setupLocalization } from './i18n/setup';
+import { appConfig } from './app/app.config';
+import { App } from './app/app';
 
-async function bootstrap(): Promise<void> {
-  if (environment.production) {
-    enableProdMode();
-  }
-
-  await setupLocalization();
-  await bootstrapApplication(AppComponent, appConfig);
-}
-
-bootstrap().catch((err) => console.error(err));
+bootstrapApplication(App, appConfig)
+  .catch((err) => console.error(err));

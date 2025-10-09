@@ -1,9 +1,0 @@
-{
-  "*.{ts,js,html,scss,css,json,md}": [
-    "prettier --write"
-  ],
-  "src/**/*.{ts,html}": [
-    "eslint --fix",
-    "jest --findRelatedTests --passWithNoTests"
-  ]
-}
