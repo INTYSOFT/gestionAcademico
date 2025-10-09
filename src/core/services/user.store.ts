@@ -2,14 +2,6 @@ import { computed, Injectable, signal } from '@angular/core';
 import { MenuItem, MENU_ITEMS } from '../models/menu';
 import { User } from '../models/user';
 
-const MOCK_USER: User = {
-  id: '1',
-  name: 'Ada Lovelace',
-  email: 'ada.lovelace@example.com',
-  roles: ['admin', 'manager'],
-  avatarUrl: 'https://i.pravatar.cc/150?img=5'
-};
-
 @Injectable({ providedIn: 'root' })
 export class UserStore {
   private readonly userSignal = signal<User | null>(null);
@@ -17,19 +9,39 @@ export class UserStore {
 
   readonly user = computed(() => this.userSignal());
   readonly roles = computed(() => this.userSignal()?.roles ?? []);
+  readonly hasRole = computed(() => {
+    const roles = this.roles();
+    return (role: string) => roles.includes(role);
+  });
   readonly menuComputed = computed(() => this.filterMenuByRoles(this.menuSignal(), this.roles()));
 
-  initialize(): void {
-    if (!this.userSignal()) {
-      this.userSignal.set(MOCK_USER);
+  setUser(user: User | null): void {
+    this.userSignal.set(user ? { ...user, roles: user.roles ?? [] } : null);
+  }
+
+  updateUser(partial: Partial<User>): void {
+    const current = this.userSignal();
+    if (!current) {
+      if (partial.id && partial.name && partial.email) {
+        this.userSignal.set({
+          id: partial.id,
+          name: partial.name,
+          email: partial.email,
+          roles: partial.roles ?? [],
+          avatarUrl: partial.avatarUrl
+        });
+      }
+      return;
     }
+
+    this.userSignal.set({
+      ...current,
+      ...partial,
+      roles: partial.roles ?? current.roles
+    });
   }
 
-  simulateLogin(): void {
-    this.userSignal.set(MOCK_USER);
-  }
-
-  signOut(): void {
+  clear(): void {
     this.userSignal.set(null);
   }
 

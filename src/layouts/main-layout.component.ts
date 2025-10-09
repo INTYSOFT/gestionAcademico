@@ -8,6 +8,7 @@ import { NgIf } from '@angular/common';
 import { SidebarComponent } from '@shared/ui/sidebar/sidebar.component';
 import { TopbarComponent } from '@shared/ui/topbar/topbar.component';
 import { UserStore } from '@core/services/user.store';
+import { OidcAuthService } from '@core/auth/oidc-auth.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -53,6 +54,7 @@ import { UserStore } from '@core/services/user.store';
 })
 export class MainLayoutComponent {
   private readonly userStore = inject(UserStore);
+  private readonly authService = inject(OidcAuthService);
   private readonly openedSignal = signal(true);
 
   readonly user = this.userStore.user;
@@ -63,7 +65,7 @@ export class MainLayoutComponent {
   }
 
   logout(): void {
-    this.userStore.signOut();
+    this.authService.logout();
   }
 
   opened(): boolean {

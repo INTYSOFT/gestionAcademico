@@ -4,12 +4,13 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { User } from '@core/models/user';
 
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [NgIf, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule],
+  imports: [NgIf, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, MatDividerModule],
   template: `
     <mat-toolbar color="primary" class="sticky top-0 z-10 shadow-md">
       <button mat-icon-button (click)="toggle.emit()" aria-label="Toggle menu" i18n-aria-label>
@@ -18,11 +19,28 @@ import { User } from '@core/models/user';
       <span class="ml-4 text-lg font-semibold" i18n="@@topbar.title">Panel administrativo</span>
       <span class="flex-1"></span>
       <ng-container *ngIf="user() as currentUser">
-        <button mat-button [matMenuTriggerFor]="userMenu">
-          <span class="mr-2">{{ currentUser.name }}</span>
-          <mat-icon>account_circle</mat-icon>
+        <button mat-button [matMenuTriggerFor]="userMenu" type="button">
+          <img
+            *ngIf="currentUser.avatarUrl; else fallbackAvatar"
+            [src]="currentUser.avatarUrl"
+            alt="avatar"
+            class="mr-2 h-8 w-8 rounded-full object-cover"
+          />
+          <ng-template #fallbackAvatar>
+            <mat-icon class="mr-2">account_circle</mat-icon>
+          </ng-template>
+          <span class="font-medium">{{ currentUser.name }}</span>
         </button>
         <mat-menu #userMenu="matMenu">
+          <button mat-menu-item type="button" i18n="@@topbar.profile">
+            <mat-icon>person</mat-icon>
+            <span>Perfil</span>
+          </button>
+          <button mat-menu-item type="button" i18n="@@topbar.language">
+            <mat-icon>language</mat-icon>
+            <span>Cambiar idioma</span>
+          </button>
+          <mat-divider></mat-divider>
           <button mat-menu-item type="button" (click)="logout.emit()" i18n="@@topbar.logout">
             <mat-icon>logout</mat-icon>
             <span>Cerrar sesión</span>
