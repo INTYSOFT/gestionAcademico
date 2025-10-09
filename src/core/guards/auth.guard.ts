@@ -1,15 +1,14 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
-import { UserStore } from '../services/user.store';
+import { CanActivateFn } from '@angular/router';
+import { OidcAuthService } from '../auth/oidc-auth.service';
 
-export const authGuard: CanActivateFn = () => {
-  const userStore = inject(UserStore);
-  const router = inject(Router);
+export const authGuard: CanActivateFn = (_route, state) => {
+  const authService = inject(OidcAuthService);
 
-  if (userStore.isAuthenticated()) {
+  if (authService.isAuthenticated()) {
     return true;
   }
 
-  void router.navigate(['/sign-in']);
+  authService.login(state.url);
   return false;
 };
