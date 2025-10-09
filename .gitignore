@@ -1,0 +1,23 @@
+# Node
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Angular
+/dist/
+/.angular/
+
+# Coverage
+coverage/
+
+# IDEs
+.idea/
+.vscode/
+
+# Misc
+.DS_Store
+
+# Playwright
+/playwright-report/
+/test-results/

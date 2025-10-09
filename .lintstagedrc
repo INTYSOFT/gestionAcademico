@@ -1,0 +1,8 @@
+{
+  "*.{ts,js,html,scss,css,json,md}": [
+    "prettier --write"
+  ],
+  "src/**/*.{ts,html}": [
+    "ng lint --fix --silent"
+  ]
+}
