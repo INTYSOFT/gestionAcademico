@@ -1,12 +1,13 @@
 import { DestroyRef, Injectable, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
-import { Observable, combineLatest, firstValueFrom } from 'rxjs';
-import { map, shareReplay, tap } from 'rxjs/operators';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { environment } from '../../environments/environment';
-import { UserStore } from '../services/user.store';
-import { User } from '../models/user';
+import { BehaviorSubject, Observable, combineLatest, firstValueFrom } from 'rxjs';
+import { distinctUntilChanged, map, shareReplay, tap } from 'rxjs/operators';
+
+import { environment } from '@environments/environment';
+import { User } from '@core/models/user';
+import { UserStore } from '@core/services/user.store';
 
 export interface AuthResult {
   isAuthenticated: boolean;
@@ -25,16 +26,21 @@ export class OidcAuthService {
   private readonly userStore = inject(UserStore);
   private readonly destroyRef = inject(DestroyRef);
 
-  private readonly isAuthenticatedInternal$ = this.oidcSecurityService.isAuthenticated$.pipe(
-    map((value) => {
-      if (typeof value === 'boolean') {
-        return value;
+  private readonly manualAuthState$ = new BehaviorSubject<boolean | null>(null);
+  private readonly manualUser$ = new BehaviorSubject<User | null>(null);
+  private manualAccessToken: string | null = null;
+
+  private readonly isAuthenticatedInternal$ = combineLatest([
+    this.oidcSecurityService.isAuthenticated$,
+    this.manualAuthState$
+  ]).pipe(
+    map(([value, manual]) => {
+      if (manual !== null) {
+        return manual;
       }
-      if (value && typeof value === 'object' && 'isAuthenticated' in value) {
-        return Boolean((value as { isAuthenticated?: unknown }).isAuthenticated);
-      }
-      return false;
+      return this.normalizeIsAuthenticated(value);
     }),
+    distinctUntilChanged(),
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
@@ -43,8 +49,16 @@ export class OidcAuthService {
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
-  readonly user$ = combineLatest([this.idTokenClaims$, this.isAuthenticatedInternal$]).pipe(
-    map(([claims, isAuthenticated]) => (isAuthenticated ? this.mapClaimsToUser(claims) : null)),
+  readonly user$ = combineLatest([this.idTokenClaims$, this.isAuthenticatedInternal$, this.manualUser$]).pipe(
+    map(([claims, isAuthenticated, manualUser]) => {
+      if (!isAuthenticated) {
+        return null;
+      }
+      if (manualUser) {
+        return manualUser;
+      }
+      return this.mapClaimsToUser(claims);
+    }),
     tap((user) => {
       if (user) {
         this.userStore.setUser(user);
@@ -64,6 +78,7 @@ export class OidcAuthService {
   }
 
   login(redirectTo?: string): void {
+    this.resetManualAuthentication();
     const targetUrl = redirectTo || this.router.url;
     this.setRedirectUrl(targetUrl);
     this.oidcSecurityService.authorize();
@@ -72,10 +87,14 @@ export class OidcAuthService {
   logout(): void {
     this.clearRedirectUrl();
     this.userStore.clear();
+    this.resetManualAuthentication(false);
     void firstValueFrom(this.oidcSecurityService.logoffAndRevokeTokens()).catch(() => undefined);
   }
 
   accessToken(): string | null {
+    if (this.manualAuthState$.value === true && this.manualAccessToken) {
+      return this.manualAccessToken;
+    }
     try {
       return this.oidcSecurityService.getAccessToken();
     } catch (error) {
@@ -89,6 +108,7 @@ export class OidcAuthService {
       tap((result: AuthResult) => {
         if (!result?.isAuthenticated) {
           this.userStore.clear();
+          this.resetManualAuthentication(false);
         }
       })
     );
@@ -97,12 +117,14 @@ export class OidcAuthService {
   async handleInitialSignIn(result: AuthResult | null): Promise<void> {
     if (!result) {
       this.userStore.clear();
+      this.resetManualAuthentication(false);
       return;
     }
 
     if (!result.isAuthenticated) {
       this.userStore.clear();
       this.clearRedirectUrl();
+      this.resetManualAuthentication(false);
       return;
     }
 
@@ -110,6 +132,21 @@ export class OidcAuthService {
     if (redirectUrl) {
       await this.router.navigateByUrl(redirectUrl);
     }
+  }
+
+  async completeWithManualUser(payload: { user: User; accessToken?: string | null; redirectUrl?: string | null }): Promise<void> {
+    this.manualAccessToken = payload.accessToken ?? null;
+    const user: User = {
+      ...payload.user,
+      roles: payload.user.roles ?? []
+    };
+    this.manualUser$.next(user);
+    this.manualAuthState$.next(true);
+    this.userStore.setUser(user);
+    if (payload.redirectUrl) {
+      this.setRedirectUrl(payload.redirectUrl);
+    }
+    await this.handleInitialSignIn({ isAuthenticated: true });
   }
 
   private mapClaimsToUser(claims: Record<string, unknown>): User | null {
@@ -187,5 +224,21 @@ export class OidcAuthService {
       return null;
     }
     return window.sessionStorage;
+  }
+
+  private normalizeIsAuthenticated(value: unknown): boolean {
+    if (typeof value === 'boolean') {
+      return value;
+    }
+    if (value && typeof value === 'object' && 'isAuthenticated' in value) {
+      return Boolean((value as { isAuthenticated?: unknown }).isAuthenticated);
+    }
+    return false;
+  }
+
+  private resetManualAuthentication(nextState: boolean | null = null): void {
+    this.manualAccessToken = null;
+    this.manualUser$.next(null);
+    this.manualAuthState$.next(nextState);
   }
 }

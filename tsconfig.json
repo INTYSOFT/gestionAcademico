@@ -18,8 +18,10 @@
     "lib": ["es2022", "dom", "dom.iterable"],
     "paths": {
       "@core/*": ["src/core/*"],
+      "@core/i18n/*": ["src/core/i18n/*"],
       "@shared/*": ["src/shared/*"],
-      "@features/*": ["src/features/*"]
+      "@features/*": ["src/features/*"],
+      "@environments/*": ["src/environments/*"]
     }
   },
   "angularCompilerOptions": {
