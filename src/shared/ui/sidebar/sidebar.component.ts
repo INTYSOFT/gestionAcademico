@@ -12,14 +12,9 @@ import { MenuItemComponent } from '../menu-item/menu-item.component';
   imports: [NgFor, MatListModule, MatIconModule, MatButtonModule, MenuItemComponent],
   template: `
     <div class="flex flex-col h-full gap-6 p-4">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-lg font-semibold" i18n="@@sidebar.title">Panel</h2>
-          <p class="text-sm text-slate-500 dark:text-slate-400" i18n="@@sidebar.subtitle">Bienvenido nuevamente</p>
-        </div>
-        <button mat-icon-button color="primary" class="dark:text-slate-100 text-slate-700" type="button">
-          <mat-icon>brightness_6</mat-icon>
-        </button>
+      <div>
+        <h2 class="text-lg font-semibold" i18n="@@sidebar.title">Panel</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400" i18n="@@sidebar.subtitle">Bienvenido nuevamente</p>
       </div>
       <mat-nav-list>
         <ng-container *ngFor="let item of menu()">

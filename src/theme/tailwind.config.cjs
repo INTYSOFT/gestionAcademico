@@ -1,7 +1,16 @@
 /* eslint-env node */
+const { join } = require('path');
+
 module.exports = {
-  content: ['./src/**/*.{html,ts}'],
   darkMode: 'class',
+  content: [
+    join(__dirname, '../index.html'),
+    join(__dirname, '../**/*.{html,ts}')
+  ],
+  safelist: [
+    { pattern: /text-(emerald|rose)-500/, variants: ['dark'] },
+    { pattern: /bg-primary-500\/10/, variants: ['dark'] }
+  ],
   theme: {
     extend: {
       colors: {
@@ -17,6 +26,12 @@ module.exports = {
           800: '#3730a3',
           900: '#312e81'
         }
+      },
+      fontFamily: {
+        sans: ['Inter', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif']
+      },
+      boxShadow: {
+        card: '0 10px 30px -10px rgba(15, 23, 42, 0.3)'
       }
     }
   },

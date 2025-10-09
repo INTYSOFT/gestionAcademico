@@ -45,6 +45,16 @@ export const routes: Routes = [
     ]
   },
   {
+    path: 'auth',
+    children: [
+      {
+        path: 'callback',
+        loadComponent: () =>
+          import('./features/auth/auth-callback.component').then((m) => m.AuthCallbackComponent)
+      }
+    ]
+  },
+  {
     path: '**',
     redirectTo: 'dashboard'
   }
