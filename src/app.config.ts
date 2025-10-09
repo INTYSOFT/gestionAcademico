@@ -1,19 +1,23 @@
-import { ApplicationConfig } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideZoneChangeDetection } from '@angular/core';
 import { provideMatIconRegistry } from '@angular/material/icon';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { routes } from './app.routes';
-import { authInterceptor } from './core/interceptors/auth.interceptor';
-import { errorInterceptor } from './core/interceptors/error.interceptor';
+import { authHttpInterceptor } from './core/interceptors/auth.interceptor';
+import { errorHttpInterceptor } from './core/interceptors/error.interceptor';
+import { provideOidc } from './core/auth/oidc.config';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
+    provideHttpClient(withInterceptors([authHttpInterceptor, errorHttpInterceptor])),
     provideAnimations(),
     provideMatIconRegistry(),
-    provideZoneChangeDetection({ eventCoalescing: true })
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    importProvidersFrom(MatSnackBarModule),
+    provideOidc()
   ]
 };
