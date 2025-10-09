@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="es" datatype="plaintext" original="ng2.template">
+    <body>
+      <trans-unit id="menuDashboard" datatype="html">
+        <source>Dashboard</source>
+        <target>Dashboard</target>
+      </trans-unit>
+      <trans-unit id="menuEcommerce" datatype="html">
+        <source>Ecommerce</source>
+        <target>Ecommerce</target>
+      </trans-unit>
+      <trans-unit id="dashboardTitle" datatype="html">
+        <source>Dashboard</source>
+        <target>Dashboard</target>
+      </trans-unit>
+      <trans-unit id="dashboardRecent" datatype="html">
+        <source>Actividad reciente</source>
+        <target>Actividad reciente</target>
+      </trans-unit>
+      <trans-unit id="dashboardAction" datatype="html">
+        <source>Acción</source>
+        <target>Acción</target>
+      </trans-unit>
+      <trans-unit id="dashboardTime" datatype="html">
+        <source>Tiempo</source>
+        <target>Tiempo</target>
+      </trans-unit>
+      <trans-unit id="dashboardAnnouncements" datatype="html">
+        <source>Anuncios</source>
+        <target>Anuncios</target>
+      </trans-unit>
+      <trans-unit id="dashboardStudents" datatype="html">
+        <source>Estudiantes</source>
+        <target>Estudiantes</target>
+      </trans-unit>
+      <trans-unit id="dashboardCourses" datatype="html">
+        <source>Cursos activos</source>
+        <target>Cursos activos</target>
+      </trans-unit>
+      <trans-unit id="dashboardTeachers" datatype="html">
+        <source>Docentes</source>
+        <target>Docentes</target>
+      </trans-unit>
+      <trans-unit id="dashboardAttendance" datatype="html">
+        <source>Asistencia</source>
+        <target>Asistencia</target>
+      </trans-unit>
+      <trans-unit id="ecommerceOrders" datatype="html">
+        <source>Pedidos recientes</source>
+        <target>Pedidos recientes</target>
+      </trans-unit>
+      <trans-unit id="ecommerceCustomer" datatype="html">
+        <source>Cliente</source>
+        <target>Cliente</target>
+      </trans-unit>
+      <trans-unit id="ecommerceStatus" datatype="html">
+        <source>Estado</source>
+        <target>Estado</target>
+      </trans-unit>
+      <trans-unit id="ecommerceTotal" datatype="html">
+        <source>Total</source>
+        <target>Total</target>
+      </trans-unit>
+      <trans-unit id="ecommerceConversion" datatype="html">
+        <source>Tasa de conversión</source>
+        <target>Tasa de conversión</target>
+      </trans-unit>
+      <trans-unit id="ecommerceHint" datatype="html">
+        <source>Comparado con la semana anterior</source>
+        <target>Comparado con la semana anterior</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

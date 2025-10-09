@@ -1,0 +1,10 @@
+@import './tailwind.css';
+@import './theme/material-theme.scss';
+
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+}
