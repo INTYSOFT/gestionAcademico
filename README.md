@@ -1,59 +1,27 @@
-# AppGestionacademica
+# Angular Admin Template
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.5.
+Plantilla administrativa basada en Angular 20 con Angular Material, TailwindCSS y un sistema de layouts tipo Fuse. Incluye configuración de calidad con ESLint, Prettier, Husky, lint-staged, commitlint, Jest y Playwright, además de soporte i18n y Docker.
 
-## Development server
+## Scripts principales
 
-To start a local development server, run:
+- `npm start`: levanta el servidor de desarrollo.
+- `npm run build`: compila la aplicación para producción.
+- `npm run lint`: ejecuta ESLint sobre los archivos TypeScript.
+- `npm run format`: formatea los archivos con Prettier.
+- `npm test`: ejecuta las pruebas unitarias con Jest.
+- `npm run e2e`: ejecuta las pruebas end-to-end con Playwright.
 
-```bash
-ng serve
-```
+## Husky
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Ejecuta lint-staged y commitlint durante los ganchos de Git. Inicializa Husky con `npm install` (script `prepare`).
 
-## Code scaffolding
+## Docker
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Genera una imagen de producción multi-stage. Construye y ejecuta con:
 
 ```bash
-ng generate --help
+docker build -t angular-admin .
+docker run -p 8080:80 angular-admin
 ```
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+La aplicación estará disponible en `http://localhost:8080`.

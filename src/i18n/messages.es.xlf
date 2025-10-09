@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="es" datatype="plaintext" original="ng2.template">
+    <body>
+      <trans-unit id="nav.dashboard" datatype="html">
+        <source>Panel</source>
+        <target>Panel</target>
+      </trans-unit>
+      <trans-unit id="nav.ecommerce" datatype="html">
+        <source>Ecommerce</source>
+        <target>Ecommerce</target>
+      </trans-unit>
+      <trans-unit id="nav.orders" datatype="html">
+        <source>Pedidos</source>
+        <target>Pedidos</target>
+      </trans-unit>
+      <trans-unit id="nav.products" datatype="html">
+        <source>Productos</source>
+        <target>Productos</target>
+      </trans-unit>
+      <trans-unit id="sidebar.title" datatype="html">
+        <source>Panel</source>
+        <target>Panel</target>
+      </trans-unit>
+      <trans-unit id="sidebar.subtitle" datatype="html">
+        <source>Bienvenido nuevamente</source>
+        <target>Bienvenido nuevamente</target>
+      </trans-unit>
+      <trans-unit id="topbar.title" datatype="html">
+        <source>Panel administrativo</source>
+        <target>Panel administrativo</target>
+      </trans-unit>
+      <trans-unit id="topbar.logout" datatype="html">
+        <source>Cerrar sesión</source>
+        <target>Cerrar sesión</target>
+      </trans-unit>
+      <trans-unit id="dashboard.title" datatype="html">
+        <source>Dashboard</source>
+        <target>Dashboard</target>
+      </trans-unit>
+      <trans-unit id="dashboard.subtitle" datatype="html">
+        <source>Resumen general del rendimiento.</source>
+        <target>Resumen general del rendimiento.</target>
+      </trans-unit>
+      <trans-unit id="dashboard.export" datatype="html">
+        <source>Exportar reporte</source>
+        <target>Exportar reporte</target>
+      </trans-unit>
+      <trans-unit id="dashboard.table.title" datatype="html">
+        <source>Actividad reciente</source>
+        <target>Actividad reciente</target>
+      </trans-unit>
+      <trans-unit id="dashboard.table.user" datatype="html">
+        <source>Usuario</source>
+        <target>Usuario</target>
+      </trans-unit>
+      <trans-unit id="dashboard.table.action" datatype="html">
+        <source>Acción</source>
+        <target>Acción</target>
+      </trans-unit>
+      <trans-unit id="dashboard.table.when" datatype="html">
+        <source>Hace</source>
+        <target>Hace</target>
+      </trans-unit>
+      <trans-unit id="dashboard.tasks.title" datatype="html">
+        <source>Tareas rápidas</source>
+        <target>Tareas rápidas</target>
+      </trans-unit>
+      <trans-unit id="dashboard.tasks.create" datatype="html">
+        <source>Crear campaña</source>
+        <target>Crear campaña</target>
+      </trans-unit>
+      <trans-unit id="dashboard.tasks.invite" datatype="html">
+        <source>Invitar miembros</source>
+        <target>Invitar miembros</target>
+      </trans-unit>
+      <trans-unit id="dashboard.tasks.webinar" datatype="html">
+        <source>Programar webinar</source>
+        <target>Programar webinar</target>
+      </trans-unit>
+      <trans-unit id="ecommerce.title" datatype="html">
+        <source>Ecommerce</source>
+        <target>Ecommerce</target>
+      </trans-unit>
+      <trans-unit id="ecommerce.subtitle" datatype="html">
+        <source>Administra tu catálogo y pedidos.</source>
+        <target>Administra tu catálogo y pedidos.</target>
+      </trans-unit>
+      <trans-unit id="ecommerce.addProduct" datatype="html">
+        <source>Nuevo producto</source>
+        <target>Nuevo producto</target>
+      </trans-unit>
+      <trans-unit id="ecommerce.inventory" datatype="html">
+        <source>Inventario</source>
+        <target>Inventario</target>
+      </trans-unit>
+      <trans-unit id="ecommerce.table.product" datatype="html">
+        <source>Producto</source>
+        <target>Producto</target>
+      </trans-unit>
+      <trans-unit id="ecommerce.table.price" datatype="html">
+        <source>Precio</source>
+        <target>Precio</target>
+      </trans-unit>
+      <trans-unit id="ecommerce.table.stock" datatype="html">
+        <source>Stock</source>
+        <target>Stock</target>
+      </trans-unit>
+      <trans-unit id="ecommerce.table.actions" datatype="html">
+        <source>Acciones</source>
+        <target>Acciones</target>
+      </trans-unit>
+      <trans-unit id="signin.title" datatype="html">
+        <source>Inicia sesión</source>
+        <target>Inicia sesión</target>
+      </trans-unit>
+      <trans-unit id="signin.email" datatype="html">
+        <source>Correo electrónico</source>
+        <target>Correo electrónico</target>
+      </trans-unit>
+      <trans-unit id="signin.password" datatype="html">
+        <source>Contraseña</source>
+        <target>Contraseña</target>
+      </trans-unit>
+      <trans-unit id="signin.action" datatype="html">
+        <source>Acceder</source>
+        <target>Acceder</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
