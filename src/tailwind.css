@@ -6,6 +6,10 @@
   --sidebar-width: 18rem;
 }
 
+body {
+  @apply bg-base-100 text-base-content;
+}
+
 .bg-base-100 {
   @apply bg-white text-slate-900;
 }
@@ -24,6 +28,10 @@
 
 .text-muted-foreground {
   @apply text-slate-500 dark:text-slate-400;
+}
+
+.text-base-content {
+  @apply text-slate-900 dark:text-slate-100;
 }
 
 .dark .bg-base-100 {

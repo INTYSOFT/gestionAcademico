@@ -9,6 +9,16 @@ import { UserProfile } from '../models/user';
 
 const REDIRECT_STORAGE_KEY = 'gestion-academico:auth:redirect';
 
+export interface MockAuthPayload {
+  id: string;
+  name: string;
+  email: string;
+  roles: string[];
+  accessToken?: string;
+  redirectUri?: string;
+  picture?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class OidcAuthService {
   private readonly oidcSecurityService = inject(OidcSecurityService);
@@ -82,6 +92,7 @@ export class OidcAuthService {
     this.oidcSecurityService.logoffAndRevokeTokens().subscribe({
       error: (error) => console.error('Error during logout', error)
     });
+    void this.router.navigate(['/sign-in']);
   }
 
   isAuthenticated(): boolean {
@@ -112,6 +123,32 @@ export class OidcAuthService {
         return throwError(() => error);
       })
     );
+  }
+
+  mockCompleteLogin(payload: MockAuthPayload): void {
+    if (environment.production || !environment.mockAuth) {
+      return;
+    }
+
+    const profile: UserProfile = {
+      id: payload.id,
+      name: payload.name,
+      email: payload.email,
+      roles: payload.roles,
+      picture: payload.picture
+    };
+
+    this.accessTokenSubject.next(payload.accessToken ?? 'mock-access-token');
+    this.idTokenClaimsSubject.next({
+      sub: payload.id,
+      email: payload.email,
+      name: payload.name,
+      picture: payload.picture,
+      [environment.oidc.roleClaim]: payload.roles
+    });
+    this.userStore.setUser(profile);
+    this.isAuthenticatedSubject.next(true);
+    void this.router.navigateByUrl(payload.redirectUri ?? '/dashboard');
   }
 
   private async navigatePostLogin(): Promise<void> {
@@ -150,7 +187,7 @@ export class OidcAuthService {
   }
 }
 
-function mapClaimsToUserProfile(claims: Record<string, unknown>): UserProfile | null {
+export function mapClaimsToUserProfile(claims: Record<string, unknown>): UserProfile | null {
   const id = readClaim(claims, 'sub');
   const email = readClaim(claims, 'email');
   const givenName = readClaim(claims, 'given_name');
@@ -183,7 +220,7 @@ function extractClaims(userDataResult: unknown): Record<string, unknown> {
   return claims ?? {};
 }
 
-function normalizeRoles(value: unknown): string[] {
+export function normalizeRoles(value: unknown): string[] {
   if (!value) {
     return [];
   }
@@ -199,24 +236,6 @@ function normalizeRoles(value: unknown): string[] {
   return [];
 }
 
-function readClaim(claims: Record<string, unknown>, path: string): unknown {
-  if (!path) {
-    return undefined;
-  }
-
-  if (path.includes('://') || path.includes('/')) {
-    return (claims as Record<string, unknown>)[path];
-  }
-
-  return path.split('.').reduce<unknown>((acc, key) => {
-    if (acc === undefined || acc === null) {
-      return undefined;
-    }
-    if (typeof acc !== 'object') {
-      return undefined;
-    }
-    return (acc as Record<string, unknown>)[key];
-  }, claims);
+function readClaim(claims: Record<string, unknown>, key: string): unknown {
+  return Object.prototype.hasOwnProperty.call(claims, key) ? claims[key] : undefined;
 }
-
-export { mapClaimsToUserProfile };

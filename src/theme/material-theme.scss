@@ -2,18 +2,36 @@
 
 @include mat.core();
 
-$primary-palette: mat.define-palette(mat.$indigo-palette);
-$accent-palette: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+$primary-palette: mat.define-palette(mat.$indigo-palette, 500, 300, 700);
+$secondary-palette: mat.define-palette(mat.$deep-purple-palette, A200, A100, A400);
 $warn-palette: mat.define-palette(mat.$red-palette);
+
+$custom-typography: mat.define-typography-config(
+  font-family: 'Roboto', sans-serif,
+  headline-large: (
+    font-size: 2.5rem,
+    font-weight: 600,
+    line-height: 1.2
+  ),
+  title-medium: (
+    font-size: 1.125rem,
+    font-weight: 600
+  ),
+  body-large: (
+    font-size: 1rem,
+    line-height: 1.5
+  )
+);
 
 $light-theme: mat.define-theme(
   (
     color: (
       primary: $primary-palette,
-      tertiary: $accent-palette,
+      secondary: $secondary-palette,
+      tertiary: $secondary-palette,
       warn: $warn-palette
     ),
-    typography: mat.define-typography-config(),
+    typography: $custom-typography,
     density: 0
   )
 );
@@ -22,16 +40,25 @@ $dark-theme: mat.define-dark-theme(
   (
     color: (
       primary: $primary-palette,
-      tertiary: $accent-palette,
+      secondary: $secondary-palette,
+      tertiary: $secondary-palette,
       warn: $warn-palette
     ),
-    typography: mat.define-typography-config(),
-    density: 0
+    typography: $custom-typography,
+    density: -1
   )
 );
 
-@include mat.all-component-themes($light-theme);
+:root {
+  @include mat.all-component-themes($light-theme);
+}
 
-.dark {
+html.dark {
   @include mat.all-component-colors($dark-theme);
+  @include mat.all-component-typographies($dark-theme);
+  @include mat.all-component-densities($dark-theme);
+}
+
+html {
+  scroll-behavior: smooth;
 }

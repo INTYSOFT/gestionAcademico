@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
+  mockAuth: false,
   oidc: {
     authority: 'https://YOUR_DOMAIN/.well-known/openid-configuration',
     clientId: 'YOUR_CLIENT_ID',
