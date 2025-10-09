@@ -1,14 +1,21 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Routes, Router } from '@angular/router';
 import { MainLayoutComponent } from './layouts/main-layout.component';
 import { AuthLayoutComponent } from './layouts/auth-layout.component';
 import { authGuard } from './core/guards/auth.guard';
 import { profileResolver } from './core/resolvers/profile.resolver';
+import { OidcAuthService } from './core/auth/oidc-auth.service';
 
 export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'dashboard'
+    canActivate: [() => {
+      const router = inject(Router);
+      const authService = inject(OidcAuthService);
+      const target = authService.isAuthenticated() ? 'dashboard' : 'sign-in';
+      return router.createUrlTree([target]);
+    }]
   },
   {
     path: '',
@@ -32,6 +39,14 @@ export const routes: Routes = [
     children: [
       {
         path: 'sign-in',
+        canActivate: [() => {
+          const authService = inject(OidcAuthService);
+          if (authService.isAuthenticated()) {
+            return inject(Router).createUrlTree(['dashboard']);
+          }
+
+          return true;
+        }],
         loadComponent: () => import('./features/auth/sign-in.component').then((m) => m.SignInComponent)
       }
     ]

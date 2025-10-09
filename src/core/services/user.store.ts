@@ -1,4 +1,4 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, Signal, computed, signal } from '@angular/core';
 import { MenuItem } from '../models/menu';
 import { UserProfile } from '../models/user';
 
@@ -22,23 +22,32 @@ const MENU_ITEMS: MenuItem[] = [
 
 @Injectable({ providedIn: 'root' })
 export class UserStore {
-  private readonly profileSignal = signal<UserProfile | null>({
-    id: '1',
-    name: 'Ada Lovelace',
-    email: 'ada.lovelace@example.com',
-    roles: ['admin']
-  });
+  private readonly userSignal = signal<UserProfile | null>(null);
 
-  readonly roles = computed(() => this.profileSignal()?.roles ?? []);
+  readonly user = computed(() => this.userSignal());
+
+  readonly roles = computed(() => this.user()?.roles ?? []);
 
   readonly menu = computed<MenuItem[]>(() => this.filterMenuByRoles(MENU_ITEMS, this.roles()));
 
+  setUser(profile: UserProfile | null): void {
+    this.userSignal.set(profile ? { ...profile, roles: [...new Set(profile.roles ?? [])] } : null);
+  }
+
+  clear(): void {
+    this.userSignal.set(null);
+  }
+
   isAuthenticated(): boolean {
-    return this.profileSignal() !== null;
+    return this.userSignal() !== null;
+  }
+
+  hasRole(role: string): Signal<boolean> {
+    return computed(() => this.roles().includes(role));
   }
 
   profile(): UserProfile | null {
-    return this.profileSignal();
+    return this.userSignal();
   }
 
   private filterMenuByRoles(items: MenuItem[], roles: string[]): MenuItem[] {
