@@ -48,6 +48,10 @@ export const routes: Routes = [
           return true;
         }],
         loadComponent: () => import('./features/auth/sign-in.component').then((m) => m.SignInComponent)
+      },
+      {
+        path: 'auth/callback',
+        loadComponent: () => import('./features/auth/auth-callback.component').then((m) => m.AuthCallbackComponent)
       }
     ]
   },

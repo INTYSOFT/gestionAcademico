@@ -50,6 +50,22 @@
         <source>Pedidos recientes</source>
         <target>Pedidos recientes</target>
       </trans-unit>
+      <trans-unit id="ecommerceProduct" datatype="html">
+        <source>Producto</source>
+        <target>Producto</target>
+      </trans-unit>
+      <trans-unit id="ecommerceSku" datatype="html">
+        <source>SKU</source>
+        <target>SKU</target>
+      </trans-unit>
+      <trans-unit id="ecommerceCategory" datatype="html">
+        <source>Categoría</source>
+        <target>Categoría</target>
+      </trans-unit>
+      <trans-unit id="ecommercePrice" datatype="html">
+        <source>Precio</source>
+        <target>Precio</target>
+      </trans-unit>
       <trans-unit id="ecommerceCustomer" datatype="html">
         <source>Cliente</source>
         <target>Cliente</target>
@@ -69,6 +85,70 @@
       <trans-unit id="ecommerceHint" datatype="html">
         <source>Comparado con la semana anterior</source>
         <target>Comparado con la semana anterior</target>
+      </trans-unit>
+      <trans-unit id="ecommerceStatusInStock" datatype="html">
+        <source>Disponible</source>
+        <target>Disponible</target>
+      </trans-unit>
+      <trans-unit id="ecommerceStatusLow" datatype="html">
+        <source>Inventario bajo</source>
+        <target>Inventario bajo</target>
+      </trans-unit>
+      <trans-unit id="ecommerceStatusOut" datatype="html">
+        <source>Agotado</source>
+        <target>Agotado</target>
+      </trans-unit>
+      <trans-unit id="topbarTitle" datatype="html">
+        <source>Gestión Académica</source>
+        <target>Gestión Académica</target>
+      </trans-unit>
+      <trans-unit id="topbarToggleMenu" datatype="html">
+        <source>Alternar navegación</source>
+        <target>Alternar navegación</target>
+      </trans-unit>
+      <trans-unit id="topbarThemeToggle" datatype="html">
+        <source>Cambiar tema</source>
+        <target>Cambiar tema</target>
+      </trans-unit>
+      <trans-unit id="topbarLanguage" datatype="html">
+        <source>Seleccionar idioma</source>
+        <target>Seleccionar idioma</target>
+      </trans-unit>
+      <trans-unit id="topbarUserMenu" datatype="html">
+        <source>Menú de usuario</source>
+        <target>Menú de usuario</target>
+      </trans-unit>
+      <trans-unit id="topbarProfile" datatype="html">
+        <source>Perfil</source>
+        <target>Perfil</target>
+      </trans-unit>
+      <trans-unit id="topbarLogout" datatype="html">
+        <source>Cerrar sesión</source>
+        <target>Cerrar sesión</target>
+      </trans-unit>
+      <trans-unit id="topbarDarkMode" datatype="html">
+        <source>Modo oscuro</source>
+        <target>Modo oscuro</target>
+      </trans-unit>
+      <trans-unit id="topbarLightMode" datatype="html">
+        <source>Modo claro</source>
+        <target>Modo claro</target>
+      </trans-unit>
+      <trans-unit id="authTitle" datatype="html">
+        <source>Admin Portal</source>
+        <target>Admin Portal</target>
+      </trans-unit>
+      <trans-unit id="authDescription" datatype="html">
+        <source>Autentícate con</source>
+        <target>Autentícate con</target>
+      </trans-unit>
+      <trans-unit id="authButton" datatype="html">
+        <source>Iniciar sesión</source>
+        <target>Iniciar sesión</target>
+      </trans-unit>
+      <trans-unit id="authFooter" datatype="html">
+        <source>Se utilizará OAuth2/OIDC (Authorization Code + PKCE) con refresh tokens rotatorios cuando el proveedor lo permita.</source>
+        <target>Se utilizará OAuth2/OIDC (Authorization Code + PKCE) con refresh tokens rotatorios cuando el proveedor lo permita.</target>
       </trans-unit>
     </body>
   </file>

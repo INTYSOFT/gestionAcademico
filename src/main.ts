@@ -3,9 +3,15 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { environment } from './environments/environment';
 import { appConfig } from './app.config';
 import { AppComponent } from './app.component';
+import { setupLocalization } from './i18n/setup';
 
-if (environment.production) {
-  enableProdMode();
+async function bootstrap(): Promise<void> {
+  if (environment.production) {
+    enableProdMode();
+  }
+
+  await setupLocalization();
+  await bootstrapApplication(AppComponent, appConfig);
 }
 
-bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));
+bootstrap().catch((err) => console.error(err));

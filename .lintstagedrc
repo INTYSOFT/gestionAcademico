@@ -3,6 +3,7 @@
     "prettier --write"
   ],
   "src/**/*.{ts,html}": [
-    "ng lint --fix --silent"
+    "eslint --fix",
+    "jest --findRelatedTests --passWithNoTests"
   ]
 }
