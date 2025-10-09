@@ -1,43 +1,36 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { Router } from '@angular/router';
-import { UserStore } from '@core/services/user.store';
+import { MatIconModule } from '@angular/material/icon';
+import { NgIf } from '@angular/common';
+import { OidcAuthService } from '@core/auth/oidc-auth.service';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-sign-in',
   standalone: true,
-  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule],
+  imports: [NgIf, MatButtonModule, MatIconModule],
   template: `
-    <h1 class="mb-6 text-2xl font-semibold" i18n="@@signin.title">Inicia sesión</h1>
-    <form class="space-y-4" (ngSubmit)="login()">
-      <mat-form-field appearance="outline" class="w-full">
-        <mat-label i18n="@@signin.email">Correo electrónico</mat-label>
-        <input matInput [formControl]="email" type="email" required />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="w-full">
-        <mat-label i18n="@@signin.password">Contraseña</mat-label>
-        <input matInput type="password" required />
-      </mat-form-field>
-
-      <button mat-flat-button color="primary" class="w-full" type="submit" i18n="@@signin.action">
-        Acceder
+    <div class="space-y-6 text-center">
+      <div class="space-y-2">
+        <h1 class="text-3xl font-semibold" i18n="@@signin.title">Bienvenido</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-300" i18n="@@signin.subtitle">
+          Inicia sesión con tu proveedor {{ providerName() }} para continuar.
+        </p>
+      </div>
+      <button mat-flat-button color="primary" class="w-full" type="button" (click)="login()">
+        <mat-icon class="mr-2">login</mat-icon>
+        <span i18n="@@signin.action">Iniciar sesión</span>
       </button>
-    </form>
+    </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SignInComponent {
-  private readonly router = inject(Router);
-  private readonly userStore = inject(UserStore);
+  private readonly oidcAuthService = inject(OidcAuthService);
 
-  readonly email = new FormControl('admin@example.com');
+  readonly providerName = computed(() => environment.oidc.providerName);
 
   login(): void {
-    this.userStore.simulateLogin();
-    void this.router.navigate(['/dashboard']);
+    this.oidcAuthService.login();
   }
 }

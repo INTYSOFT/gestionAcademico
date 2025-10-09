@@ -11,7 +11,12 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDividerModule } from '@angular/material/divider';
 import { routes } from './app.routes';
+import { authHttpInterceptor } from './core/interceptors/auth.interceptor';
+import { errorHttpInterceptor } from './core/interceptors/error.interceptor';
+import { provideOidcConfig } from './core/auth/oidc.config';
 
 @Component({
   selector: 'app-root',
@@ -25,8 +30,9 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withInterceptors([])),
+    provideHttpClient(withInterceptors([authHttpInterceptor, errorHttpInterceptor])),
     provideAnimations(),
+    ...provideOidcConfig(),
     importProvidersFrom(
       MatIconModule,
       MatButtonModule,
@@ -34,7 +40,9 @@ export const appConfig: ApplicationConfig = {
       MatSidenavModule,
       MatListModule,
       MatMenuModule,
-      MatTableModule
+      MatTableModule,
+      MatSnackBarModule,
+      MatDividerModule
     )
   ]
 };
