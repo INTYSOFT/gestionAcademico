@@ -34,6 +34,7 @@ interface ApoderadoFormValue {
     id: number | null;
     apoderadoId: number | null;
     documento: string;
+    relacion: string;
     apellidos?: string | null;
     nombres?: string | null;
     celular?: string | null;
@@ -191,6 +192,7 @@ export class AlumnoFormDialogComponent implements OnInit {
             id: [apoderado?.id ?? null],
             apoderadoId: [apoderado?.apoderado?.id ?? apoderado?.apoderadoId ?? null],
             documento: [apoderado?.apoderado?.documento ?? '', [Validators.required, Validators.maxLength(15)]],
+            relacion: [apoderado?.relacion ?? '', [Validators.required, Validators.maxLength(50)]],
             apellidos: [apoderado?.apoderado?.apellidos ?? '', [Validators.maxLength(150)]],
             nombres: [apoderado?.apoderado?.nombres ?? '', [Validators.maxLength(150)]],
             celular: [apoderado?.apoderado?.celular ?? '', [Validators.maxLength(15)]],
@@ -235,13 +237,15 @@ export class AlumnoFormDialogComponent implements OnInit {
     ): AlumnoApoderadoUpsertPayload[] {
         return this.apoderados.controls
             .map((group) => group.getRawValue() as ApoderadoFormValue)
-            .filter((value) => value.documento?.trim())
+            .filter((value) => value.documento?.trim() && value.relacion?.trim())
             .map((value) => {
                 const documento = value.documento.trim();
+                const relacion = value.relacion.trim();
 
                 return {
                     id: value.id ?? undefined,
                     apoderadoId: value.apoderadoId ?? undefined,
+                    relacion,
                     activo: value.activo,
                     alumno,
                     apoderado: {

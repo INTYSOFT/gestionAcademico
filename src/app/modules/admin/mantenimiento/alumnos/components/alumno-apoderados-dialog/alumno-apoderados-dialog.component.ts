@@ -34,7 +34,7 @@ interface AlumnoApoderadosDialogData {
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AlumnoApoderadosDialogComponent implements OnInit {
-    readonly displayedColumns = ['documento', 'nombres', 'celular', 'correo', 'activo', 'fechaRegistro'];
+    readonly displayedColumns = ['documento', 'relacion', 'nombres', 'celular', 'correo', 'activo', 'fechaRegistro'];
     readonly dataSource = new MatTableDataSource<AlumnoApoderado>([]);
     readonly isLoading$ = new BehaviorSubject<boolean>(false);
 
