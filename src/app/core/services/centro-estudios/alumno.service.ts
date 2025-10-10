@@ -5,7 +5,7 @@ import { Alumno, CreateAlumnoPayload, UpdateAlumnoPayload } from 'app/core/model
 
 @Injectable({ providedIn: 'root' })
 export class AlumnoService extends ApiMainService {
-    private readonly resourcePath = 'api/Alumnoes';
+    private readonly resourcePath = 'api/Alumnos';
 
     getAlumnos(search?: string): Observable<Alumno[]> {
         const params = search ? { search } : undefined;
