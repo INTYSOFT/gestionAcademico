@@ -72,7 +72,7 @@ export class AlumnosComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.destroy$))
             .subscribe((value) => {
                 if (this.gridApi) {
-                    this.gridApi.setQuickFilter(value ?? '');
+                    this.gridApi.setGridOption('quickFilterText', value ?? '');
                 }
             });
     }
@@ -84,7 +84,7 @@ export class AlumnosComponent implements OnInit, OnDestroy {
 
     onGridReady(event: GridReadyEvent<Alumno>): void {
         this.gridApi = event.api;
-        this.gridApi.setQuickFilter(this.searchControl.value ?? '');
+        this.gridApi.setGridOption('quickFilterText', this.searchControl.value ?? '');
     }
 
     openCreateAlumnoDialog(): void {

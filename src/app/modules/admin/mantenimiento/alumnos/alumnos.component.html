@@ -31,4 +31,9 @@
             (gridReady)="onGridReady($event)"
         ></ag-grid-angular>
     </div>
+
+    <!-- Hidden template to register standalone cell renderer component -->
+    <ng-template #alumnoActionsCellHost>
+        <app-alumno-actions-cell></app-alumno-actions-cell>
+    </ng-template>
 </div>
