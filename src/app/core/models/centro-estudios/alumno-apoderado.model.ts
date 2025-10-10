@@ -1,4 +1,5 @@
 import { Apoderado, UpsertApoderadoPayload } from './apoderado.model';
+import type { AlumnoPersonalDataPayload } from './alumno.model';
 
 export interface AlumnoApoderado {
     id: number;
@@ -15,4 +16,5 @@ export interface AlumnoApoderadoUpsertPayload {
     apoderadoId?: number | null;
     activo?: boolean;
     apoderado: UpsertApoderadoPayload;
+    alumno?: AlumnoPersonalDataPayload | null;
 }

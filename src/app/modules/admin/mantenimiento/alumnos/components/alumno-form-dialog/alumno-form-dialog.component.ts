@@ -219,7 +219,7 @@ export class AlumnoFormDialogComponent implements OnInit {
             activo: formValue.activo,
         };
 
-        const alumnoApoderados = this.buildAlumnoApoderadosPayload();
+        const alumnoApoderados = this.buildAlumnoApoderadosPayload(alumnoPayload);
 
         return {
             ...alumnoPayload,
@@ -230,7 +230,9 @@ export class AlumnoFormDialogComponent implements OnInit {
         };
     }
 
-    private buildAlumnoApoderadosPayload(): AlumnoApoderadoUpsertPayload[] {
+    private buildAlumnoApoderadosPayload(
+        alumno: AlumnoPersonalDataPayload
+    ): AlumnoApoderadoUpsertPayload[] {
         return this.apoderados.controls
             .map((group) => group.getRawValue() as ApoderadoFormValue)
             .filter((value) => value.documento?.trim())
@@ -241,6 +243,7 @@ export class AlumnoFormDialogComponent implements OnInit {
                     id: value.id ?? undefined,
                     apoderadoId: value.apoderadoId ?? undefined,
                     activo: value.activo,
+                    alumno,
                     apoderado: {
                         id: value.apoderadoId ?? undefined,
                         documento,
