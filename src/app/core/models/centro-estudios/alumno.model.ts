@@ -18,19 +18,25 @@ export interface Alumno {
     alumnoApoderados?: AlumnoApoderado[];
 }
 
-export interface UpsertAlumnoPayload {
-    dni: string;
-    apellidos?: string | null;
-    nombres?: string | null;
+export type AlumnoPersonalDataPayload = Pick<
+    Alumno,
+    | 'dni'
+    | 'apellidos'
+    | 'nombres'
+    | 'fechaNacimiento'
+    | 'celular'
+    | 'correo'
+    | 'ubigeoCode'
+    | 'colegioOrigen'
+    | 'carreraActualId'
+    | 'fotoUrl'
+    | 'activo'
+>;
+
+export interface UpsertAlumnoPayload extends Omit<AlumnoPersonalDataPayload, 'fechaNacimiento'> {
     fechaNacimiento?: string | Date | null;
-    celular?: string | null;
-    correo?: string | null;
-    ubigeoCode?: string | null;
-    colegioOrigen?: string | null;
-    carreraActualId?: number | null;
-    fotoUrl?: string | null;
-    activo: boolean;
     apoderados: AlumnoApoderadoUpsertPayload[];
+    alumno?: AlumnoPersonalDataPayload | null;
 }
 
 export type CreateAlumnoPayload = UpsertAlumnoPayload;
