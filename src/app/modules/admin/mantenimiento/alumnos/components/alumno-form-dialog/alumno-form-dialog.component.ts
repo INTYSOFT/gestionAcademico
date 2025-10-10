@@ -20,7 +20,10 @@ import {
     CreateAlumnoPayload,
     UpdateAlumnoPayload,
 } from 'app/core/models/centro-estudios/alumno.model';
-import { AlumnoApoderado } from 'app/core/models/centro-estudios/alumno-apoderado.model';
+import {
+    AlumnoApoderado,
+    AlumnoApoderadoUpsertPayload,
+} from 'app/core/models/centro-estudios/alumno-apoderado.model';
 import { AlumnoService } from 'app/core/services/centro-estudios/alumno.service';
 
 interface AlumnoFormDialogData {
@@ -216,20 +219,7 @@ export class AlumnoFormDialogComponent implements OnInit {
             activo: formValue.activo,
         };
 
-        const apoderados = (this.apoderados.value as ApoderadoFormValue[]).map((value) => ({
-            id: value.id ?? undefined,
-            apoderadoId: value.apoderadoId ?? undefined,
-            activo: value.activo,
-            apoderado: {
-                id: value.apoderadoId ?? undefined,
-                documento: value.documento,
-                apellidos: value.apellidos ?? null,
-                nombres: value.nombres ?? null,
-                celular: value.celular ?? null,
-                correo: value.correo ?? null,
-                activo: value.activo,
-            },
-        }));
+        const apoderados = this.buildApoderadosPayload();
 
         return {
             ...alumnoPayload,
@@ -238,6 +228,40 @@ export class AlumnoFormDialogComponent implements OnInit {
             apoderados,
             alumno: alumnoPayload,
         };
+    }
+
+    private buildApoderadosPayload(): AlumnoApoderadoUpsertPayload[] {
+        return this.apoderados.controls
+            .map((group) => group.getRawValue() as ApoderadoFormValue)
+            .filter((value) => value.documento?.trim())
+            .map((value) => {
+                const documento = value.documento.trim();
+
+                return {
+                    id: value.id ?? undefined,
+                    apoderadoId: value.apoderadoId ?? undefined,
+                    activo: value.activo,
+                    apoderado: {
+                        id: value.apoderadoId ?? undefined,
+                        documento,
+                        apellidos: this.toNullableString(value.apellidos),
+                        nombres: this.toNullableString(value.nombres),
+                        celular: this.toNullableString(value.celular),
+                        correo: this.toNullableString(value.correo),
+                        activo: value.activo,
+                    },
+                };
+            });
+    }
+
+    private toNullableString(value: string | null | undefined): string | null {
+        if (value === null || value === undefined) {
+            return null;
+        }
+
+        const trimmedValue = value.trim();
+
+        return trimmedValue ? trimmedValue : null;
     }
 
     private toDateOnlyString(value: unknown): string | null {
