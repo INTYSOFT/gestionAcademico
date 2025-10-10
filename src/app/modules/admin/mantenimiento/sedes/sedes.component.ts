@@ -101,11 +101,19 @@ export class SedesComponent implements OnInit {
             ? this.sedeService.updateSede(this.selectedSede!.id, payload)
             : this.sedeService.createSede(payload);
 
+        let shouldReloadAfterUpdate = false;
+
         request$
             .pipe(
-                finalize(() => this.isLoading$.next(false)),
                 tap((sede) => {
-                    this.upsertSede(sede);
+                    if (sede) {
+                        this.upsertSede(sede);
+                    } else if (isEditing) {
+                        // Algunos servicios REST retornan 204 (sin contenido) al actualizar.
+                        // Forzamos la recarga de la lista para reflejar los cambios.
+                        shouldReloadAfterUpdate = true;
+                    }
+
                     this.resetForm();
                     this.snackBar.open(
                         isEditing
@@ -116,6 +124,13 @@ export class SedesComponent implements OnInit {
                             duration: 4000,
                         }
                     );
+                }),
+                finalize(() => {
+                    this.isLoading$.next(false);
+
+                    if (shouldReloadAfterUpdate) {
+                        this.loadSedes();
+                    }
                 })
             )
             .subscribe({
