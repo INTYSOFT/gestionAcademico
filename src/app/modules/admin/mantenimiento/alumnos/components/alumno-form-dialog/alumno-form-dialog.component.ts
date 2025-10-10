@@ -30,7 +30,7 @@ interface AlumnoFormDialogData {
 interface ApoderadoFormValue {
     id: number | null;
     apoderadoId: number | null;
-    dni: string;
+    documento: string;
     apellidos?: string | null;
     nombres?: string | null;
     celular?: string | null;
@@ -76,7 +76,7 @@ export class AlumnoFormDialogComponent implements OnInit {
         private readonly fb: FormBuilder,
         private readonly snackBar: MatSnackBar,
         private readonly alumnoService: AlumnoService,
-        private readonly dialogRef: MatDialogRef<AlumnoFormDialogComponent, Alumno>,
+        private readonly dialogRef: MatDialogRef<AlumnoFormDialogComponent, boolean>,
         @Inject(MAT_DIALOG_DATA) data: AlumnoFormDialogData | null
     ) {
         this.data = data ?? {};
@@ -123,7 +123,7 @@ export class AlumnoFormDialogComponent implements OnInit {
                 finalize(() => this.isSaving$.next(false))
             )
             .subscribe({
-                next: (alumno) => {
+                next: () => {
                     this.snackBar.open(
                         this.data.alumno
                             ? 'Alumno actualizado correctamente.'
@@ -133,7 +133,7 @@ export class AlumnoFormDialogComponent implements OnInit {
                             duration: 4000,
                         }
                     );
-                    this.dialogRef.close(alumno);
+                    this.dialogRef.close(true);
                 },
                 error: (error) => {
                     this.snackBar.open(error.message ?? 'Ocurrió un error al guardar la información.', 'Cerrar', {
@@ -187,7 +187,7 @@ export class AlumnoFormDialogComponent implements OnInit {
         return this.fb.group({
             id: [apoderado?.id ?? null],
             apoderadoId: [apoderado?.apoderado?.id ?? apoderado?.apoderadoId ?? null],
-            dni: [apoderado?.apoderado?.dni ?? '', [Validators.required, Validators.maxLength(12)]],
+            documento: [apoderado?.apoderado?.documento ?? '', [Validators.required, Validators.maxLength(15)]],
             apellidos: [apoderado?.apoderado?.apellidos ?? '', [Validators.maxLength(150)]],
             nombres: [apoderado?.apoderado?.nombres ?? '', [Validators.maxLength(150)]],
             celular: [apoderado?.apoderado?.celular ?? '', [Validators.maxLength(15)]],
@@ -222,7 +222,7 @@ export class AlumnoFormDialogComponent implements OnInit {
             activo: value.activo,
             apoderado: {
                 id: value.apoderadoId ?? undefined,
-                dni: value.dni,
+                documento: value.documento,
                 apellidos: value.apellidos ?? null,
                 nombres: value.nombres ?? null,
                 celular: value.celular ?? null,

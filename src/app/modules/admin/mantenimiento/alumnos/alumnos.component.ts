@@ -92,9 +92,9 @@ export class AlumnosComponent implements OnInit, OnDestroy {
             width: '960px',
         });
 
-        dialogRef.afterClosed().subscribe((alumno?: Alumno) => {
-            if (alumno) {
-                this.upsertAlumno(alumno);
+        dialogRef.afterClosed().subscribe((shouldReload?: boolean) => {
+            if (shouldReload) {
+                this.loadAlumnos();
             }
         });
     }
@@ -105,9 +105,9 @@ export class AlumnosComponent implements OnInit, OnDestroy {
             data: { alumno },
         });
 
-        dialogRef.afterClosed().subscribe((updatedAlumno?: Alumno) => {
-            if (updatedAlumno) {
-                this.upsertAlumno(updatedAlumno);
+        dialogRef.afterClosed().subscribe((shouldReload?: boolean) => {
+            if (shouldReload) {
+                this.loadAlumnos();
             }
         });
     }
@@ -137,20 +137,6 @@ export class AlumnosComponent implements OnInit, OnDestroy {
                     });
                 },
             });
-    }
-
-    private upsertAlumno(alumno: Alumno): void {
-        const data = [...this.rowData];
-        const index = data.findIndex((item) => item.id === alumno.id);
-
-        if (index > -1) {
-            data[index] = alumno;
-        } else {
-            data.unshift(alumno);
-        }
-
-        this.rowData = data;
-        this.cdr.markForCheck();
     }
 
     private createColumnDefs(): ColDef<Alumno>[] {

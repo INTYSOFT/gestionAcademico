@@ -6,9 +6,9 @@
     <mat-progress-bar *ngIf="isLoading$ | async" mode="indeterminate"></mat-progress-bar>
 
     <table mat-table [dataSource]="dataSource" class="w-full">
-        <ng-container matColumnDef="dni">
-            <th mat-header-cell *matHeaderCellDef>DNI</th>
-            <td mat-cell *matCellDef="let element">{{ element.apoderado?.dni || element.apoderadoId }}</td>
+        <ng-container matColumnDef="documento">
+            <th mat-header-cell *matHeaderCellDef>Documento</th>
+            <td mat-cell *matCellDef="let element">{{ element.apoderado?.documento || element.apoderadoId }}</td>
         </ng-container>
 
         <ng-container matColumnDef="nombres">
