@@ -65,6 +65,7 @@ interface ApoderadoFormValue {
 export class AlumnoFormDialogComponent implements OnInit {
     readonly isSaving$ = new BehaviorSubject<boolean>(false);
     readonly form: FormGroup;
+    readonly data: AlumnoFormDialogData;
 
     get apoderados(): FormArray<FormGroup> {
         return this.form.get('apoderados') as FormArray<FormGroup>;
@@ -75,8 +76,9 @@ export class AlumnoFormDialogComponent implements OnInit {
         private readonly snackBar: MatSnackBar,
         private readonly alumnoService: AlumnoService,
         private readonly dialogRef: MatDialogRef<AlumnoFormDialogComponent, Alumno>,
-        @Inject(MAT_DIALOG_DATA) readonly data: AlumnoFormDialogData
+        @Inject(MAT_DIALOG_DATA) data: AlumnoFormDialogData | null
     ) {
+        this.data = data ?? {};
         this.form = this.fb.group({
             dni: ['', [Validators.required, Validators.maxLength(12)]],
             apellidos: ['', [Validators.maxLength(150)]],
