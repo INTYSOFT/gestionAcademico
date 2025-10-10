@@ -16,6 +16,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { BehaviorSubject, finalize } from 'rxjs';
 import {
     Alumno,
+    AlumnoPersonalDataPayload,
     CreateAlumnoPayload,
     UpdateAlumnoPayload,
 } from 'app/core/models/centro-estudios/alumno.model';
@@ -198,6 +199,23 @@ export class AlumnoFormDialogComponent implements OnInit {
     private buildPayload(): CreateAlumnoPayload | UpdateAlumnoPayload {
         const formValue = this.form.getRawValue();
 
+        const fechaNacimiento = this.toDateOnlyString(formValue.fechaNacimiento);
+        const carreraActualId = formValue.carreraActualId ? Number(formValue.carreraActualId) : null;
+
+        const alumnoPayload: AlumnoPersonalDataPayload = {
+            dni: formValue.dni,
+            apellidos: formValue.apellidos ?? null,
+            nombres: formValue.nombres ?? null,
+            fechaNacimiento,
+            celular: formValue.celular ?? null,
+            correo: formValue.correo ?? null,
+            ubigeoCode: formValue.ubigeoCode ?? null,
+            colegioOrigen: formValue.colegioOrigen ?? null,
+            carreraActualId,
+            fotoUrl: formValue.fotoUrl ?? null,
+            activo: formValue.activo,
+        };
+
         const apoderados = (this.apoderados.value as ApoderadoFormValue[]).map((value) => ({
             id: value.id ?? undefined,
             apoderadoId: value.apoderadoId ?? undefined,
@@ -214,18 +232,11 @@ export class AlumnoFormDialogComponent implements OnInit {
         }));
 
         return {
-            dni: formValue.dni,
-            apellidos: formValue.apellidos ?? null,
-            nombres: formValue.nombres ?? null,
-            fechaNacimiento: this.toDateOnlyString(formValue.fechaNacimiento),
-            celular: formValue.celular ?? null,
-            correo: formValue.correo ?? null,
-            ubigeoCode: formValue.ubigeoCode ?? null,
-            colegioOrigen: formValue.colegioOrigen ?? null,
-            carreraActualId: formValue.carreraActualId ? Number(formValue.carreraActualId) : null,
-            fotoUrl: formValue.fotoUrl ?? null,
-            activo: formValue.activo,
+            ...alumnoPayload,
+            fechaNacimiento,
+            carreraActualId,
             apoderados,
+            alumno: alumnoPayload,
         };
     }
 
@@ -235,12 +246,33 @@ export class AlumnoFormDialogComponent implements OnInit {
         }
 
         if (value instanceof Date) {
-            const year = value.getFullYear();
-            const month = `${value.getMonth() + 1}`.padStart(2, '0');
-            const day = `${value.getDate()}`.padStart(2, '0');
-            return `${year}-${month}-${day}`;
+            return this.formatDateOnly(value);
         }
 
-        return value;
+        const trimmedValue = value.trim();
+
+        if (!trimmedValue) {
+            return null;
+        }
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(trimmedValue)) {
+            return trimmedValue;
+        }
+
+        const parsedDate = new Date(trimmedValue);
+
+        if (!Number.isNaN(parsedDate.getTime())) {
+            return this.formatDateOnly(parsedDate);
+        }
+
+        return trimmedValue;
+    }
+
+    private formatDateOnly(value: Date): string {
+        const year = value.getFullYear();
+        const month = `${value.getMonth() + 1}`.padStart(2, '0');
+        const day = `${value.getDate()}`.padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
     }
 }
