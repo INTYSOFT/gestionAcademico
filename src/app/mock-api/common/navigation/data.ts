@@ -8,6 +8,21 @@ export const defaultNavigation: FuseNavigationItem[] = [
         type : 'basic',
         icon : 'heroicons_outline:chart-pie',
         link : '/example'
+    },
+    {
+        id      : 'mantenimiento',
+        title   : 'Mantenimiento',
+        type    : 'collapsable',
+        icon    : 'heroicons_outline:wrench-screwdriver',
+        children: [
+            {
+                id   : 'mantenimiento.sedes',
+                title: 'Sedes',
+                type : 'basic',
+                icon : 'heroicons_outline:building-office',
+                link : '/mantenimiento/sedes'
+            }
+        ]
     }
 ];
 export const compactNavigation: FuseNavigationItem[] = [
@@ -17,6 +32,12 @@ export const compactNavigation: FuseNavigationItem[] = [
         type : 'basic',
         icon : 'heroicons_outline:chart-pie',
         link : '/example'
+    },
+    {
+        id   : 'mantenimiento',
+        title: 'Mantenimiento',
+        type : 'collapsable',
+        icon : 'heroicons_outline:wrench-screwdriver'
     }
 ];
 export const futuristicNavigation: FuseNavigationItem[] = [
@@ -26,6 +47,12 @@ export const futuristicNavigation: FuseNavigationItem[] = [
         type : 'basic',
         icon : 'heroicons_outline:chart-pie',
         link : '/example'
+    },
+    {
+        id   : 'mantenimiento',
+        title: 'Mantenimiento',
+        type : 'collapsable',
+        icon : 'heroicons_outline:wrench-screwdriver'
     }
 ];
 export const horizontalNavigation: FuseNavigationItem[] = [
@@ -35,5 +62,20 @@ export const horizontalNavigation: FuseNavigationItem[] = [
         type : 'basic',
         icon : 'heroicons_outline:chart-pie',
         link : '/example'
+    },
+    {
+        id   : 'mantenimiento',
+        title: 'Mantenimiento',
+        type : 'group',
+        icon : 'heroicons_outline:wrench-screwdriver',
+        children: [
+            {
+                id   : 'mantenimiento.sedes',
+                title: 'Sedes',
+                type : 'basic',
+                icon : 'heroicons_outline:building-office',
+                link : '/mantenimiento/sedes'
+            }
+        ]
     }
 ];

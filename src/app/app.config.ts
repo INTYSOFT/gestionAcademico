@@ -14,6 +14,7 @@ import { TranslocoService, provideTransloco } from '@jsverse/transloco';
 import { appRoutes } from 'app/app.routes';
 import { provideAuth } from 'app/core/auth/auth.provider';
 import { provideIcons } from 'app/core/icons/icons.provider';
+import { provideApiConfig } from 'app/core/config/api.config';
 import { MockApiService } from 'app/mock-api';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
@@ -119,6 +120,13 @@ export const appConfig: ApplicationConfig = {
                         name: 'Amber',
                     },
                 ],
+            },
+        }),
+        provideApiConfig({
+            baseUrl: 'http://192.168.1.50:5000',
+            retryAttempts: 0,
+            defaultHeaders: {
+                'Content-Type': 'application/json',
             },
         }),
     ],
