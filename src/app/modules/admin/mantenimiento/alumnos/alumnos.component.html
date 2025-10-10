@@ -1,12 +1,15 @@
 <div class="flex flex-col gap-6">
-    <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+    <div
+        class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
             <h1 class="text-2xl font-semibold">Gestión de alumnos</h1>
             <p class="text-sm text-gray-500 dark:text-gray-400">
-                Administra los alumnos y sus apoderados registrados en el sistema.
+                Administra los alumnos y sus apoderados registrados en el
+                sistema.
             </p>
         </div>
-        <button mat-flat-button color="primary" type="button" (click)="openCreateAlumnoDialog()">
+        <button mat-flat-button color="primary" type="button"
+            (click)="openCreateAlumnoDialog()">
             <mat-icon class="mr-2">add</mat-icon>
             Nuevo alumno
         </button>
@@ -15,22 +18,23 @@
     <mat-form-field appearance="outline" class="w-full md:w-72">
         <mat-label>Buscar alumno</mat-label>
         <mat-icon matPrefix>search</mat-icon>
-        <input matInput [formControl]="searchControl" placeholder="Buscar por DNI, nombres o apellidos" />
+        <input matInput [formControl]="searchControl"
+            placeholder="Buscar por DNI, nombres o apellidos" />
     </mat-form-field>
 
-    <mat-progress-bar *ngIf="isLoading$ | async" mode="indeterminate"></mat-progress-bar>
+    <mat-progress-bar *ngIf="isLoading$ | async"
+        mode="indeterminate"></mat-progress-bar>
 
-    <div class="ag-theme-alpine w-full flex-1" style="height: 100%;width: 100%;">
+    <div class="ag-theme-alpine w-full" style="height: 500px;">
         <ag-grid-angular
-            class="w-full min-h-[420px]"
-            style="width: 100%; height: 100%;"
+            class="w-full"
+            style="height: 100%; width: 100%;"
             [columnDefs]="columnDefs"
             [defaultColDef]="defaultColDef"
             [rowData]="rowData"
             [animateRows]="true"
             [rowSelection]="'single'"
-            (gridReady)="onGridReady($event)"
-        ></ag-grid-angular>
+            (gridReady)="onGridReady($event)"></ag-grid-angular>
     </div>
 
     <!-- Hidden template to register standalone cell renderer component -->
