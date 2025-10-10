@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { FuseMockApiService, FuseMockApiUtils } from '@fuse/lib/mock-api';
+import { FuseMockApiService } from '@fuse/lib/mock-api';
 import { assign, cloneDeep } from 'lodash-es';
 import { sedesData } from './data';
 
@@ -21,16 +21,22 @@ export class SedesMockApi {
                 nombre: string;
                 ubigeoCode: string;
                 direccion?: string | null;
+                activo: boolean;
             };
 
+            const now = new Date().toISOString();
+            const nextId = this._sedes.length > 0 ? Math.max(...this._sedes.map((sede) => sede.id)) + 1 : 1;
+
             const sede = {
-                id: FuseMockApiUtils.guid(),
+                id: nextId,
                 nombre: payload.nombre,
                 ubigeoCode: payload.ubigeoCode,
                 direccion: payload.direccion ?? null,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                deletedAt: null,
+                activo: payload.activo,
+                fechaRegistro: now,
+                fechaActualizacion: now,
+                usuaraioRegistroId: null,
+                usuaraioActualizacionId: null,
             };
 
             this._sedes = [sede, ...this._sedes];
@@ -41,12 +47,13 @@ export class SedesMockApi {
         this.mockApi
             .onPatch('api/centro-estudios/sedes/:id')
             .reply(({ request, urlParams }) => {
-                const id = urlParams['id'];
+                const id = Number(urlParams['id']);
 
                 const payload = request.body as {
                     nombre?: string;
                     ubigeoCode?: string;
                     direccion?: string | null;
+                    activo?: boolean;
                 };
 
                 let updatedSede: any = null;
@@ -54,7 +61,7 @@ export class SedesMockApi {
                 this._sedes = this._sedes.map((sede) => {
                     if (sede.id === id) {
                         updatedSede = assign({}, sede, payload, {
-                            updatedAt: new Date().toISOString(),
+                            fechaActualizacion: new Date().toISOString(),
                         });
                         return updatedSede;
                     }
