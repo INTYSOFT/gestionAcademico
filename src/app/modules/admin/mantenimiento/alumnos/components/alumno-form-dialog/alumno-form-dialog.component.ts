@@ -240,8 +240,8 @@ export class AlumnoFormDialogComponent implements OnInit {
         };
     }
 
-    private toDateOnlyString(value: Date | string | null): string | null {
-        if (!value) {
+    private toDateOnlyString(value: unknown): string | null {
+        if (value === null || value === undefined) {
             return null;
         }
 
@@ -249,23 +249,82 @@ export class AlumnoFormDialogComponent implements OnInit {
             return this.formatDateOnly(value);
         }
 
-        const trimmedValue = value.trim();
+        if (typeof value === 'string') {
+            const trimmedValue = value.trim();
 
-        if (!trimmedValue) {
-            return null;
-        }
+            if (!trimmedValue) {
+                return null;
+            }
 
-        if (/^\d{4}-\d{2}-\d{2}$/.test(trimmedValue)) {
+            if (/^\d{4}-\d{2}-\d{2}$/.test(trimmedValue)) {
+                return trimmedValue;
+            }
+
+            const parsedDate = new Date(trimmedValue);
+
+            if (!Number.isNaN(parsedDate.getTime())) {
+                return this.formatDateOnly(parsedDate);
+            }
+
             return trimmedValue;
         }
 
-        const parsedDate = new Date(trimmedValue);
+        if (typeof value === 'number') {
+            const parsedDate = new Date(value);
 
-        if (!Number.isNaN(parsedDate.getTime())) {
-            return this.formatDateOnly(parsedDate);
+            if (!Number.isNaN(parsedDate.getTime())) {
+                return this.formatDateOnly(parsedDate);
+            }
+
+            return null;
         }
 
-        return trimmedValue;
+        if (typeof value === 'object' && value) {
+            const maybeDateObject = value as {
+                toDate?: () => Date;
+                seconds?: number;
+                nanoseconds?: number;
+                year?: number;
+                month?: number;
+                day?: number;
+            };
+
+            if (typeof maybeDateObject.toDate === 'function') {
+                const parsedDate = maybeDateObject.toDate();
+
+                if (parsedDate instanceof Date && !Number.isNaN(parsedDate.getTime())) {
+                    return this.formatDateOnly(parsedDate);
+                }
+            }
+
+            if (
+                typeof maybeDateObject.year === 'number' &&
+                typeof maybeDateObject.month === 'number' &&
+                typeof maybeDateObject.day === 'number'
+            ) {
+                const parsedDate = new Date(
+                    maybeDateObject.year,
+                    // Month is zero-based in JavaScript Date
+                    maybeDateObject.month - 1,
+                    maybeDateObject.day
+                );
+
+                if (!Number.isNaN(parsedDate.getTime())) {
+                    return this.formatDateOnly(parsedDate);
+                }
+            }
+
+            if (typeof maybeDateObject.seconds === 'number') {
+                const milliseconds = maybeDateObject.seconds * 1000 + (maybeDateObject.nanoseconds ?? 0) / 1_000_000;
+                const parsedDate = new Date(milliseconds);
+
+                if (!Number.isNaN(parsedDate.getTime())) {
+                    return this.formatDateOnly(parsedDate);
+                }
+            }
+        }
+
+        return null;
     }
 
     private formatDateOnly(value: Date): string {
