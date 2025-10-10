@@ -5,7 +5,12 @@
 <div mat-dialog-content class="flex flex-col gap-6 py-2">
     <mat-progress-bar *ngIf="isSaving$ | async" mode="indeterminate"></mat-progress-bar>
 
-    <form [formGroup]="form" class="flex flex-col gap-6" (ngSubmit)="submit()">
+    <form
+        id="alumnoForm"
+        [formGroup]="form"
+        class="flex flex-col gap-6"
+        (ngSubmit)="submit()"
+    >
         <section class="flex flex-col gap-4">
             <h3 class="text-base font-semibold">Datos del alumno</h3>
             <div class="grid gap-4 md:grid-cols-2">
@@ -155,6 +160,7 @@
         mat-flat-button
         color="primary"
         type="submit"
+        form="alumnoForm"
         [disabled]="form.invalid || (isSaving$ | async)"
     >
         {{ data.alumno ? 'Actualizar' : 'Registrar' }}
