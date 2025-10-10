@@ -116,10 +116,10 @@
 
                     <div class="grid gap-4 md:grid-cols-2">
                         <mat-form-field appearance="outline">
-                            <mat-label>DNI</mat-label>
-                            <input matInput formControlName="dni" />
-                            <mat-error *ngIf="apoderado.get('dni')?.hasError('required')">
-                                El DNI es obligatorio.
+                            <mat-label>Documento</mat-label>
+                            <input matInput formControlName="documento" maxlength="15" />
+                            <mat-error *ngIf="apoderado.get('documento')?.hasError('required')">
+                                El documento es obligatorio.
                             </mat-error>
                         </mat-form-field>
 
