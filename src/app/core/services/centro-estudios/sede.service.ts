@@ -9,7 +9,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class SedeService extends ApiMainService {
-    private readonly resourcePath = 'api/centro-estudios/sedes';
+    private readonly resourcePath = 'api/sedes';
 
     getSedes(): Observable<Sede[]> {
         return this.get<Sede[]>(this.resourcePath);
