@@ -12,4 +12,4 @@ export interface Sede {
 
 export type CreateSedePayload = Pick<Sede, 'nombre' | 'ubigeoCode' | 'direccion' | 'activo'>;
 
-export type UpdateSedePayload = Partial<CreateSedePayload>;
+export type UpdateSedePayload = Partial<CreateSedePayload> & { id?: number };
