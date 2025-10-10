@@ -5,6 +5,7 @@ export interface AlumnoApoderado {
     id: number;
     alumnoId: number;
     apoderadoId: number;
+    relacion: string;
     activo: boolean;
     fechaRegistro?: string | null;
     fechaActualizacion?: string | null;
@@ -14,6 +15,7 @@ export interface AlumnoApoderado {
 export interface AlumnoApoderadoUpsertPayload {
     id?: number | null;
     apoderadoId?: number | null;
+    relacion: string;
     activo?: boolean;
     apoderado: UpsertApoderadoPayload;
     alumno?: AlumnoPersonalDataPayload | null;

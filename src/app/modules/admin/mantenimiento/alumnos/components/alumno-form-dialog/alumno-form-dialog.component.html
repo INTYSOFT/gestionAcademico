@@ -124,6 +124,14 @@
                         </mat-form-field>
 
                         <mat-form-field appearance="outline">
+                            <mat-label>Relación</mat-label>
+                            <input matInput formControlName="relacion" maxlength="50" />
+                            <mat-error *ngIf="apoderado.get('relacion')?.hasError('required')">
+                                La relación es obligatoria.
+                            </mat-error>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
                             <mat-label>Apellidos</mat-label>
                             <input matInput formControlName="apellidos" />
                         </mat-form-field>
