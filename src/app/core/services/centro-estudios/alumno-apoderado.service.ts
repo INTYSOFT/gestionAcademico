@@ -5,7 +5,7 @@ import { AlumnoApoderado } from 'app/core/models/centro-estudios/alumno-apoderad
 
 @Injectable({ providedIn: 'root' })
 export class AlumnoApoderadoService extends ApiMainService {
-    private readonly resourcePath = 'api/alumno-apoderados';
+    private readonly resourcePath = 'api/AlumnoApoderadoes';
 
     getByAlumnoId(alumnoId: number): Observable<AlumnoApoderado[]> {
         return this.get<AlumnoApoderado[]>(this.resourcePath, {
