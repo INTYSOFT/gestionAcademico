@@ -39,15 +39,15 @@ export type AlumnoActionsCellRendererParams = ICellRendererParams<Alumno> & {
     `,
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AlumnoActionsCellComponent implements ICellRendererAngularComp<Alumno> {
+export class AlumnoActionsCellComponent implements ICellRendererAngularComp {
     private params!: AlumnoActionsCellRendererParams;
 
-    agInit(params: AlumnoActionsCellRendererParams): void {
-        this.params = params;
+    agInit(params: ICellRendererParams): void {
+        this.params = params as AlumnoActionsCellRendererParams;
     }
 
-    refresh(params: AlumnoActionsCellRendererParams): boolean {
-        this.params = params;
+    refresh(params: ICellRendererParams): boolean {
+        this.params = params as AlumnoActionsCellRendererParams;
         return true;
     }
 
