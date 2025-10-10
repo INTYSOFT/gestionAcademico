@@ -1,13 +1,15 @@
 export interface Sede {
-    id: string;
+    id: number;
     nombre: string;
     ubigeoCode: string;
     direccion?: string | null;
-    createdAt: string;
-    updatedAt: string;
-    deletedAt?: string | null;
+    activo: boolean;
+    fechaRegistro?: string | null;
+    fechaActualizacion?: string | null;
+    usuaraioRegistroId?: number | null;
+    usuaraioActualizacionId?: number | null;
 }
 
-export type CreateSedePayload = Pick<Sede, 'nombre' | 'ubigeoCode' | 'direccion'>;
+export type CreateSedePayload = Pick<Sede, 'nombre' | 'ubigeoCode' | 'direccion' | 'activo'>;
 
 export type UpdateSedePayload = Partial<CreateSedePayload>;

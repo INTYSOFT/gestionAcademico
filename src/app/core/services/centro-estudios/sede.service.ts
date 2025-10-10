@@ -19,7 +19,7 @@ export class SedeService extends ApiMainService {
         return this.post<Sede>(this.resourcePath, payload);
     }
 
-    updateSede(id: string, payload: UpdateSedePayload): Observable<Sede> {
+    updateSede(id: number, payload: UpdateSedePayload): Observable<Sede> {
         return this.patch<Sede>(`${this.resourcePath}/${id}`, payload);
     }
 }
