@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -38,10 +39,11 @@ import { BehaviorSubject, finalize, tap } from 'rxjs';
         MatSnackBarModule,
         MatTableModule,
         MatTooltipModule,
+        MatSlideToggleModule,
     ],
 })
 export class SedesComponent implements OnInit {
-    displayedColumns = ['nombre', 'ubigeoCode', 'direccion', 'createdAt', 'actions'];
+    displayedColumns = ['nombre', 'ubigeoCode', 'direccion', 'activo', 'fechaRegistro', 'actions'];
     dataSource = new MatTableDataSource<Sede>([]);
     form: FormGroup;
     selectedSede: Sede | null = null;
@@ -52,6 +54,7 @@ export class SedesComponent implements OnInit {
             nombre: ['', [Validators.required, Validators.maxLength(150)]],
             ubigeoCode: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]],
             direccion: ['', [Validators.maxLength(255)]],
+            activo: [true],
         });
     }
 
@@ -88,6 +91,7 @@ export class SedesComponent implements OnInit {
             nombre: this.form.value.nombre,
             ubigeoCode: this.form.value.ubigeoCode,
             direccion: this.form.value.direccion,
+            activo: this.form.value.activo,
         };
 
         this.isLoading$.next(true);
@@ -129,6 +133,7 @@ export class SedesComponent implements OnInit {
             nombre: sede.nombre,
             ubigeoCode: sede.ubigeoCode,
             direccion: sede.direccion ?? '',
+            activo: sede.activo,
         });
     }
 
@@ -138,6 +143,7 @@ export class SedesComponent implements OnInit {
             nombre: '',
             ubigeoCode: '',
             direccion: '',
+            activo: true,
         });
         this.form.markAsPristine();
         this.form.markAsUntouched();
