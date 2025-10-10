@@ -219,18 +219,18 @@ export class AlumnoFormDialogComponent implements OnInit {
             activo: formValue.activo,
         };
 
-        const apoderados = this.buildApoderadosPayload();
+        const alumnoApoderados = this.buildAlumnoApoderadosPayload();
 
         return {
             ...alumnoPayload,
             fechaNacimiento,
             carreraActualId,
-            apoderados,
+            alumnoApoderados,
             alumno: alumnoPayload,
         };
     }
 
-    private buildApoderadosPayload(): AlumnoApoderadoUpsertPayload[] {
+    private buildAlumnoApoderadosPayload(): AlumnoApoderadoUpsertPayload[] {
         return this.apoderados.controls
             .map((group) => group.getRawValue() as ApoderadoFormValue)
             .filter((value) => value.documento?.trim())

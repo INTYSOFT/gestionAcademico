@@ -35,7 +35,7 @@ export type AlumnoPersonalDataPayload = Pick<
 
 export interface UpsertAlumnoPayload extends Omit<AlumnoPersonalDataPayload, 'fechaNacimiento'> {
     fechaNacimiento?: string | Date | null;
-    apoderados: AlumnoApoderadoUpsertPayload[];
+    alumnoApoderados: AlumnoApoderadoUpsertPayload[];
     alumno?: AlumnoPersonalDataPayload | null;
 }
 
