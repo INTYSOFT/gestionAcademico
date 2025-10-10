@@ -21,6 +21,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:building-office',
                 link : '/mantenimiento/sedes'
+            },
+            {
+                id   : 'mantenimiento.alumnos',
+                title: 'Alumnos',
+                type : 'basic',
+                icon : 'heroicons_outline:user-group',
+                link : '/mantenimiento/alumnos'
             }
         ]
     }
@@ -75,6 +82,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:building-office',
                 link : '/mantenimiento/sedes'
+            },
+            {
+                id   : 'mantenimiento.alumnos',
+                title: 'Alumnos',
+                type : 'basic',
+                icon : 'heroicons_outline:user-group',
+                link : '/mantenimiento/alumnos'
             }
         ]
     }
