@@ -1,0 +1,32 @@
+.colegio-dialog {
+    width: min(32rem, 90vw);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.colegio-dialog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.colegio-dialog__title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.colegio-dialog__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.colegio-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}

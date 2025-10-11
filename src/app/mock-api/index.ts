@@ -17,6 +17,7 @@ import { SearchMockApi } from 'app/mock-api/common/search/api';
 import { ShortcutsMockApi } from 'app/mock-api/common/shortcuts/api';
 import { UserMockApi } from 'app/mock-api/common/user/api';
 import { AlumnosMockApi } from 'app/mock-api/mantenimiento/alumnos/api';
+import { ColegiosMockApi } from 'app/mock-api/mantenimiento/colegios/api';
 import { SedesMockApi } from 'app/mock-api/mantenimiento/sedes/api';
 import { AnalyticsMockApi } from 'app/mock-api/dashboards/analytics/api';
 import { CryptoMockApi } from 'app/mock-api/dashboards/crypto/api';
@@ -30,6 +31,7 @@ export class MockApiService {
     academyMockApi = inject(AcademyMockApi);
     activitiesMockApi = inject(ActivitiesMockApi);
     alumnosMockApi = inject(AlumnosMockApi);
+    colegiosMockApi = inject(ColegiosMockApi);
     analyticsMockApi = inject(AnalyticsMockApi);
     authMockApi = inject(AuthMockApi);
     chatMockApi = inject(ChatMockApi);

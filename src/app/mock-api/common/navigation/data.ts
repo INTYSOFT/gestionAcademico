@@ -23,6 +23,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 link : '/mantenimiento/sedes'
             },
             {
+                id   : 'mantenimiento.colegios',
+                title: 'Colegios',
+                type : 'basic',
+                icon : 'heroicons_outline:building-library',
+                link : '/mantenimiento/colegios'
+            },
+            {
                 id   : 'mantenimiento.alumnos',
                 title: 'Alumnos',
                 type : 'basic',
@@ -82,6 +89,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:building-office',
                 link : '/mantenimiento/sedes'
+            },
+            {
+                id   : 'mantenimiento.colegios',
+                title: 'Colegios',
+                type : 'basic',
+                icon : 'heroicons_outline:building-library',
+                link : '/mantenimiento/colegios'
             },
             {
                 id   : 'mantenimiento.alumnos',
