@@ -101,9 +101,7 @@ export class AlumnosComponent implements OnInit, OnDestroy {
         private readonly dialog: MatDialog,
         private readonly snackBar: MatSnackBar,
         private readonly alumnosService: AlumnosService
-    ) {
-        alert('Módulo en desarrollo. Algunas funcionalidades pueden no estar disponibles.');
-    }
+    ) {}
 
     ngOnInit(): void {
         this.loadAlumnos();
