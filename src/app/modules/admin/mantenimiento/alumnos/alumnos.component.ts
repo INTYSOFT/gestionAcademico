@@ -1,4 +1,4 @@
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe, NgIf, NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -24,6 +24,7 @@ import { AlumnoActionsCellComponent } from './components/alumno-actions-cell/alu
     imports: [
         AsyncPipe,
         NgIf,
+        NgStyle,
         ReactiveFormsModule,
         MatFormFieldModule,
         MatInputModule,
@@ -54,22 +55,41 @@ export class AlumnosComponent implements OnInit, OnDestroy {
     readonly theme = themeQuartz
         .withPart(iconSetQuartzLight)
         .withParams({
-            backgroundColor: '#ffffff',
+            accentColor: '#1d4ed8',
+            backgroundColor: '#f8fafc',
             browserColorScheme: 'light',
             columnBorder: false,
-            fontFamily: 'Arial',
-            foregroundColor: 'rgb(46, 55, 66)',
-            headerBackgroundColor: '#053A6E',
+            fontFamily: '"Inter", Arial, sans-serif',
+            foregroundColor: '#0f172a',
+            headerBackgroundColor: '#1d4ed8',
             headerFontSize: 14,
             headerFontWeight: 600,
-            headerTextColor: '#FFFFFF',
-            oddRowBackgroundColor: '#F9FAFB',
+            headerTextColor: '#f8fafc',
+            oddRowBackgroundColor: '#eff6ff',
             rowBorder: false,
+            rowHoverColor: '#dbeafe',
+            selectedRowBackgroundColor: '#bfdbfe',
             sidePanelBorder: false,
             spacing: 8,
-            wrapperBorder: false,
-            wrapperBorderRadius: 0,
+            wrapperBorder: {
+                color: '#93c5fd',
+                width: 1,
+            },
+            wrapperBorderRadius: 12,
         });
+
+    readonly gridStyles: Record<string, string> = {
+        '--ag-background-color': '#f8fafc',
+        '--ag-foreground-color': '#0f172a',
+        '--ag-border-color': '#93c5fd',
+        '--ag-header-background-color': '#1d4ed8',
+        '--ag-header-foreground-color': '#f8fafc',
+        '--ag-odd-row-background-color': '#eff6ff',
+        '--ag-row-hover-color': '#dbeafe',
+        '--ag-selected-row-background-color': '#bfdbfe',
+        '--ag-input-focus-box-shadow': '0 0 0 2px rgba(59, 130, 246, 0.45)',
+        '--ag-font-family': '"Inter", Arial, sans-serif',
+    };
 
     rowData: Alumno[] = [];
     private gridApi?: GridApi<Alumno>;

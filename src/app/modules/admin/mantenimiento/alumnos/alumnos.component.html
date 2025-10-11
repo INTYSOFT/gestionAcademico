@@ -25,9 +25,12 @@
     <mat-progress-bar *ngIf="isLoading$ | async"
         mode="indeterminate"></mat-progress-bar>
 
-    <div class="ag-theme-quartz w-full" style="height: 500px;">
-        <ag-grid-angular            
-            style="height: 100%; width: 100%;"
+    <div
+        class="ag-theme-quartz w-full rounded-xl border border-blue-200 bg-white/70 shadow-sm"
+        [ngStyle]="gridStyles"
+        style="height: 500px;">
+        <ag-grid-angular
+            class="h-full w-full"
             [columnDefs]="columnDefs"
             [pagination]="true"
             [theme]="theme"
