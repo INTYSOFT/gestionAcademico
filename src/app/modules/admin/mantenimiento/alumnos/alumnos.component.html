@@ -26,9 +26,11 @@
         mode="indeterminate"></mat-progress-bar>
 
     <div class="ag-theme-quartz w-full" style="height: 500px;">
-        <ag-grid-angular            
+        <ag-grid-angular
             style="height: 100%; width: 100%;"
-            [columnDefs]="columnDefs"
+            [context]="{ componentParent: this }"
+            [columnDefs]="columnDefs"            
+            [suppressRowClickSelection]="false"
             [pagination]="true"
             [theme]="theme"
             [defaultColDef]="defaultColDef"
@@ -36,6 +38,8 @@
             [animateRows]="true"
             [rowSelection]="'single'"
             (gridReady)="onGridReady($event)"></ag-grid-angular>
+
+      
     </div>
 
     <!-- Hidden template to register standalone cell renderer component -->

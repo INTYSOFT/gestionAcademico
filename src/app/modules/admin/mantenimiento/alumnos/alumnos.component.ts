@@ -50,6 +50,7 @@ export class AlumnosComponent implements OnInit, OnDestroy {
         sortable: true,
         flex: 1,
         minWidth: 150,
+        filter: true,        
     };
     readonly theme = themeQuartz
         .withPart(iconSetQuartzLight)
