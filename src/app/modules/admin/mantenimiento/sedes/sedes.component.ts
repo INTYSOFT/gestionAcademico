@@ -12,9 +12,12 @@ import {
 //>>>>>>> main
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SedeService } from 'app/core/services/centro-estudios/sede.service';
@@ -36,11 +39,15 @@ import {
         AsyncPipe,
         DatePipe,
         NgIf,
+        ReactiveFormsModule,
         MatButtonModule,
         MatIconModule,
+        MatFormFieldModule,
+        MatInputModule,
         MatDialogModule,
         MatProgressBarModule,
         MatSnackBarModule,
+        MatSlideToggleModule,
         MatTableModule,
         MatTooltipModule,
     ],
