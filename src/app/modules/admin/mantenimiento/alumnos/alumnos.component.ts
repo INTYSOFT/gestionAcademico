@@ -56,26 +56,26 @@ export class AlumnosComponent implements OnInit, OnDestroy {
     readonly theme = themeQuartz
         .withPart(iconSetQuartzLight)
         .withParams({
-            accentColor: '#1d4ed8',
-            backgroundColor: '#f8fafc',
+
+            accentColor: '#2563EB',
+            backgroundColor: '#F8FAFF',
+            borderColor: '#BFDBFE',
             browserColorScheme: 'light',
             columnBorder: false,
-            fontFamily: '"Inter", Arial, sans-serif',
-            foregroundColor: '#0f172a',
-            headerBackgroundColor: '#1d4ed8',
+            fontFamily: 'Inter, "Segoe UI", sans-serif',
+            foregroundColor: '#0F172A',
+            headerBackgroundColor: '#1D4ED8',
             headerFontSize: 14,
             headerFontWeight: 600,
-            headerTextColor: '#f8fafc',
-            oddRowBackgroundColor: '#eff6ff',
+            headerTextColor: '#FFFFFF',
+            oddRowBackgroundColor: '#EFF6FF',
             rowBorder: false,
-            rowHoverColor: '#dbeafe',
-            selectedRowBackgroundColor: '#bfdbfe',
+            rowHoverColor: '#DBEAFE',
+            selectedRowBackgroundColor: '#BFDBFE',
             sidePanelBorder: false,
             spacing: 8,
-            wrapperBorder: {
-                color: '#93c5fd',
-                width: 1,
-            },
+            wrapperBorder: '1px solid #BFDBFE',        
+
             wrapperBorderRadius: 12,
         });
 
