@@ -26,10 +26,11 @@
         mode="indeterminate"></mat-progress-bar>
 
     <div class="ag-theme-alpine w-full" style="height: 500px;">
-        <ag-grid-angular
-            class="w-full"
+        <ag-grid-angular            
             style="height: 100%; width: 100%;"
             [columnDefs]="columnDefs"
+            [pagination]="true"
+            [theme]="theme"
             [defaultColDef]="defaultColDef"
             [rowData]="rowData"
             [animateRows]="true"

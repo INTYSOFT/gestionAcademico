@@ -10,7 +10,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
+import { ColDef, GridApi, GridReadyEvent, iconSetQuartzLight, themeQuartz } from 'ag-grid-community';
 import { BehaviorSubject, Subject, finalize, takeUntil } from 'rxjs';
 import { Alumno } from 'app/core/models/centro-estudios/alumno.model';
 import { AlumnoService } from 'app/core/services/centro-estudios/alumno.service';
@@ -51,6 +51,27 @@ export class AlumnosComponent implements OnInit, OnDestroy {
         flex: 1,
         minWidth: 150,
     };
+
+
+    theme = themeQuartz
+    .withPart(iconSetQuartzLight)
+    .withParams({
+      backgroundColor: "#ffffff",
+      browserColorScheme: "light",
+      columnBorder: false,
+      fontFamily: "Arial",
+      foregroundColor: "rgb(46, 55, 66)",
+      headerBackgroundColor: "#053A6E",
+      headerFontSize: 14,
+      headerFontWeight: 600,
+      headerTextColor: "#FFFFFF",
+      oddRowBackgroundColor: "#F9FAFB",
+      rowBorder: false,
+      sidePanelBorder: false,
+      spacing: 8,
+      wrapperBorder: false,
+      wrapperBorderRadius: 0
+    });
 
     rowData: Alumno[] = [];
     private gridApi?: GridApi<Alumno>;
