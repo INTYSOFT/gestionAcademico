@@ -1,0 +1,75 @@
+<h2 mat-dialog-title>{{ alumno ? 'Editar alumno' : 'Registrar alumno' }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()" class="alumno-form" mat-dialog-content>
+    <div class="form-grid">
+        <mat-form-field appearance="outline">
+            <mat-label>DNI</mat-label>
+            <input matInput formControlName="dni" maxlength="8" />
+            <mat-error *ngIf="form.controls.dni.hasError('required')">El DNI es obligatorio.</mat-error>
+            <mat-error *ngIf="form.controls.dni.hasError('pattern')">Ingresa un DNI válido (8 dígitos).</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Apellido paterno</mat-label>
+            <input matInput formControlName="apellidoPaterno" />
+            <mat-error *ngIf="form.controls.apellidoPaterno.hasError('required')">
+                El apellido paterno es obligatorio.
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Apellido materno</mat-label>
+            <input matInput formControlName="apellidoMaterno" />
+            <mat-error *ngIf="form.controls.apellidoMaterno.hasError('required')">
+                El apellido materno es obligatorio.
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field-full">
+            <mat-label>Nombres</mat-label>
+            <input matInput formControlName="nombres" />
+            <mat-error *ngIf="form.controls.nombres.hasError('required')">Los nombres son obligatorios.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Fecha de nacimiento</mat-label>
+            <input matInput formControlName="fechaNacimiento" [matDatepicker]="picker" />
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            <mat-error *ngIf="form.controls.fechaNacimiento.hasError('required')">
+                Selecciona la fecha de nacimiento.
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Celular</mat-label>
+            <input matInput formControlName="celular" maxlength="9" />
+            <mat-error *ngIf="form.controls.celular.hasError('pattern')">Ingresa un número válido.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field-full">
+            <mat-label>Correo electrónico</mat-label>
+            <input matInput formControlName="correoElectronico" />
+            <mat-error *ngIf="form.controls.correoElectronico.hasError('required')">
+                El correo electrónico es obligatorio.
+            </mat-error>
+            <mat-error *ngIf="form.controls.correoElectronico.hasError('email')">
+                Ingresa un correo electrónico válido.
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field-full">
+            <mat-label>Dirección</mat-label>
+            <textarea matInput formControlName="direccion" rows="2"></textarea>
+        </mat-form-field>
+    </div>
+
+    <mat-slide-toggle formControlName="activo">Activo</mat-slide-toggle>
+</form>
+
+<mat-dialog-actions align="end">
+    <button mat-stroked-button type="button" (click)="cancel()" [disabled]="isSaving">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit" form="" (click)="submit()" [disabled]="isSaving">
+        {{ alumno ? 'Guardar cambios' : 'Registrar' }}
+    </button>
+</mat-dialog-actions>
