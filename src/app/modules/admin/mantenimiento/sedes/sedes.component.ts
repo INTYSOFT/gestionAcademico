@@ -1,5 +1,15 @@
 import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, ViewEncapsulation } from '@angular/core';
+//<<<<<<< codex/add-search-functionality-to-sedescomponent
+import {
+    FormBuilder,
+    FormControl,
+    FormGroup,
+    ReactiveFormsModule,
+    Validators,
+} from '@angular/forms';
+//=======
+//>>>>>>> main
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -39,6 +49,7 @@ export class SedesComponent implements OnInit {
     displayedColumns = ['nombre', 'ubigeoCode', 'direccion', 'activo', 'fechaRegistro', 'actions'];
     dataSource = new MatTableDataSource<Sede>([]);
     isLoading$ = new BehaviorSubject<boolean>(false);
+    searchControl = new FormControl<string>('', { nonNullable: true });
 
     constructor(
         private snackBar: MatSnackBar,
@@ -47,6 +58,26 @@ export class SedesComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
+        this.dataSource.filterPredicate = (data: Sede, filter: string): boolean => {
+            const normalizedFilter = filter.trim().toLowerCase();
+
+            if (!normalizedFilter) {
+                return true;
+            }
+
+            const valuesToCheck = [
+                data.nombre,
+                data.ubigeoCode,
+                data.direccion ?? '',
+                data.activo ? 'activo' : 'inactivo',
+                data.fechaRegistro ?? '',
+            ];
+
+            return valuesToCheck.some((value) =>
+                value.toString().toLowerCase().includes(normalizedFilter)
+            );
+        };
+
         this.loadSedes();
     }
 
@@ -58,6 +89,7 @@ export class SedesComponent implements OnInit {
                 finalize(() => this.isLoading$.next(false)),
                 tap((sedes) => {
                     this.dataSource.data = sedes;
+                    this.applyFilter(this.searchControl.value);
                 })
             )
             .subscribe({
@@ -104,5 +136,9 @@ export class SedesComponent implements OnInit {
         }
 
         this.dataSource.data = data;
+    }
+
+    applyFilter(value: string): void {
+        this.dataSource.filter = value.trim().toLowerCase();
     }
 }
