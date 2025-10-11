@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
 import { AlumnosComponent } from './alumnos.component';
 
-export default [
+export const alumnosRoutes: Routes = [
     {
-        path: '',
+        path: 'alumnos',
         component: AlumnosComponent,
     },
-] as Routes;
+];

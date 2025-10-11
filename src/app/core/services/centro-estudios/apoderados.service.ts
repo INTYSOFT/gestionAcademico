@@ -1,24 +1,24 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { API_CONFIG } from 'app/core/config/api.config';
 import { HttpErrorService } from 'app/core/services/http-error.service';
 import {
-    Alumno,
-    CreateAlumnoPayload,
-    UpdateAlumnoPayload,
-} from 'app/core/models/centro-estudios/alumno.model';
+    Apoderado,
+    CreateApoderadoPayload,
+    UpdateApoderadoPayload,
+} from 'app/core/models/centro-estudios/apoderado.model';
 import { Observable, catchError, map, throwError } from 'rxjs';
 import { CENTRO_ESTUDIOS_API } from './centro-estudios-api.constants';
 
 @Injectable({ providedIn: 'root' })
-export class AlumnosService {
+export class ApoderadosService {
     private readonly http = inject(HttpClient);
     private readonly apiConfig = inject(API_CONFIG);
     private readonly errorService = inject(HttpErrorService);
 
-    list(params?: HttpParams): Observable<Alumno[]> {
+    list(): Observable<Apoderado[]> {
         return this.http
-            .get<Alumno[]>(this.buildUrl(CENTRO_ESTUDIOS_API.alumnos), { params })
+            .get<Apoderado[]>(this.buildUrl(CENTRO_ESTUDIOS_API.apoderados))
             .pipe(
                 map((response) => response ?? []),
                 catchError((error) =>
@@ -27,9 +27,33 @@ export class AlumnosService {
             );
     }
 
-    get(id: number): Observable<Alumno> {
+    search(term: string): Observable<Apoderado[]> {
+        const normalized = term.trim().toLowerCase();
+        return this.list().pipe(
+            map((apoderados) => {
+                if (!normalized) {
+                    return apoderados;
+                }
+
+                return apoderados.filter((apoderado) => {
+                    const searchable = [
+                        apoderado.documento,
+                        apoderado.apellidos,
+                        apoderado.nombres,
+                    ]
+                        .filter((value): value is string => !!value)
+                        .map((value) => value.toLowerCase())
+                        .join(' ');
+
+                    return searchable.includes(normalized);
+                });
+            })
+        );
+    }
+
+    get(id: number): Observable<Apoderado> {
         return this.http
-            .get<Alumno>(`${this.buildUrl(CENTRO_ESTUDIOS_API.alumnos)}/${id}`)
+            .get<Apoderado>(`${this.buildUrl(CENTRO_ESTUDIOS_API.apoderados)}/${id}`)
             .pipe(
                 catchError((error) =>
                     throwError(() => this.errorService.createError(error))
@@ -37,9 +61,12 @@ export class AlumnosService {
             );
     }
 
-    create(payload: CreateAlumnoPayload): Observable<Alumno> {
+    create(payload: CreateApoderadoPayload): Observable<Apoderado> {
         return this.http
-            .post<Alumno>(this.buildUrl(CENTRO_ESTUDIOS_API.alumnos), payload)
+            .post<Apoderado>(
+                this.buildUrl(CENTRO_ESTUDIOS_API.apoderados),
+                payload
+            )
             .pipe(
                 catchError((error) =>
                     throwError(() => this.errorService.createError(error))
@@ -47,10 +74,10 @@ export class AlumnosService {
             );
     }
 
-    updatePartial(id: number, payload: UpdateAlumnoPayload): Observable<Alumno> {
+    update(id: number, payload: UpdateApoderadoPayload): Observable<Apoderado> {
         return this.http
-            .patch<Alumno>(
-                `${this.buildUrl(CENTRO_ESTUDIOS_API.alumnos)}/${id}`,
+            .put<Apoderado>(
+                `${this.buildUrl(CENTRO_ESTUDIOS_API.apoderados)}/${id}`,
                 payload
             )
             .pipe(
@@ -63,7 +90,7 @@ export class AlumnosService {
     remove(id: number): Observable<void> {
         return this.http
             .delete<void>(
-                `${this.buildUrl(CENTRO_ESTUDIOS_API.alumnos)}/${id}`
+                `${this.buildUrl(CENTRO_ESTUDIOS_API.apoderados)}/${id}`
             )
             .pipe(
                 catchError((error) =>

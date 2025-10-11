@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
     ApplicationConfig,
     inject,
@@ -13,6 +13,8 @@ import { provideFuse } from '@fuse';
 import { TranslocoService, provideTransloco } from '@jsverse/transloco';
 import { appRoutes } from 'app/app.routes';
 import { provideAuth } from 'app/core/auth/auth.provider';
+import { authInterceptor } from 'app/core/auth/auth.interceptor';
+import { httpErrorInterceptor } from 'app/core/interceptors/http-error.interceptor';
 import { provideIcons } from 'app/core/icons/icons.provider';
 import { provideApiConfig } from 'app/core/config/api.config';
 import { MockApiService } from 'app/mock-api';
@@ -22,7 +24,9 @@ import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
 export const appConfig: ApplicationConfig = {
     providers: [
         provideAnimations(),
-        provideHttpClient(),
+        provideHttpClient(
+            withInterceptors([authInterceptor, httpErrorInterceptor])
+        ),
         provideRouter(
             appRoutes,
             withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })

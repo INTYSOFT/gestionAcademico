@@ -10,14 +10,18 @@ import { LayoutComponent } from 'app/layout/layout.component';
 export const appRoutes: Route[] = [
 
     // Redirect empty path to '/example'
-    {path: '', pathMatch : 'full', redirectTo: 'example'},
+    {path: '', pathMatch : 'full', redirectTo: 'mantenimiento/alumnos'},
 
     // Redirect signed-in user to the '/example'
     //
     // After the user signs in, the sign-in page will redirect the user to the 'signed-in-redirect'
     // path. Below is another redirection for that path to redirect the user to the desired
     // location. This is a small convenience to keep all main routes together here on this file.
-    {path: 'signed-in-redirect', pathMatch : 'full', redirectTo: 'example'},
+    {
+        path: 'signed-in-redirect',
+        pathMatch: 'full',
+        redirectTo: 'mantenimiento/alumnos',
+    },
 
     // Auth routes for guests
     {
@@ -76,15 +80,24 @@ export const appRoutes: Route[] = [
         children: [
             {path: 'example', loadChildren: () => import('app/modules/admin/example/example.routes')},
             {
-                path: 'mantenimiento/sedes',
-                loadChildren: () =>
-                    import('app/modules/admin/mantenimiento/sedes/sedes.routes'),
-            },
-            {
-                path: 'mantenimiento/alumnos',
-                loadChildren: () =>
-                    import('app/modules/admin/mantenimiento/alumnos/alumnos.routes'),
+                path: 'mantenimiento',
+                children: [
+                    {
+                        path: 'sedes',
+                        loadChildren: () =>
+                            import('app/modules/admin/mantenimiento/sedes/sedes.routes'),
+                    },
+                    {
+                        path: 'alumnos',
+                        loadChildren: () =>
+                            import('app/modules/admin/mantenimiento/alumnos/alumnos.routes').then(
+                                (m) => m.alumnosRoutes
+                            ),
+                    },
+                    { path: '', pathMatch: 'full', redirectTo: 'alumnos' },
+                ],
             }
         ]
-    }
+    },
+    { path: '**', redirectTo: 'mantenimiento/alumnos' }
 ];

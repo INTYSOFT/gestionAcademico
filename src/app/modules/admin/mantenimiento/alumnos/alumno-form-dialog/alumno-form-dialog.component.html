@@ -1,0 +1,110 @@
+<h2 mat-dialog-title>
+    {{ data.alumno ? 'Editar alumno' : 'Nuevo alumno' }}
+</h2>
+
+<form [formGroup]="form" (ngSubmit)="save()" class="alumno-form">
+    <mat-dialog-content>
+        <div class="alumno-form__grid">
+            <mat-form-field appearance="outline">
+                <mat-label>DNI</mat-label>
+                <input matInput formControlName="dni" maxlength="12" />
+                <mat-error *ngIf="form.controls.dni.hasError('required')">
+                    El DNI es obligatorio.
+                </mat-error>
+                <mat-error *ngIf="form.controls.dni.hasError('minlength')">
+                    Debe tener al menos 8 dígitos.
+                </mat-error>
+                <mat-error *ngIf="form.controls.dni.hasError('maxlength')">
+                    No puede superar los 12 dígitos.
+                </mat-error>
+                <mat-error *ngIf="form.controls.dni.hasError('pattern')">
+                    Solo se permiten números.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Apellidos</mat-label>
+                <input matInput formControlName="apellidos" />
+                <mat-error *ngIf="form.controls.apellidos.hasError('required')">
+                    Los apellidos son obligatorios.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Nombres</mat-label>
+                <input matInput formControlName="nombres" />
+                <mat-error *ngIf="form.controls.nombres.hasError('required')">
+                    Los nombres son obligatorios.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Fecha de nacimiento</mat-label>
+                <input matInput [matDatepicker]="picker" formControlName="fechaNacimiento" />
+                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+                <mat-error *ngIf="form.controls.fechaNacimiento.hasError('futureDate')">
+                    La fecha no puede ser futura.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Celular</mat-label>
+                <input matInput formControlName="celular" />
+                <mat-error *ngIf="form.controls.celular.hasError('pattern')">
+                    Ingrese entre 9 y 15 dígitos.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Correo electrónico</mat-label>
+                <input matInput formControlName="correo" />
+                <mat-error *ngIf="form.controls.correo.hasError('email')">
+                    Ingrese un correo válido.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Colegio de procedencia</mat-label>
+                <mat-select formControlName="colegioId">
+                    <mat-option value="" disabled>Seleccione</mat-option>
+                    <mat-option
+                        *ngFor="let colegio of colegios$ | async; trackBy: trackById"
+                        [value]="colegio.id"
+                    >
+                        {{ colegio.nombre }}
+                    </mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.controls.colegioId.hasError('required')">
+                    Seleccione un colegio.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="alumno-form__full">
+                <mat-label>Dirección</mat-label>
+                <input matInput formControlName="direccion" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="alumno-form__full">
+                <mat-label>Observación</mat-label>
+                <textarea matInput rows="3" formControlName="observacion"></textarea>
+            </mat-form-field>
+        </div>
+
+        <mat-checkbox formControlName="activo">Activo</mat-checkbox>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="cancel()">Cancelar</button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="isSaving$ | async">
+            <mat-progress-spinner
+                *ngIf="isSaving$ | async"
+                diameter="20"
+                mode="indeterminate"
+            ></mat-progress-spinner>
+            <span>
+                {{ data.alumno ? 'Guardar cambios' : 'Registrar' }}
+            </span>
+        </button>
+    </mat-dialog-actions>
+</form>

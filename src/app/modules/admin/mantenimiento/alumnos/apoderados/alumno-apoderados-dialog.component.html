@@ -1,0 +1,109 @@
+<h2 mat-dialog-title>
+    Apoderados de {{ data.alumno.nombres }} {{ data.alumno.apellidos }}
+</h2>
+
+<mat-dialog-content class="apoderados">
+    <div class="apoderados__toolbar">
+        <button mat-raised-button color="primary" type="button" (click)="addApoderado()">
+            <mat-icon>person_add</mat-icon>
+            Agregar apoderado
+        </button>
+    </div>
+
+    <mat-progress-bar
+        *ngIf="isLoading$ | async"
+        mode="indeterminate"
+        color="primary"
+    ></mat-progress-bar>
+
+    <table
+        mat-table
+        [dataSource]="relaciones$ | async"
+        class="apoderados__table"
+        *ngIf="(relaciones$ | async)?.length || (isLoading$ | async)"
+    >
+        <ng-container matColumnDef="documento">
+            <th mat-header-cell *matHeaderCellDef>Documento</th>
+            <td mat-cell *matCellDef="let relacion">
+                {{ relacion.apoderado?.documento || '—' }}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="apellidos">
+            <th mat-header-cell *matHeaderCellDef>Apellidos</th>
+            <td mat-cell *matCellDef="let relacion">
+                {{ relacion.apoderado?.apellidos || '—' }}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="nombres">
+            <th mat-header-cell *matHeaderCellDef>Nombres</th>
+            <td mat-cell *matCellDef="let relacion">
+                {{ relacion.apoderado?.nombres || '—' }}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="parentesco">
+            <th mat-header-cell *matHeaderCellDef>Parentesco</th>
+            <td mat-cell *matCellDef="let relacion">
+                <mat-form-field appearance="fill">
+                    <mat-select
+                        [value]="relacion.parentescoId"
+                        (selectionChange)="updateParentesco(relacion, $event.value)"
+                        [disabled]="isUpdating(relacion)"
+                    >
+                        <mat-option value="" disabled>Seleccione</mat-option>
+                        <mat-option
+                            *ngFor="let parentesco of parentescos$ | async; trackBy: trackByParentescoId"
+                            [value]="parentesco.id"
+                        >
+                            {{ parentesco.nombre }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="celular">
+            <th mat-header-cell *matHeaderCellDef>Celular</th>
+            <td mat-cell *matCellDef="let relacion">
+                {{ relacion.apoderado?.celular || '—' }}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="correo">
+            <th mat-header-cell *matHeaderCellDef>Correo</th>
+            <td mat-cell *matCellDef="let relacion">
+                {{ relacion.apoderado?.correo || '—' }}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef class="apoderados__actions-header">
+                Acciones
+            </th>
+            <td mat-cell *matCellDef="let relacion">
+                <button
+                    mat-icon-button
+                    color="warn"
+                    type="button"
+                    aria-label="Desvincular apoderado"
+                    (click)="unlink(relacion)"
+                    [disabled]="isUpdating(relacion)"
+                >
+                    <mat-icon>link_off</mat-icon>
+                </button>
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr
+            mat-row
+            *matRowDef="let row; columns: displayedColumns; trackBy: trackByRelacionId"
+        ></tr>
+    </table>
+
+    <p class="apoderados__empty" *ngIf="!(isLoading$ | async) && !(relaciones$ | async)?.length">
+        No se encontraron apoderados vinculados.
+    </p>
+</mat-dialog-content>

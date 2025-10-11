@@ -1,33 +1,88 @@
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { ApiMainService } from '../api/api-main.service';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { API_CONFIG } from 'app/core/config/api.config';
+import { HttpErrorService } from 'app/core/services/http-error.service';
 import {
     AlumnoApoderado,
     CreateAlumnoApoderadoPayload,
     UpdateAlumnoApoderadoPayload,
 } from 'app/core/models/centro-estudios/alumno-apoderado.model';
+import { Observable, catchError, map, throwError } from 'rxjs';
+import { CENTRO_ESTUDIOS_API } from './centro-estudios-api.constants';
 
 @Injectable({ providedIn: 'root' })
-export class AlumnoApoderadoService extends ApiMainService {
-    private readonly resourcePath = 'api/AlumnoApoderadoes';
+export class AlumnoApoderadoService {
+    private readonly http = inject(HttpClient);
+    private readonly apiConfig = inject(API_CONFIG);
+    private readonly errorService = inject(HttpErrorService);
 
-    obtenerPorAlumno(alumnoId: number): Observable<AlumnoApoderado[]> {
-        return this.get<AlumnoApoderado[]>(`${this.resourcePath}/${alumnoId}`);
+    listByAlumno(alumnoId: number): Observable<AlumnoApoderado[]> {
+        const params = new HttpParams().set('alumnoId', String(alumnoId));
+        return this.http
+            .get<AlumnoApoderado[]>(
+                this.buildUrl(CENTRO_ESTUDIOS_API.alumnoApoderados),
+                { params }
+            )
+            .pipe(
+                map((response) => response ?? []),
+                catchError((error) =>
+                    throwError(() => this.errorService.createError(error))
+                )
+            );
     }
 
-    crearRelacion(alumnoId: number, payload: CreateAlumnoApoderadoPayload): Observable<AlumnoApoderado> {
-        return this.post<AlumnoApoderado>(`${this.resourcePath}/${alumnoId}`, payload);
-    }
-
-    updateRelacion(
+    link(
         alumnoId: number,
-        relacionId: number,
-        payload: UpdateAlumnoApoderadoPayload
+        apoderadoId: number,
+        parentescoId: number
     ): Observable<AlumnoApoderado> {
-        return this.patch<AlumnoApoderado>(`${this.resourcePath}/${alumnoId}/${relacionId}`, payload);
+        const payload: CreateAlumnoApoderadoPayload = {
+            alumnoId,
+            apoderadoId,
+            parentescoId,
+        };
+
+        return this.http
+            .post<AlumnoApoderado>(
+                this.buildUrl(CENTRO_ESTUDIOS_API.alumnoApoderados),
+                payload
+            )
+            .pipe(
+                catchError((error) =>
+                    throwError(() => this.errorService.createError(error))
+                )
+            );
     }
 
-    desvincular(alumnoId: number, relacionId: number): Observable<void> {
-        return this.patch<void>(`${this.resourcePath}/${alumnoId}/${relacionId}`, { activo: false });
+    updateLink(id: number, parentescoId: number): Observable<AlumnoApoderado> {
+        const payload: UpdateAlumnoApoderadoPayload = { parentescoId };
+        return this.http
+            .put<AlumnoApoderado>(
+                `${this.buildUrl(CENTRO_ESTUDIOS_API.alumnoApoderados)}/${id}`,
+                payload
+            )
+            .pipe(
+                catchError((error) =>
+                    throwError(() => this.errorService.createError(error))
+                )
+            );
+    }
+
+    unlink(id: number): Observable<void> {
+        return this.http
+            .delete<void>(
+                `${this.buildUrl(CENTRO_ESTUDIOS_API.alumnoApoderados)}/${id}`
+            )
+            .pipe(
+                catchError((error) =>
+                    throwError(() => this.errorService.createError(error))
+                )
+            );
+    }
+
+    private buildUrl(endpoint: string): string {
+        const baseUrl = this.apiConfig.baseUrl.replace(/\/$/, '');
+        const sanitizedEndpoint = endpoint.replace(/^\/+/, '');
+        return `${baseUrl}/${sanitizedEndpoint}`;
     }
 }

@@ -1,19 +1,26 @@
 import { Apoderado } from './apoderado.model';
+import { Parentesco } from './parentesco.model';
 
 export interface AlumnoApoderado {
-    id?: number;
+    id: number;
     alumnoId: number;
     apoderadoId: number;
-    parentesco: string;
-    esTitular: boolean;
+    parentescoId?: number | null;
+    activo: boolean;
+    fechaRegistro?: string | null;
+    fechaActualizacion?: string | null;
+    usuaraioRegistroId?: number | null;
+    usuaraioActualizacionId?: number | null;
     apoderado?: Apoderado;
-    activo?: boolean;
+    parentesco?: Parentesco;
 }
 
 export interface CreateAlumnoApoderadoPayload {
+    alumnoId: number;
     apoderadoId: number;
-    parentesco: string;
-    esTitular: boolean;
+    parentescoId: number;
 }
 
-export type UpdateAlumnoApoderadoPayload = Partial<CreateAlumnoApoderadoPayload>;
+export interface UpdateAlumnoApoderadoPayload {
+    parentescoId: number;
+}

@@ -1,34 +1,23 @@
-.alumnos-container {
+.alumnos {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
     padding: 1.5rem;
-}
 
-.alumnos-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-}
+    &__header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1rem;
+    }
 
-.alumnos-title {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-}
+    &__search-field {
+        flex: 1 1 280px;
+        max-width: 420px;
+    }
 
-.alumnos-subtitle {
-    margin: 0;
-    color: rgba(0, 0, 0, 0.6);
-}
-
-.alumnos-search {
-    max-width: 420px;
-}
-
-.alumnos-grid {
-    width: 100%;
-    min-height: 420px;
+    &__grid {
+        width: 100%;
+        min-height: 320px;
+    }
 }
