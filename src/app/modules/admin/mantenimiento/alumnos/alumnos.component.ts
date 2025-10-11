@@ -51,27 +51,25 @@ export class AlumnosComponent implements OnInit, OnDestroy {
         flex: 1,
         minWidth: 150,
     };
-
-
-    theme = themeQuartz
-    .withPart(iconSetQuartzLight)
-    .withParams({
-      backgroundColor: "#ffffff",
-      browserColorScheme: "light",
-      columnBorder: false,
-      fontFamily: "Arial",
-      foregroundColor: "rgb(46, 55, 66)",
-      headerBackgroundColor: "#053A6E",
-      headerFontSize: 14,
-      headerFontWeight: 600,
-      headerTextColor: "#FFFFFF",
-      oddRowBackgroundColor: "#F9FAFB",
-      rowBorder: false,
-      sidePanelBorder: false,
-      spacing: 8,
-      wrapperBorder: false,
-      wrapperBorderRadius: 0
-    });
+    readonly theme = themeQuartz
+        .withPart(iconSetQuartzLight)
+        .withParams({
+            backgroundColor: '#ffffff',
+            browserColorScheme: 'light',
+            columnBorder: false,
+            fontFamily: 'Arial',
+            foregroundColor: 'rgb(46, 55, 66)',
+            headerBackgroundColor: '#053A6E',
+            headerFontSize: 14,
+            headerFontWeight: 600,
+            headerTextColor: '#FFFFFF',
+            oddRowBackgroundColor: '#F9FAFB',
+            rowBorder: false,
+            sidePanelBorder: false,
+            spacing: 8,
+            wrapperBorder: false,
+            wrapperBorderRadius: 0,
+        });
 
     rowData: Alumno[] = [];
     private gridApi?: GridApi<Alumno>;
