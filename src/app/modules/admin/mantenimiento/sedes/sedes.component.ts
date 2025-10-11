@@ -1,6 +1,5 @@
 import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, ViewEncapsulation } from '@angular/core';
-//<<<<<<< codex/add-search-functionality-to-sedescomponent
 import {
     FormBuilder,
     FormControl,
@@ -8,8 +7,6 @@ import {
     ReactiveFormsModule,
     Validators,
 } from '@angular/forms';
-//=======
-//>>>>>>> main
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -20,8 +17,9 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { SedeService } from 'app/core/services/centro-estudios/sede.service';
-import { Sede } from 'app/core/models/centro-estudios/sede.model';
+import { CreateSedePayload, Sede } from 'app/core/models/centro-estudios/sede.model';
 import { BehaviorSubject, finalize, tap } from 'rxjs';
 import {
     SedeDialogResult,
@@ -45,7 +43,10 @@ import {
         MatFormFieldModule,
         MatInputModule,
         MatDialogModule,
+        MatFormFieldModule,
+        MatInputModule,
         MatProgressBarModule,
+        MatSlideToggleModule,
         MatSnackBarModule,
         MatSlideToggleModule,
         MatTableModule,
@@ -56,13 +57,24 @@ export class SedesComponent implements OnInit {
     displayedColumns = ['nombre', 'ubigeoCode', 'direccion', 'activo', 'fechaRegistro', 'actions'];
     dataSource = new MatTableDataSource<Sede>([]);
     isLoading$ = new BehaviorSubject<boolean>(false);
+    isSaving$ = new BehaviorSubject<boolean>(false);
     searchControl = new FormControl<string>('', { nonNullable: true });
+    form: FormGroup;
+    selectedSede: Sede | null = null;
 
     constructor(
         private snackBar: MatSnackBar,
         private sedeService: SedeService,
-        private dialog: MatDialog
-    ) {}
+        private dialog: MatDialog,
+        private fb: FormBuilder
+    ) {
+        this.form = this.fb.group({
+            nombre: ['', [Validators.required, Validators.maxLength(150)]],
+            ubigeoCode: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]],
+            direccion: ['', [Validators.maxLength(255)]],
+            activo: [true],
+        });
+    }
 
     ngOnInit(): void {
         this.dataSource.filterPredicate = (data: Sede, filter: string): boolean => {
@@ -147,5 +159,94 @@ export class SedesComponent implements OnInit {
 
     applyFilter(value: string): void {
         this.dataSource.filter = value.trim().toLowerCase();
+    }
+
+    selectSede(sede: Sede): void {
+        this.selectedSede = sede;
+        this.form.patchValue({
+            nombre: sede.nombre,
+            ubigeoCode: sede.ubigeoCode,
+            direccion: sede.direccion ?? '',
+            activo: sede.activo,
+        });
+        this.form.markAsPristine();
+        this.form.markAsUntouched();
+    }
+
+    resetForm(): void {
+        this.selectedSede = null;
+        this.form.reset({
+            nombre: '',
+            ubigeoCode: '',
+            direccion: '',
+            activo: true,
+        });
+        this.form.markAsPristine();
+        this.form.markAsUntouched();
+    }
+
+    submit(): void {
+        if (this.form.invalid) {
+            this.form.markAllAsTouched();
+            return;
+        }
+
+        const payload: CreateSedePayload = {
+            nombre: this.form.value.nombre,
+            ubigeoCode: this.form.value.ubigeoCode,
+            direccion: this.form.value.direccion,
+            activo: this.form.value.activo,
+        };
+
+        const isEditing = !!this.selectedSede;
+
+        this.isSaving$.next(true);
+
+        const request$ = isEditing
+            ? this.sedeService.updateSede(this.selectedSede!.id, payload)
+            : this.sedeService.createSede(payload);
+
+        let shouldReloadAfterUpdate = false;
+
+        request$
+            .pipe(
+                tap((sede) => {
+                    if (sede) {
+                        this.upsertSede(sede);
+                        this.applyFilter(this.searchControl.value);
+
+                        if (isEditing) {
+                            this.selectSede(sede);
+                        } else {
+                            this.resetForm();
+                        }
+                    } else if (isEditing) {
+                        shouldReloadAfterUpdate = true;
+                        this.resetForm();
+                    }
+
+                    this.snackBar.open(
+                        isEditing ? 'Sede actualizada correctamente.' : 'Sede registrada correctamente.',
+                        'Cerrar',
+                        {
+                            duration: 4000,
+                        }
+                    );
+                }),
+                finalize(() => {
+                    this.isSaving$.next(false);
+
+                    if (shouldReloadAfterUpdate) {
+                        this.loadSedes();
+                    }
+                })
+            )
+            .subscribe({
+                error: (error) => {
+                    this.snackBar.open(error.message ?? 'Ocurrió un error al guardar la sede.', 'Cerrar', {
+                        duration: 5000,
+                    });
+                },
+            });
     }
 }
