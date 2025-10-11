@@ -13,7 +13,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { BehaviorSubject, finalize } from 'rxjs';
+import { BehaviorSubject, finalize, forkJoin, Observable, of, switchMap } from 'rxjs';
 import {
     Alumno,
     AlumnoPersonalDataPayload,
@@ -24,7 +24,9 @@ import {
     AlumnoApoderado,
     AlumnoApoderadoUpsertPayload,
 } from 'app/core/models/centro-estudios/alumno-apoderado.model';
+import { Apoderado, UpsertApoderadoPayload } from 'app/core/models/centro-estudios/apoderado.model';
 import { AlumnoService } from 'app/core/services/centro-estudios/alumno.service';
+import { ApoderadoService } from 'app/core/services/centro-estudios/apoderado.service';
 
 
 interface AlumnoFormDialogData {
@@ -81,6 +83,7 @@ export class AlumnoFormDialogComponent implements OnInit {
         private readonly fb: FormBuilder,
         private readonly snackBar: MatSnackBar,
         private readonly alumnoService: AlumnoService,
+        private readonly apoderadoService: ApoderadoService,
         private readonly dialogRef: MatDialogRef<AlumnoFormDialogComponent, boolean>,
         @Inject(MAT_DIALOG_DATA) data: AlumnoFormDialogData | null
     ) {
@@ -115,16 +118,19 @@ export class AlumnoFormDialogComponent implements OnInit {
             return;
         }
 
-        const payload = this.buildPayload();
+        const apoderadoFormValues = this.getValidApoderadoFormValues();
 
         this.isSaving$.next(true);
 
-        const request$ = this.data.alumno
-            ? this.alumnoService.updateAlumno(this.data.alumno.id, payload as UpdateAlumnoPayload)
-            : this.alumnoService.createAlumno(payload as CreateAlumnoPayload);
-
-        request$
+        this.upsertApoderados(apoderadoFormValues)
             .pipe(
+                switchMap((apoderados) => {
+                    const payload = this.buildPayload(apoderadoFormValues, apoderados);
+
+                    return this.data.alumno
+                        ? this.alumnoService.updateAlumno(this.data.alumno.id, payload as UpdateAlumnoPayload)
+                        : this.alumnoService.createAlumno(payload as CreateAlumnoPayload);
+                }),
                 finalize(() => this.isSaving$.next(false))
             )
             .subscribe({
@@ -202,7 +208,10 @@ export class AlumnoFormDialogComponent implements OnInit {
         });
     }
 
-    private buildPayload(): CreateAlumnoPayload | UpdateAlumnoPayload {
+    private buildPayload(
+        apoderadoFormValues: ApoderadoFormValue[],
+        apoderados: Apoderado[]
+    ): CreateAlumnoPayload | UpdateAlumnoPayload {
         const formValue = this.form.getRawValue();
 
         const fechaNacimiento = this.toDateOnlyString(formValue.fechaNacimiento);
@@ -222,7 +231,11 @@ export class AlumnoFormDialogComponent implements OnInit {
             activo: formValue.activo,
         };
 
-        const alumnoApoderados = this.buildAlumnoApoderadosPayload(alumnoPayload);
+        const alumnoApoderados = this.buildAlumnoApoderadosPayload(
+            alumnoPayload,
+            apoderadoFormValues,
+            apoderados
+        );
 
         return {
             ...alumnoPayload,
@@ -234,32 +247,72 @@ export class AlumnoFormDialogComponent implements OnInit {
     }
 
     private buildAlumnoApoderadosPayload(
-        alumno: AlumnoPersonalDataPayload
+        alumno: AlumnoPersonalDataPayload,
+        apoderadoFormValues: ApoderadoFormValue[],
+        apoderados: Apoderado[]
     ): AlumnoApoderadoUpsertPayload[] {
+        return apoderadoFormValues.map((value, index) => {
+            const apoderado = apoderados[index];
+            const apoderadoId = apoderado?.id ?? value.apoderadoId ?? undefined;
+            const documento = (apoderado?.documento ?? value.documento).trim();
+            const relacion = value.relacion.trim();
+
+            return {
+                id: value.id ?? undefined,
+                apoderadoId,
+                relacion,
+                activo: value.activo,
+                alumno,
+                apoderado: {
+                    id: apoderadoId,
+                    documento,
+                    apellidos: this.toNullableString(apoderado?.apellidos ?? value.apellidos),
+                    nombres: this.toNullableString(apoderado?.nombres ?? value.nombres),
+                    celular: this.toNullableString(apoderado?.celular ?? value.celular),
+                    correo: this.toNullableString(apoderado?.correo ?? value.correo),
+                    activo: apoderado?.activo ?? value.activo,
+                },
+            };
+        });
+    }
+
+    private getValidApoderadoFormValues(): ApoderadoFormValue[] {
         return this.apoderados.controls
             .map((group) => group.getRawValue() as ApoderadoFormValue)
-            .filter((value) => value.documento?.trim() && value.relacion?.trim())
-            .map((value) => {
-                const documento = value.documento.trim();
-                const relacion = value.relacion.trim();
+            .map((value) => ({
+                ...value,
+                documento: value.documento?.trim() ?? '',
+                relacion: value.relacion?.trim() ?? '',
+            }))
+            .filter((value) => value.documento && value.relacion);
+    }
 
-                return {
-                    id: value.id ?? undefined,
-                    apoderadoId: value.apoderadoId ?? undefined,
-                    relacion,
-                    activo: value.activo,
-                    alumno,
-                    apoderado: {
-                        id: value.apoderadoId ?? undefined,
-                        documento,
-                        apellidos: this.toNullableString(value.apellidos),
-                        nombres: this.toNullableString(value.nombres),
-                        celular: this.toNullableString(value.celular),
-                        correo: this.toNullableString(value.correo),
-                        activo: value.activo,
-                    },
-                };
-            });
+    private upsertApoderados(values: ApoderadoFormValue[]): Observable<Apoderado[]> {
+        if (!values.length) {
+            return of<Apoderado[]>([]);
+        }
+
+        const requests = values.map((value) => {
+            const payload = this.buildApoderadoUpsertPayload(value);
+
+            return value.apoderadoId
+                ? this.apoderadoService.updateApoderado(value.apoderadoId, payload)
+                : this.apoderadoService.createApoderado(payload);
+        });
+
+        return forkJoin(requests);
+    }
+
+    private buildApoderadoUpsertPayload(value: ApoderadoFormValue): UpsertApoderadoPayload {
+        return {
+            id: value.apoderadoId ?? undefined,
+            documento: value.documento.trim(),
+            apellidos: this.toNullableString(value.apellidos),
+            nombres: this.toNullableString(value.nombres),
+            celular: this.toNullableString(value.celular),
+            correo: this.toNullableString(value.correo),
+            activo: value.activo,
+        };
     }
 
     private toNullableString(value: string | null | undefined): string | null {
