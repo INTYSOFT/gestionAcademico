@@ -1,0 +1,39 @@
+<section class="alumnos">
+    <header class="alumnos__header">
+        <mat-form-field appearance="outline" class="alumnos__search-field">
+            <mat-label>Buscar alumnos</mat-label>
+            <input
+                matInput
+                type="search"
+                [formControl]="searchControl"
+                placeholder="DNI, nombres o correo"
+            />
+        </mat-form-field>
+        <button
+            mat-raised-button
+            color="primary"
+            type="button"
+            (click)="createAlumno()"
+        >
+            <mat-icon>add</mat-icon>
+            Nuevo alumno
+        </button>
+    </header>
+
+    <mat-progress-bar
+        *ngIf="isLoading$ | async"
+        mode="indeterminate"
+        color="primary"
+    ></mat-progress-bar>
+
+    <ag-grid-angular
+        class="ag-theme-material alumnos__grid"
+        [rowData]="filteredAlumnos$ | async"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        [animateRows]="true"
+        [rowHeight]="56"
+        [domLayout]="'autoHeight'"
+        (gridReady)="onGridReady($event)"
+    ></ag-grid-angular>
+</section>
