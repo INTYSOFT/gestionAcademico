@@ -25,6 +25,7 @@
     <mat-progress-bar *ngIf="isLoading$ | async"
         mode="indeterminate"></mat-progress-bar>
 
+//<<<<<<< codex/apply-blue-theme-to-alumnos-list
     <div
         class="ag-theme-quartz w-full rounded-xl border border-blue-200 bg-white/70 shadow-sm"
         [ngStyle]="gridStyles"
@@ -32,6 +33,14 @@
         <ag-grid-angular
             class="h-full w-full"
             [columnDefs]="columnDefs"
+//=======
+    <div class="ag-theme-quartz w-full" style="height: 500px;">
+        <ag-grid-angular
+            style="height: 100%; width: 100%;"
+            [context]="{ componentParent: this }"
+            [columnDefs]="columnDefs"            
+            [suppressRowClickSelection]="false"
+//>>>>>>> main
             [pagination]="true"
             [theme]="theme"
             [defaultColDef]="defaultColDef"
@@ -39,6 +48,8 @@
             [animateRows]="true"
             [rowSelection]="'single'"
             (gridReady)="onGridReady($event)"></ag-grid-angular>
+
+      
     </div>
 
     <!-- Hidden template to register standalone cell renderer component -->
