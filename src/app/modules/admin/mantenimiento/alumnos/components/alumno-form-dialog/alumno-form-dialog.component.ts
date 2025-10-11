@@ -188,16 +188,89 @@ export class AlumnoFormDialogComponent implements OnInit {
         });
 
         if (alumno.alumnoApoderados?.length) {
-            alumno.alumnoApoderados.forEach((apoderado) => this.addApoderado(apoderado));
+            this.setApoderadosFormArray(alumno.alumnoApoderados);
+            this.loadApoderadoDetails(alumno.alumnoApoderados);
         } else {
             this.addApoderado();
         }
     }
 
+    private setApoderadosFormArray(apoderados: AlumnoApoderado[]): void {
+        while (this.apoderados.length > 0) {
+            this.apoderados.removeAt(0);
+        }
+
+        apoderados.forEach((apoderado) => this.addApoderado(apoderado));
+    }
+
+    private loadApoderadoDetails(apoderados: AlumnoApoderado[]): void {
+        const apoderadosWithoutDetails = apoderados
+            .map((apoderado, index) => ({
+                apoderado,
+                index,
+                apoderadoId:
+                    apoderado.apoderado?.id ??
+                    (apoderado.apoderadoId !== null && apoderado.apoderadoId !== undefined
+                        ? Number(apoderado.apoderadoId)
+                        : null),
+            }))
+            .filter(
+                ({ apoderado, apoderadoId }) =>
+                    !apoderado.apoderado &&
+                    apoderadoId !== null &&
+                    !Number.isNaN(apoderadoId) &&
+                    apoderadoId > 0
+            );
+
+        if (!apoderadosWithoutDetails.length) {
+            return;
+        }
+
+        const requests = apoderadosWithoutDetails.map(({ apoderadoId }) =>
+            this.apoderadoService.getApoderadoById(apoderadoId as number)
+        );
+
+        forkJoin(requests).subscribe({
+            next: (apoderadosResponse) => {
+                apoderadosResponse.forEach((apoderadoResponse, responseIndex) => {
+                    const { index } = apoderadosWithoutDetails[responseIndex];
+                    const group = this.apoderados.at(index);
+
+                    if (group) {
+                        group.patchValue({
+                            apoderadoId: apoderadoResponse.id,
+                            documento: apoderadoResponse.documento ?? '',
+                            apellidos: apoderadoResponse.apellidos ?? '',
+                            nombres: apoderadoResponse.nombres ?? '',
+                            celular: apoderadoResponse.celular ?? '',
+                            correo: apoderadoResponse.correo ?? '',
+                            activo: apoderadoResponse.activo,
+                        });
+                    }
+                });
+            },
+            error: (error) => {
+                this.snackBar.open(
+                    error.message ?? 'Ocurrió un error al obtener los datos del apoderado.',
+                    'Cerrar',
+                    {
+                        duration: 5000,
+                    }
+                );
+            },
+        });
+    }
+
     private createApoderadoFormGroup(apoderado?: AlumnoApoderado): FormGroup {
+        const apoderadoId =
+            apoderado?.apoderado?.id ??
+            (apoderado?.apoderadoId !== null && apoderado?.apoderadoId !== undefined
+                ? Number(apoderado.apoderadoId)
+                : null);
+
         return this.fb.group({
             id: [apoderado?.id ?? null],
-            apoderadoId: [apoderado?.apoderado?.id ?? apoderado?.apoderadoId ?? null],
+            apoderadoId: [apoderadoId],
             documento: [apoderado?.apoderado?.documento ?? '', [Validators.required, Validators.maxLength(15)]],
             relacion: [apoderado?.relacion ?? '', [Validators.required, Validators.maxLength(50)]],
             apellidos: [apoderado?.apoderado?.apellidos ?? '', [Validators.maxLength(150)]],
