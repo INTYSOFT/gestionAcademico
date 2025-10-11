@@ -1,31 +1,34 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { API_CONFIG } from 'app/core/config/api.config';
-import { HttpErrorService } from 'app/core/services/http-error.service';
-import { Colegio } from 'app/core/models/centro-estudios/colegio.model';
-import { Observable, catchError, map, throwError } from 'rxjs';
-import { CENTRO_ESTUDIOS_API } from './centro-estudios-api.constants';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import {
+    Colegio,
+    CreateColegioPayload,
+    UpdateColegioPayload,
+} from 'app/core/models/centro-estudios/colegio.model';
+import { ApiMainService } from '../api/api-main.service';
 
 @Injectable({ providedIn: 'root' })
-export class ColegiosService {
-    private readonly http = inject(HttpClient);
-    private readonly apiConfig = inject(API_CONFIG);
-    private readonly errorService = inject(HttpErrorService);
+export class ColegiosService extends ApiMainService {
+    private readonly resourcePath = 'api/centro-estudios/colegios';
 
     list(): Observable<Colegio[]> {
-        return this.http
-            .get<Colegio[]>(this.buildUrl(CENTRO_ESTUDIOS_API.colegios))
-            .pipe(
-                map((response) => response ?? []),
-                catchError((error) =>
-                    throwError(() => this.errorService.createError(error))
-                )
-            );
+        return this.getColegios();
     }
 
-    private buildUrl(endpoint: string): string {
-        const baseUrl = this.apiConfig.baseUrl.replace(/\/$/, '');
-        const sanitizedEndpoint = endpoint.replace(/^\/+/, '');
-        return `${baseUrl}/${sanitizedEndpoint}`;
+    getColegios(): Observable<Colegio[]> {
+        return this.get<Colegio[]>(this.resourcePath);
+    }
+
+    createColegio(payload: CreateColegioPayload): Observable<Colegio> {
+        return this.post<Colegio>(this.resourcePath, payload);
+    }
+
+    updateColegio(id: number, payload: UpdateColegioPayload): Observable<Colegio> {
+        const body: UpdateColegioPayload = {
+            ...payload,
+            id,
+        };
+
+        return this.patch<Colegio>(`${this.resourcePath}/${id}`, body);
     }
 }
