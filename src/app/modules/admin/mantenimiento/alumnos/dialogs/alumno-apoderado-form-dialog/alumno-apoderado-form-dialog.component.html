@@ -1,0 +1,16 @@
+<h2 mat-dialog-title>Vínculo con el apoderado</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()" mat-dialog-content class="apoderado-relacion-form">
+    <mat-form-field appearance="outline">
+        <mat-label>Parentesco</mat-label>
+        <input matInput formControlName="parentesco" />
+        <mat-error *ngIf="form.controls.parentesco.hasError('required')">El parentesco es obligatorio.</mat-error>
+    </mat-form-field>
+
+    <mat-slide-toggle formControlName="esTitular">Es titular</mat-slide-toggle>
+</form>
+
+<mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cancel()">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit" (click)="submit()">Guardar</button>
+</mat-dialog-actions>
