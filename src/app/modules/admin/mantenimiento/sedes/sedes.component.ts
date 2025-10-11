@@ -17,7 +17,6 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { SedeService } from 'app/core/services/centro-estudios/sede.service';
 import { CreateSedePayload, Sede } from 'app/core/models/centro-estudios/sede.model';
 import { BehaviorSubject, finalize, tap } from 'rxjs';

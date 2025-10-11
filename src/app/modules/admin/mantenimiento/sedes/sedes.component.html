@@ -1,10 +1,10 @@
 <div class="flex min-w-0 flex-auto flex-col">
     <div class="flex-auto p-6 sm:p-10">
 
-        <div class="flex flex-col gap-6 lg:flex-row">
-            <div class="w-full lg:w-7/12">
-                <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+        <div >
+            <div >
+                <div >
+                    <div >
                         <h2 class="text-xl font-semibold">Sedes registradas</h2>
                         <mat-form-field appearance="outline" class="w-full sm:w-72">
                             <mat-label>Buscar sede</mat-label>
@@ -27,127 +27,17 @@
                             </button>
                         </mat-form-field>
                     </div>
-                    <button mat-stroked-button color="primary" (click)="resetForm()">
-                        <mat-icon class="mr-2">add</mat-icon>
-                        Nueva sede
-                    </button>
-                </div>
-                <mat-progress-bar *ngIf="(isLoading$ | async)" mode="indeterminate"></mat-progress-bar>
-                <div class="overflow-x-auto rounded-2xl border border-outline">
-                    <table mat-table [dataSource]="dataSource" class="min-w-full">
-                        <ng-container matColumnDef="nombre">
-                            <th mat-header-cell *matHeaderCellDef>Nombre</th>
-                            <td mat-cell *matCellDef="let sede">{{ sede.nombre }}</td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="ubigeoCode">
-                            <th mat-header-cell *matHeaderCellDef>Ubigeo</th>
-                            <td mat-cell *matCellDef="let sede">{{ sede.ubigeoCode }}</td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="direccion">
-                            <th mat-header-cell *matHeaderCellDef>Dirección</th>
-                            <td mat-cell *matCellDef="let sede">{{ sede.direccion || '—' }}</td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="activo">
-                            <th mat-header-cell *matHeaderCellDef>Estado</th>
-                            <td mat-cell *matCellDef="let sede">{{ sede.activo ? 'Activo' : 'Inactivo' }}</td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="fechaRegistro">
-                            <th mat-header-cell *matHeaderCellDef>Registrado</th>
-                            <td mat-cell *matCellDef="let sede">
-                                {{ sede.fechaRegistro ? (sede.fechaRegistro | date: 'dd/MM/yyyy HH:mm') : '—' }}
-                            </td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="actions">
-                            <th mat-header-cell *matHeaderCellDef class="w-24 text-right">Acciones</th>
-                            <td mat-cell *matCellDef="let sede" class="text-right">
-                                <button
-                                    mat-icon-button
-                                    color="primary"
-                                    matTooltip="Editar sede"
-                                    (click)="selectSede(sede)"
-                                >
-                                    <mat-icon>edit</mat-icon>
-                                </button>
-                            </td>
-                        </ng-container>
-
-                        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-                        <tr class="mat-row" *matNoDataRow>
-                            <td class="p-6 text-center" [attr.colspan]="displayedColumns.length">
-                                No existen sedes registradas.
-                            </td>
-                        </tr>
-                    </table>
-                </div>
+               
+                </div>                
+                
+                <button mat-stroked-button color="primary" (click)="openSedeDialog()">
+                    <mat-icon class="mr-2">add</mat-icon>
+                    Nueva sede
+                </button>
             </div>
-            <div class="w-full lg:w-5/12">
-                <div class="rounded-2xl border border-outline p-6">
-                    <h2 class="mb-4 text-xl font-semibold">
-                        {{ selectedSede ? 'Editar sede' : 'Registrar nueva sede' }}
-                    </h2>
-                    <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
-                        <mat-form-field appearance="fill">
-                            <mat-label>Nombre de la sede</mat-label>
-                            <input matInput formControlName="nombre" placeholder="Ej. Sede Central" />
-                            <mat-error *ngIf="form.get('nombre')?.hasError('required')">
-                                El nombre es obligatorio.
-                            </mat-error>
-                            <mat-error *ngIf="form.get('nombre')?.hasError('maxlength')">
-                                El nombre supera el máximo permitido.
-                            </mat-error>
-                        </mat-form-field>
+            
 
-                        <mat-form-field appearance="fill">
-                            <mat-label>Código de ubigeo</mat-label>
-                            <input matInput formControlName="ubigeoCode" placeholder="Ej. 150101" maxlength="6" />
-                            <mat-error *ngIf="form.get('ubigeoCode')?.hasError('required')">
-                                El código de ubigeo es obligatorio.
-                            </mat-error>
-                            <mat-error *ngIf="form.get('ubigeoCode')?.hasError('minlength') || form.get('ubigeoCode')?.hasError('maxlength')">
-                                Debe contener 6 dígitos.
-                            </mat-error>
-                        </mat-form-field>
-
-                        <mat-form-field appearance="fill">
-                            <mat-label>Dirección</mat-label>
-                            <textarea
-                                matInput
-                                formControlName="direccion"
-                                rows="3"
-                                placeholder="Av. Ejemplo 123"
-                            ></textarea>
-                            <mat-error *ngIf="form.get('direccion')?.hasError('maxlength')">
-                                La dirección supera el máximo permitido.
-                            </mat-error>
-                        </mat-form-field>
-
-                        <mat-slide-toggle formControlName="activo">Sede activa</mat-slide-toggle>
-
-                        <div class="flex items-center justify-end gap-2">
-                            <button mat-button type="button" (click)="resetForm()" *ngIf="selectedSede">
-                                Cancelar
-                            </button>
-                            <button mat-flat-button color="primary" type="submit">
-                                {{ selectedSede ? 'Actualizar' : 'Registrar' }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold">Sedes registradas</h2>
-            <button mat-stroked-button color="primary" (click)="openSedeDialog()">
-                <mat-icon class="mr-2">add</mat-icon>
-                Nueva sede
-            </button>
-        </div>
+        
         <mat-progress-bar *ngIf="(isLoading$ | async)" mode="indeterminate"></mat-progress-bar>
         <div class="overflow-x-auto rounded-2xl border border-outline">
             <table mat-table [dataSource]="dataSource" class="min-w-full">
