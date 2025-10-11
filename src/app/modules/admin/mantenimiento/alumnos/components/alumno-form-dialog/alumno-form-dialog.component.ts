@@ -43,6 +43,7 @@ interface ApoderadoFormValue {
     celular?: string | null;
     correo?: string | null;
     activo: boolean;
+    relacionActivo: boolean;
 }
 
 @Component({
@@ -204,7 +205,8 @@ export class AlumnoFormDialogComponent implements OnInit {
             nombres: [apoderado?.apoderado?.nombres ?? '', [Validators.maxLength(150)]],
             celular: [apoderado?.apoderado?.celular ?? '', [Validators.maxLength(15)]],
             correo: [apoderado?.apoderado?.correo ?? '', [Validators.email, Validators.maxLength(150)]],
-            activo: [apoderado?.activo ?? true],
+            activo: [apoderado?.apoderado?.activo ?? true],
+            relacionActivo: [apoderado?.activo ?? true],
         });
     }
 
@@ -261,7 +263,7 @@ export class AlumnoFormDialogComponent implements OnInit {
                 id: value.id ?? undefined,
                 apoderadoId,
                 relacion,
-                activo: value.activo,
+                activo: value.relacionActivo,
                 alumno,
                 apoderado: {
                     id: apoderadoId,
