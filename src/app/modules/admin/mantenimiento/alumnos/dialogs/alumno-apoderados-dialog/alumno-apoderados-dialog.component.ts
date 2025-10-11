@@ -1,4 +1,4 @@
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Inject, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,9 +12,8 @@ import { AlumnoApoderado } from 'app/core/models/centro-estudios/alumno-apoderad
 import { Apoderado } from 'app/core/models/centro-estudios/apoderado.model';
 import { AlumnoApoderadoService } from 'app/core/services/centro-estudios/alumno-apoderado.service';
 import { BehaviorSubject, Subject, finalize, takeUntil, tap } from 'rxjs';
-import { ApoderadoFormDialogComponent, ApoderadoFormDialogResult } from '../apoderado-form-dialog/apoderado-form-dialog.component';
-import {
-    AlumnoApoderadoFormDialogComponent,
+import type { ApoderadoFormDialogResult } from '../apoderado-form-dialog/apoderado-form-dialog.component';
+import type {
     AlumnoApoderadoFormDialogData,
     AlumnoApoderadoFormDialogResult,
 } from '../alumno-apoderado-form-dialog/alumno-apoderado-form-dialog.component';
@@ -32,7 +31,6 @@ export interface AlumnoApoderadosDialogData {
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         AsyncPipe,
-        NgFor,
         NgIf,
         MatDialogModule,
         MatButtonModule,
@@ -41,8 +39,6 @@ export interface AlumnoApoderadosDialogData {
         MatTableModule,
         MatTooltipModule,
         MatProgressBarModule,
-        ApoderadoFormDialogComponent,
-        AlumnoApoderadoFormDialogComponent,
     ],
 })
 export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
@@ -80,7 +76,11 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
         this.loadRelaciones();
     }
 
-    protected crearApoderado(): void {
+    protected async crearApoderado(): Promise<void> {
+        const { ApoderadoFormDialogComponent } = await import(
+            '../apoderado-form-dialog/apoderado-form-dialog.component'
+        );
+
         const dialogRef = this.dialog.open(ApoderadoFormDialogComponent, {
             width: '520px',
         });
@@ -93,14 +93,22 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
                     return;
                 }
 
-                this.vincularApoderado(result.apoderado);
+                void this.vincularApoderado(result.apoderado);
             });
     }
 
-    protected editarApoderado(relacion: AlumnoApoderado): void {
+    protected triggerCrearApoderado(): void {
+        void this.crearApoderado();
+    }
+
+    protected async editarApoderado(relacion: AlumnoApoderado): Promise<void> {
         if (!relacion.apoderado) {
             return;
         }
+
+        const { ApoderadoFormDialogComponent } = await import(
+            '../apoderado-form-dialog/apoderado-form-dialog.component'
+        );
 
         const dialogRef = this.dialog.open(ApoderadoFormDialogComponent, {
             width: '520px',
@@ -119,7 +127,15 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
             });
     }
 
-    protected editarRelacion(relacion: AlumnoApoderado): void {
+    protected triggerEditarApoderado(relacion: AlumnoApoderado): void {
+        void this.editarApoderado(relacion);
+    }
+
+    protected async editarRelacion(relacion: AlumnoApoderado): Promise<void> {
+        const { AlumnoApoderadoFormDialogComponent } = await import(
+            '../alumno-apoderado-form-dialog/alumno-apoderado-form-dialog.component'
+        );
+
         const dialogRef = this.dialog.open(AlumnoApoderadoFormDialogComponent, {
             width: '440px',
             data: {
@@ -154,6 +170,10 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
                             }),
                     });
             });
+    }
+
+    protected triggerEditarRelacion(relacion: AlumnoApoderado): void {
+        void this.editarRelacion(relacion);
     }
 
     protected desvincular(relacion: AlumnoApoderado): void {
@@ -204,7 +224,11 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
             });
     }
 
-    private vincularApoderado(apoderado: Apoderado): void {
+    private async vincularApoderado(apoderado: Apoderado): Promise<void> {
+        const { AlumnoApoderadoFormDialogComponent } = await import(
+            '../alumno-apoderado-form-dialog/alumno-apoderado-form-dialog.component'
+        );
+
         const dialogRef = this.dialog.open(AlumnoApoderadoFormDialogComponent, {
             width: '440px',
         });
