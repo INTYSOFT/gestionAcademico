@@ -2,6 +2,7 @@ import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, ViewEncapsulation } from '@angular/core';
 import {
     FormBuilder,
+    FormControl,
     FormGroup,
     ReactiveFormsModule,
     Validators,
@@ -48,6 +49,7 @@ export class SedesComponent implements OnInit {
     form: FormGroup;
     selectedSede: Sede | null = null;
     isLoading$ = new BehaviorSubject<boolean>(false);
+    searchControl = new FormControl<string>('', { nonNullable: true });
 
     constructor(private fb: FormBuilder, private snackBar: MatSnackBar, private sedeService: SedeService) {
         this.form = this.fb.group({
@@ -59,6 +61,26 @@ export class SedesComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.dataSource.filterPredicate = (data: Sede, filter: string): boolean => {
+            const normalizedFilter = filter.trim().toLowerCase();
+
+            if (!normalizedFilter) {
+                return true;
+            }
+
+            const valuesToCheck = [
+                data.nombre,
+                data.ubigeoCode,
+                data.direccion ?? '',
+                data.activo ? 'activo' : 'inactivo',
+                data.fechaRegistro ?? '',
+            ];
+
+            return valuesToCheck.some((value) =>
+                value.toString().toLowerCase().includes(normalizedFilter)
+            );
+        };
+
         this.loadSedes();
     }
 
@@ -70,6 +92,7 @@ export class SedesComponent implements OnInit {
                 finalize(() => this.isLoading$.next(false)),
                 tap((sedes) => {
                     this.dataSource.data = sedes;
+                    this.applyFilter(this.searchControl.value);
                 })
             )
             .subscribe({
@@ -175,5 +198,9 @@ export class SedesComponent implements OnInit {
         }
 
         this.dataSource.data = data;
+    }
+
+    applyFilter(value: string): void {
+        this.dataSource.filter = value.trim().toLowerCase();
     }
 }
