@@ -1,5 +1,5 @@
 import { AsyncPipe, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, Input, OnDestroy, OnInit, ViewEncapsulation, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -14,9 +14,21 @@ import { ColDef } from 'ag-grid-community';
 import { Alumno } from 'app/core/models/centro-estudios/alumno.model';
 import { AlumnosService } from 'app/core/services/centro-estudios/alumnos.service';
 import { BehaviorSubject, Subject, finalize, takeUntil, tap } from 'rxjs';
-import { AlumnoFormDialogComponent, AlumnoFormDialogResult } from './dialogs/alumno-form-dialog/alumno-form-dialog.component';
-import { AlumnoApoderadosDialogComponent } from './dialogs/alumno-apoderados-dialog/alumno-apoderados-dialog.component';
+import type { AlumnoFormDialogResult } from './dialogs/alumno-form-dialog/alumno-form-dialog.component';
 import { AlumnosActionsCellComponent } from './components/alumnos-actions-cell/alumnos-actions-cell.component';
+
+@Directive({
+    selector: 'ag-grid-angular[frameworkComponents]',
+    standalone: true,
+})
+export class AgGridFrameworkComponentsDirective {
+    private readonly agGridAngular = inject(AgGridAngular);
+
+    @Input('frameworkComponents')
+    set frameworkComponents(value: Record<string, unknown> | undefined) {
+        this.agGridAngular.components = value;
+    }
+}
 
 @Component({
     selector: 'app-alumnos',
@@ -38,15 +50,16 @@ import { AlumnosActionsCellComponent } from './components/alumnos-actions-cell/a
         MatProgressBarModule,
         MatSnackBarModule,
         MatTooltipModule,
-        AlumnosActionsCellComponent,
-        AlumnoFormDialogComponent,
-        AlumnoApoderadosDialogComponent,
+        AgGridFrameworkComponentsDirective,
     ],
 })
 export class AlumnosComponent implements OnInit, OnDestroy {
     protected readonly searchControl = this.fb.control('', [Validators.maxLength(150)]);
     protected readonly isLoading$ = new BehaviorSubject<boolean>(false);
     protected readonly filteredAlumnos$ = new BehaviorSubject<Alumno[]>([]);
+    protected readonly frameworkComponents = {
+        alumnosActionsCell: AlumnosActionsCellComponent,
+    };
 
     protected readonly columnDefs: ColDef<Alumno>[] = [
         {
@@ -81,10 +94,10 @@ export class AlumnosComponent implements OnInit, OnDestroy {
         },
         {
             headerName: 'Acciones',
-            cellRenderer: AlumnosActionsCellComponent,
+            cellRenderer: 'alumnosActionsCell',
             cellRendererParams: {
-                onViewApoderados: (alumno: Alumno) => this.openApoderadosDialog(alumno),
-                onEdit: (alumno: Alumno) => this.openAlumnoDialog(alumno),
+                onViewApoderados: (alumno: Alumno) => void this.openApoderadosDialog(alumno),
+                onEdit: (alumno: Alumno) => void this.openAlumnoDialog(alumno),
                 onDelete: (alumno: Alumno) => this.deleteAlumno(alumno),
             },
             minWidth: 180,
@@ -125,7 +138,8 @@ export class AlumnosComponent implements OnInit, OnDestroy {
         this.destroy$.complete();
     }
 
-    protected openAlumnoDialog(alumno?: Alumno): void {
+    protected async openAlumnoDialog(alumno?: Alumno): Promise<void> {
+        const { AlumnoFormDialogComponent } = await import('./dialogs/alumno-form-dialog/alumno-form-dialog.component');
         const dialogRef = this.dialog.open(AlumnoFormDialogComponent, {
             width: '520px',
             data: {
@@ -155,7 +169,8 @@ export class AlumnosComponent implements OnInit, OnDestroy {
             });
     }
 
-    protected openApoderadosDialog(alumno: Alumno): void {
+    protected async openApoderadosDialog(alumno: Alumno): Promise<void> {
+        const { AlumnoApoderadosDialogComponent } = await import('./dialogs/alumno-apoderados-dialog/alumno-apoderados-dialog.component');
         this.dialog.open(AlumnoApoderadosDialogComponent, {
             width: '780px',
             data: {
@@ -205,7 +220,7 @@ export class AlumnosComponent implements OnInit, OnDestroy {
     }
 
     protected createAlumno(): void {
-        this.openAlumnoDialog();
+        void this.openAlumnoDialog();
     }
 
     private loadAlumnos(): void {
