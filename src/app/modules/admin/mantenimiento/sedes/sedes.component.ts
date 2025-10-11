@@ -1,23 +1,19 @@
 import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, ViewEncapsulation } from '@angular/core';
-import {
-    FormBuilder,
-    FormGroup,
-    ReactiveFormsModule,
-    Validators,
-} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SedeService } from 'app/core/services/centro-estudios/sede.service';
-import { CreateSedePayload, Sede } from 'app/core/models/centro-estudios/sede.model';
+import { Sede } from 'app/core/models/centro-estudios/sede.model';
 import { BehaviorSubject, finalize, tap } from 'rxjs';
+import {
+    SedeDialogResult,
+    SedeFormDialogComponent,
+} from './sede-form-dialog.component';
 
 @Component({
     selector: 'app-sedes',
@@ -30,33 +26,25 @@ import { BehaviorSubject, finalize, tap } from 'rxjs';
         AsyncPipe,
         DatePipe,
         NgIf,
-        ReactiveFormsModule,
         MatButtonModule,
-        MatFormFieldModule,
         MatIconModule,
-        MatInputModule,
+        MatDialogModule,
         MatProgressBarModule,
         MatSnackBarModule,
         MatTableModule,
         MatTooltipModule,
-        MatSlideToggleModule,
     ],
 })
 export class SedesComponent implements OnInit {
     displayedColumns = ['nombre', 'ubigeoCode', 'direccion', 'activo', 'fechaRegistro', 'actions'];
     dataSource = new MatTableDataSource<Sede>([]);
-    form: FormGroup;
-    selectedSede: Sede | null = null;
     isLoading$ = new BehaviorSubject<boolean>(false);
 
-    constructor(private fb: FormBuilder, private snackBar: MatSnackBar, private sedeService: SedeService) {
-        this.form = this.fb.group({
-            nombre: ['', [Validators.required, Validators.maxLength(150)]],
-            ubigeoCode: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]],
-            direccion: ['', [Validators.maxLength(255)]],
-            activo: [true],
-        });
-    }
+    constructor(
+        private snackBar: MatSnackBar,
+        private sedeService: SedeService,
+        private dialog: MatDialog
+    ) {}
 
     ngOnInit(): void {
         this.loadSedes();
@@ -81,87 +69,28 @@ export class SedesComponent implements OnInit {
             });
     }
 
-    submit(): void {
-        if (this.form.invalid) {
-            this.form.markAllAsTouched();
-            return;
-        }
+    openSedeDialog(sede?: Sede): void {
+        const dialogRef = this.dialog.open<SedeFormDialogComponent, Sede | null, SedeDialogResult>(
+            SedeFormDialogComponent,
+            {
+                data: sede ?? null,
+            }
+        );
 
-        const payload: CreateSedePayload = {
-            nombre: this.form.value.nombre,
-            ubigeoCode: this.form.value.ubigeoCode,
-            direccion: this.form.value.direccion,
-            activo: this.form.value.activo,
-        };
+        dialogRef.afterClosed().subscribe((result) => {
+            if (!result) {
+                return;
+            }
 
-        this.isLoading$.next(true);
+            if (result.reload) {
+                this.loadSedes();
+                return;
+            }
 
-        const isEditing = !!this.selectedSede;
-        const request$ = isEditing
-            ? this.sedeService.updateSede(this.selectedSede!.id, payload)
-            : this.sedeService.createSede(payload);
-
-        let shouldReloadAfterUpdate = false;
-
-        request$
-            .pipe(
-                tap((sede) => {
-                    if (sede) {
-                        this.upsertSede(sede);
-                    } else if (isEditing) {
-                        // Algunos servicios REST retornan 204 (sin contenido) al actualizar.
-                        // Forzamos la recarga de la lista para reflejar los cambios.
-                        shouldReloadAfterUpdate = true;
-                    }
-
-                    this.resetForm();
-                    this.snackBar.open(
-                        isEditing
-                            ? 'Sede actualizada correctamente.'
-                            : 'Sede registrada correctamente.',
-                        'Cerrar',
-                        {
-                            duration: 4000,
-                        }
-                    );
-                }),
-                finalize(() => {
-                    this.isLoading$.next(false);
-
-                    if (shouldReloadAfterUpdate) {
-                        this.loadSedes();
-                    }
-                })
-            )
-            .subscribe({
-                error: (error) => {
-                    this.snackBar.open(error.message ?? 'Ocurrió un error al guardar la sede.', 'Cerrar', {
-                        duration: 5000,
-                    });
-                },
-            });
-    }
-
-    selectSede(sede: Sede): void {
-        this.selectedSede = sede;
-        this.form.patchValue({
-            nombre: sede.nombre,
-            ubigeoCode: sede.ubigeoCode,
-            direccion: sede.direccion ?? '',
-            activo: sede.activo,
+            if (result.sede) {
+                this.upsertSede(result.sede);
+            }
         });
-    }
-
-    resetForm(): void {
-        this.selectedSede = null;
-        this.form.reset({
-            nombre: '',
-            ubigeoCode: '',
-            direccion: '',
-            activo: true,
-        });
-        this.form.markAsPristine();
-        this.form.markAsUntouched();
     }
 
     private upsertSede(sede: Sede): void {
