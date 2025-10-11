@@ -12,11 +12,11 @@ export class AlumnoApoderadoService extends ApiMainService {
     private readonly resourcePath = 'api/AlumnoApoderadoes';
 
     obtenerPorAlumno(alumnoId: number): Observable<AlumnoApoderado[]> {
-        return this.get<AlumnoApoderado[]>(`${this.resourcePath}/${alumnoId}/apoderados`);
+        return this.get<AlumnoApoderado[]>(`${this.resourcePath}/${alumnoId}`);
     }
 
     crearRelacion(alumnoId: number, payload: CreateAlumnoApoderadoPayload): Observable<AlumnoApoderado> {
-        return this.post<AlumnoApoderado>(`${this.resourcePath}/${alumnoId}/apoderados`, payload);
+        return this.post<AlumnoApoderado>(`${this.resourcePath}/${alumnoId}`, payload);
     }
 
     updateRelacion(
@@ -24,10 +24,10 @@ export class AlumnoApoderadoService extends ApiMainService {
         relacionId: number,
         payload: UpdateAlumnoApoderadoPayload
     ): Observable<AlumnoApoderado> {
-        return this.patch<AlumnoApoderado>(`${this.resourcePath}/${alumnoId}/apoderados/${relacionId}`, payload);
+        return this.patch<AlumnoApoderado>(`${this.resourcePath}/${alumnoId}/${relacionId}`, payload);
     }
 
     desvincular(alumnoId: number, relacionId: number): Observable<void> {
-        return this.patch<void>(`${this.resourcePath}/${alumnoId}/apoderados/${relacionId}`, { activo: false });
+        return this.patch<void>(`${this.resourcePath}/${alumnoId}/${relacionId}`, { activo: false });
     }
 }
