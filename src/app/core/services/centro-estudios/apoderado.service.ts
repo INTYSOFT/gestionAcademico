@@ -9,7 +9,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class ApoderadoService extends ApiMainService {
-    private readonly resourcePath = 'api/apoderados';
+    private readonly resourcePath = 'api/Apoderadoes';
 
     getApoderados(): Observable<Apoderado[]> {
         return this.get<Apoderado[]>(this.resourcePath);

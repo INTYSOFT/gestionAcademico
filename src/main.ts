@@ -4,6 +4,7 @@ import localeEs from '@angular/common/locales/es';
 import { ApplicationConfig, LOCALE_ID, mergeApplicationConfig } from '@angular/core';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+
 import { AppComponent } from 'app/app.component';
 import { appConfig } from 'app/app.config';
 

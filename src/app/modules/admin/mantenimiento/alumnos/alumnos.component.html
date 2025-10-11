@@ -1,4 +1,4 @@
-<div class="alumnos-container">
+<div class="alumnos-container" style="height: 100%;width: 100%;">
     <div class="alumnos-header">
         <div>
             <h1 class="alumnos-title">Gestión de alumnos</h1>
@@ -37,5 +37,6 @@
         [rowData]="filteredAlumnos$ | async"
         [suppressMovableColumns]="true"
         [animateRows]="true"
+        style="height: 100%;width: 100%;"
     ></ag-grid-angular>
 </div>
