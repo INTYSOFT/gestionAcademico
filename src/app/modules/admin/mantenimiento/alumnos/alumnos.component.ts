@@ -1,5 +1,11 @@
 import { AsyncPipe, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    OnDestroy,
+    OnInit,
+    ViewEncapsulation,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -8,22 +14,21 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef } from 'ag-grid-community';
+import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { Alumno } from 'app/core/models/centro-estudios/alumno.model';
 import { AlumnosService } from 'app/core/services/centro-estudios/alumnos.service';
-import { BehaviorSubject, Subject, finalize, takeUntil, tap } from 'rxjs';
-import type { AlumnoFormDialogResult } from './dialogs/alumno-form-dialog/alumno-form-dialog.component';
-import { AlumnosActionsCellComponent } from './components/alumnos-actions-cell/alumnos-actions-cell.component';
+import { BehaviorSubject, Subject, debounceTime, finalize, takeUntil } from 'rxjs';
+import { AlumnosActionsCellComponent } from './actions-cell/alumnos-actions-cell.component';
+import type { AlumnoFormDialogResult } from './alumno-form-dialog/alumno-form-dialog.component';
 
 @Component({
     selector: 'app-alumnos',
     standalone: true,
     templateUrl: './alumnos.component.html',
-    styleUrl: './alumnos.component.scss',
-    encapsulation: ViewEncapsulation.None,
+    styleUrls: ['./alumnos.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    encapsulation: ViewEncapsulation.None,
     imports: [
         AsyncPipe,
         NgIf,
@@ -36,180 +41,88 @@ import { AlumnosActionsCellComponent } from './components/alumnos-actions-cell/a
         MatInputModule,
         MatProgressBarModule,
         MatSnackBarModule,
-        MatTooltipModule,
+        AlumnosActionsCellComponent,
     ],
 })
 export class AlumnosComponent implements OnInit, OnDestroy {
-    protected readonly searchControl = this.fb.control('', [Validators.maxLength(150)]);
+    protected readonly searchControl = this.fb.control('', {
+        nonNullable: true,
+        validators: [Validators.maxLength(150)],
+    });
     protected readonly isLoading$ = new BehaviorSubject<boolean>(false);
+    protected readonly alumnos$ = new BehaviorSubject<Alumno[]>([]);
     protected readonly filteredAlumnos$ = new BehaviorSubject<Alumno[]>([]);
 
     protected readonly columnDefs: ColDef<Alumno>[] = [
+        { headerName: 'DNI', field: 'dni', minWidth: 120, flex: 1 },
+        { headerName: 'Apellidos', field: 'apellidos', minWidth: 200, flex: 1 },
+        { headerName: 'Nombres', field: 'nombres', minWidth: 180, flex: 1 },
         {
-            headerName: 'DNI',
-            field: 'dni',
-            minWidth: 120,
-            flex: 1,
-        },
-        {
-            headerName: 'Apellidos',
-            valueGetter: (params) => `${params.data?.apellidoPaterno ?? ''} ${params.data?.apellidoMaterno ?? ''}`.trim(),
-            minWidth: 180,
-            flex: 1,
-        },
-        {
-            headerName: 'Nombres',
-            field: 'nombres',
+            headerName: 'Fecha nacimiento',
+            field: 'fechaNacimiento',
             minWidth: 160,
-            flex: 1,
+            valueFormatter: (params) => params.value ?? '',
         },
+        { headerName: 'Celular', field: 'celular', minWidth: 140 },
+        { headerName: 'Correo', field: 'correo', minWidth: 200, flex: 1 },
         {
-            headerName: 'Correo electrónico',
-            field: 'correoElectronico',
-            minWidth: 220,
-            flex: 1,
-        },
-        {
-            headerName: 'Estado',
+            headerName: 'Activo',
             field: 'activo',
-            minWidth: 110,
-            valueGetter: (params) => (params.data?.activo ? 'Activo' : 'Inactivo'),
+            minWidth: 120,
+            valueFormatter: (params) => (params.value ? 'Sí' : 'No'),
         },
         {
             headerName: 'Acciones',
             cellRenderer: AlumnosActionsCellComponent,
             cellRendererParams: {
-                onViewApoderados: (alumno: Alumno) => {
-                    void this.openApoderadosDialog(alumno);
-                },
-                onEdit: (alumno: Alumno) => {
-                    void this.openAlumnoDialog(alumno);
-                },
-                onDelete: (alumno: Alumno) => this.deleteAlumno(alumno),
+                onViewApoderados: (alumno: Alumno) => this.openApoderadosDialog(alumno),
+                onEdit: (alumno: Alumno) => this.openAlumnoDialog(alumno),
             },
-            minWidth: 180,
-            maxWidth: 220,
-            resizable: false,
+            width: 150,
             sortable: false,
             filter: false,
-            suppressSizeToFit: true,
+            resizable: false,
+            pinned: 'right',
         },
     ];
 
     protected readonly defaultColDef: ColDef = {
         sortable: true,
         resizable: true,
-        suppressHeaderMenuButton: true,
+        filter: true,
+        flex: 1,
     };
 
-    private alumnos: Alumno[] = [];
+    private gridApi?: GridApi<Alumno>;
     private readonly destroy$ = new Subject<void>();
 
     constructor(
         private readonly fb: FormBuilder,
-        private readonly snackBar: MatSnackBar,
         private readonly dialog: MatDialog,
+        private readonly snackBar: MatSnackBar,
         private readonly alumnosService: AlumnosService
     ) {}
 
     ngOnInit(): void {
         this.loadAlumnos();
 
-        this.searchControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
-            this.applyFilter(value ?? '');
-        });
+        this.searchControl.valueChanges
+            .pipe(debounceTime(300), takeUntil(this.destroy$))
+            .subscribe((term) => {
+                this.applyFilter(term);
+                this.gridApi?.setGridOption('quickFilterText', term);
+            });
     }
 
     ngOnDestroy(): void {
         this.destroy$.next();
         this.destroy$.complete();
+        this.gridApi?.destroy();
     }
 
-    protected async openAlumnoDialog(alumno?: Alumno): Promise<void> {
-        const { AlumnoFormDialogComponent } = await import(
-            './dialogs/alumno-form-dialog/alumno-form-dialog.component'
-        );
-
-        const dialogRef = this.dialog.open(AlumnoFormDialogComponent, {
-            width: '520px',
-            data: {
-                alumno,
-            },
-        });
-
-        dialogRef
-            .afterClosed()
-            .pipe(takeUntil(this.destroy$))
-            .subscribe((result?: AlumnoFormDialogResult) => {
-                if (!result) {
-                    return;
-                }
-
-                if (result.action === 'created') {
-                    this.upsertAlumno(result.alumno, true);
-                    this.snackBar.open('Alumno registrado correctamente.', 'Cerrar', {
-                        duration: 4000,
-                    });
-                } else if (result.action === 'updated') {
-                    this.upsertAlumno(result.alumno);
-                    this.snackBar.open('Alumno actualizado correctamente.', 'Cerrar', {
-                        duration: 4000,
-                    });
-                }
-            });
-    }
-
-    protected async openApoderadosDialog(alumno: Alumno): Promise<void> {
-        const { AlumnoApoderadosDialogComponent } = await import(
-            './dialogs/alumno-apoderados-dialog/alumno-apoderados-dialog.component'
-        );
-
-        this.dialog.open(AlumnoApoderadosDialogComponent, {
-            width: '780px',
-            data: {
-                alumno,
-            },
-        });
-    }
-
-    protected deleteAlumno(alumno: Alumno): void {
-        if (!alumno.id) {
-            return;
-        }
-
-        const confirmed = window.confirm('¿Está seguro de eliminar al alumno seleccionado?');
-        if (!confirmed) {
-            return;
-        }
-
-        this.isLoading$.next(true);
-
-        this.alumnosService
-            .updateAlumno(alumno.id, { activo: false })
-            .pipe(
-                tap(() => {
-                    this.snackBar.open('Alumno eliminado correctamente.', 'Cerrar', {
-                        duration: 4000,
-                    });
-                    this.alumnos = this.alumnos.map((item) =>
-                        item.id === alumno.id
-                            ? {
-                                  ...item,
-                                  activo: false,
-                              }
-                            : item
-                    );
-                    this.applyFilter(this.searchControl.value ?? '');
-                }),
-                finalize(() => this.isLoading$.next(false))
-            )
-            .subscribe({
-                error: (error) => {
-                    this.snackBar.open(error.message ?? 'Ocurrió un error al eliminar el alumno.', 'Cerrar', {
-                        duration: 5000,
-                    });
-                },
-            });
+    protected onGridReady(event: GridReadyEvent<Alumno>): void {
+        this.gridApi = event.api;
+        event.api.sizeColumnsToFit();
     }
 
     protected createAlumno(): void {
@@ -220,37 +133,34 @@ export class AlumnosComponent implements OnInit, OnDestroy {
         this.isLoading$.next(true);
 
         this.alumnosService
-            .getAlumnos()
+            .list()
             .pipe(
-                tap((alumnos) => {
-                    this.alumnos = alumnos;
-                    this.applyFilter(this.searchControl.value ?? '');
-                }),
-                finalize(() => this.isLoading$.next(false))
+                finalize(() => this.isLoading$.next(false)),
+                takeUntil(this.destroy$)
             )
             .subscribe({
-                error: (error) => {
-                    this.snackBar.open(error.message ?? 'Ocurrió un error al cargar los alumnos.', 'Cerrar', {
-                        duration: 5000,
-                    });
+                next: (alumnos) => {
+                    this.alumnos$.next(alumnos);
+                    this.applyFilter(this.searchControl.value);
                 },
             });
     }
 
     private applyFilter(term: string): void {
         const normalized = term.trim().toLowerCase();
+        const alumnos = this.alumnos$.value;
+
         if (!normalized) {
-            this.filteredAlumnos$.next([...this.alumnos]);
+            this.filteredAlumnos$.next([...alumnos]);
             return;
         }
 
-        const filtered = this.alumnos.filter((alumno) => {
+        const filtered = alumnos.filter((alumno) => {
             const searchable = [
                 alumno.dni,
+                alumno.apellidos,
                 alumno.nombres,
-                alumno.apellidoPaterno,
-                alumno.apellidoMaterno,
-                alumno.correoElectronico,
+                alumno.correo,
             ]
                 .filter((value): value is string => !!value)
                 .map((value) => value.toLowerCase())
@@ -262,19 +172,64 @@ export class AlumnosComponent implements OnInit, OnDestroy {
         this.filteredAlumnos$.next(filtered);
     }
 
-    private upsertAlumno(alumno: Alumno, prepend = false): void {
-        const data = [...this.alumnos];
-        const index = data.findIndex((item) => item.id === alumno.id);
+    private openAlumnoDialog(alumno?: Alumno): void {
+        import('./alumno-form-dialog/alumno-form-dialog.component').then(
+            ({ AlumnoFormDialogComponent }) => {
+                const dialogRef = this.dialog.open(AlumnoFormDialogComponent, {
+                    width: '520px',
+                    disableClose: true,
+                    data: { alumno },
+                });
+
+                dialogRef
+                    .afterClosed()
+                    .pipe(takeUntil(this.destroy$))
+                    .subscribe((result?: AlumnoFormDialogResult) => {
+                        if (!result) {
+                            return;
+                        }
+
+                        const message =
+                            result.action === 'created'
+                                ? 'Alumno registrado correctamente.'
+                                : 'Alumno actualizado correctamente.';
+
+                        this.upsertAlumno(result.alumno);
+                        this.snackBar.open(message, 'Cerrar', {
+                            duration: 4000,
+                        });
+                    });
+            }
+        );
+    }
+
+    private openApoderadosDialog(alumno: Alumno): void {
+        import('./apoderados/alumno-apoderados-dialog.component').then(
+            ({ AlumnoApoderadosDialogComponent }) => {
+                this.dialog.open(AlumnoApoderadosDialogComponent, {
+                    width: '860px',
+                    data: { alumno },
+                });
+            }
+        );
+    }
+
+    private upsertAlumno(alumno: Alumno): void {
+        const current = [...this.alumnos$.value];
+        const index = current.findIndex((item) => item.id === alumno.id);
 
         if (index > -1) {
-            data[index] = alumno;
-        } else if (prepend) {
-            data.unshift(alumno);
+            current[index] = alumno;
         } else {
-            data.push(alumno);
+            current.unshift(alumno);
         }
 
-        this.alumnos = data;
-        this.applyFilter(this.searchControl.value ?? '');
+        this.alumnos$.next(current);
+        this.applyFilter(this.searchControl.value);
     }
 }
+
+// Pruebas manuales:
+// 1. Crear un alumno nuevo y verificar que aparezca en el grid con los datos registrados.
+// 2. Editar un alumno existente y validar que los cambios se reflejen al cerrar el diálogo.
+// 3. Abrir la gestión de apoderados, vincular un apoderado y confirmar que la tabla se actualiza correctamente.

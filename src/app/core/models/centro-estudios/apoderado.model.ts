@@ -1,15 +1,24 @@
 export interface Apoderado {
-    id?: number;
-    dni: string;
-    apellidoPaterno: string;
-    apellidoMaterno: string;
-    nombres: string;
+    id: number;
+    apellidos?: string | null;
+    nombres?: string | null;
     celular?: string | null;
-    correoElectronico?: string | null;
-    direccion?: string | null;
-    nombresCompletos?: string;
+    correo?: string | null;
+    documento?: string | null;
+    activo: boolean;
+    fechaRegistro?: string | null;
+    fechaActualizacion?: string | null;
+    usuaraioRegistroId?: number | null;
+    usuaraioActualizacionId?: number | null;
 }
 
-export type CreateApoderadoPayload = Omit<Apoderado, 'id' | 'nombresCompletos'>;
+export interface CreateApoderadoPayload {
+    apellidos: string;
+    nombres: string;
+    celular?: string | null;
+    correo?: string | null;
+    documento: string;
+    activo: boolean;
+}
 
 export type UpdateApoderadoPayload = Partial<CreateApoderadoPayload>;

@@ -1,0 +1,29 @@
+.apoderados {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 720px;
+
+    &__toolbar {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    &__table {
+        width: 100%;
+    }
+
+    &__actions-header {
+        text-align: center;
+    }
+
+    &__empty {
+        text-align: center;
+        color: var(--mat-sys-color-outline);
+        margin: 2rem 0;
+    }
+
+    mat-form-field {
+        width: 100%;
+    }
+}

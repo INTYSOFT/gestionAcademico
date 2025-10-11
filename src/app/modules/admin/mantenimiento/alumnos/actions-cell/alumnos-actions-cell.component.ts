@@ -1,28 +1,26 @@
 import { ChangeDetectionStrategy, Component, ViewEncapsulation } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatIconModule } from '@angular/material/icon';
 import { ICellRendererAngularComp } from 'ag-grid-angular';
 import { ICellRendererParams } from 'ag-grid-community';
 import { Alumno } from 'app/core/models/centro-estudios/alumno.model';
 
-export interface AlumnosActionsCellParams extends ICellRendererParams {
-    onViewApoderados: (alumno: Alumno) => void;
-    onEdit: (alumno: Alumno) => void;
-    onDelete: (alumno: Alumno) => void;
+interface AlumnosActionsCellParams extends ICellRendererParams<Alumno> {
+    onViewApoderados?: (alumno: Alumno) => void;
+    onEdit?: (alumno: Alumno) => void;
 }
 
 @Component({
     selector: 'app-alumnos-actions-cell',
     standalone: true,
     templateUrl: './alumnos-actions-cell.component.html',
-    styleUrl: './alumnos-actions-cell.component.scss',
-    encapsulation: ViewEncapsulation.None,
+    styleUrls: ['./alumnos-actions-cell.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [MatButtonModule, MatIconModule, MatTooltipModule],
+    encapsulation: ViewEncapsulation.None,
+    imports: [MatButtonModule, MatIconModule],
 })
 export class AlumnosActionsCellComponent implements ICellRendererAngularComp {
-    private params!: AlumnosActionsCellParams;
+    private params?: AlumnosActionsCellParams;
 
     agInit(params: AlumnosActionsCellParams): void {
         this.params = params;
@@ -33,15 +31,19 @@ export class AlumnosActionsCellComponent implements ICellRendererAngularComp {
         return true;
     }
 
-    protected viewApoderados(): void {
-        this.params.onViewApoderados(this.params.data as Alumno);
+    protected handleViewApoderados(): void {
+        if (!this.params?.data) {
+            return;
+        }
+
+        this.params.onViewApoderados?.(this.params.data);
     }
 
-    protected editAlumno(): void {
-        this.params.onEdit(this.params.data as Alumno);
-    }
+    protected handleEdit(): void {
+        if (!this.params?.data) {
+            return;
+        }
 
-    protected deleteAlumno(): void {
-        this.params.onDelete(this.params.data as Alumno);
+        this.params.onEdit?.(this.params.data);
     }
 }
