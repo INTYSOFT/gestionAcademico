@@ -111,7 +111,18 @@ export class AlumnoFormDialogComponent implements OnInit {
                 .updateAlumno(this.alumno.id, payload)
                 .pipe(finalize(() => (this.isSaving = false)))
                 .subscribe({
-                    next: (alumno) => this.dialogRef.close({ action: 'updated', alumno }),
+                    next: () => {
+                        const updatedAlumno: Alumno = {
+                            ...this.alumno!,
+                            ...payload,
+                            fechaNacimiento: payload.fechaNacimiento ?? this.alumno!.fechaNacimiento,
+                            celular: payload.celular ?? null,
+                            correoElectronico: payload.correoElectronico ?? null,
+                            direccion: payload.direccion ?? null,
+                        };
+
+                        this.dialogRef.close({ action: 'updated', alumno: updatedAlumno });
+                    },
                     error: (error) =>
                         this.snackBar.open(error.message ?? 'Ocurrió un error al actualizar el alumno.', 'Cerrar', {
                             duration: 5000,

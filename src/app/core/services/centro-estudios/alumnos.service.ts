@@ -15,7 +15,7 @@ export class AlumnosService extends ApiMainService {
         return this.post<Alumno>(this.resourcePath, payload);
     }
 
-    updateAlumno(id: number, payload: UpdateAlumnoPayload): Observable<Alumno> {
-        return this.patch<Alumno>(`${this.resourcePath}/${id}`, payload);
+    updateAlumno(id: number, payload: UpdateAlumnoPayload): Observable<void> {
+        return this.patch<void>(`${this.resourcePath}/${id}`, payload);
     }
 }
