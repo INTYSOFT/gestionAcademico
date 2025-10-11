@@ -54,21 +54,25 @@ export class AlumnosComponent implements OnInit, OnDestroy {
     readonly theme = themeQuartz
         .withPart(iconSetQuartzLight)
         .withParams({
-            backgroundColor: '#ffffff',
+            accentColor: '#2563EB',
+            backgroundColor: '#F8FAFF',
+            borderColor: '#BFDBFE',
             browserColorScheme: 'light',
             columnBorder: false,
-            fontFamily: 'Arial',
-            foregroundColor: 'rgb(46, 55, 66)',
-            headerBackgroundColor: '#053A6E',
+            fontFamily: 'Inter, "Segoe UI", sans-serif',
+            foregroundColor: '#0F172A',
+            headerBackgroundColor: '#1D4ED8',
             headerFontSize: 14,
             headerFontWeight: 600,
             headerTextColor: '#FFFFFF',
-            oddRowBackgroundColor: '#F9FAFB',
+            oddRowBackgroundColor: '#EFF6FF',
             rowBorder: false,
+            rowHoverColor: '#DBEAFE',
+            selectedRowBackgroundColor: '#BFDBFE',
             sidePanelBorder: false,
             spacing: 8,
-            wrapperBorder: false,
-            wrapperBorderRadius: 0,
+            wrapperBorder: '1px solid #BFDBFE',
+            wrapperBorderRadius: 12,
         });
 
     rowData: Alumno[] = [];
