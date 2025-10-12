@@ -118,9 +118,7 @@ export class AlumnoFormDialogComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.colegios$ = this.colegiosService
             .list()
-            .pipe(map((colegios) => colegios.filter((colegio) => colegio.activo)));
-
-            console.log(this.data.alumno);
+            .pipe(map((colegios) => colegios.filter((colegio) => colegio.activo)));            
 
         if (this.data.alumno) {
             this.patchForm(this.data.alumno);

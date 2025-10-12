@@ -6,8 +6,7 @@ export interface Alumno {
     fechaNacimiento?: string | null;
     celular?: string | null;
     correo?: string | null;
-    ubigeoCode?: string | null;
-    colegioOrigen?: string | null;
+    ubigeoCode?: string | null;    
     direccion?: string | null;
     observacion?: string | null;
     fotoUrl?: string | null;
