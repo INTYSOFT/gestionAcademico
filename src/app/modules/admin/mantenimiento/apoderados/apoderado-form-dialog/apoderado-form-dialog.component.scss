@@ -1,0 +1,23 @@
+:host {
+    display: block;
+}
+
+.apoderado-form {
+    display: grid;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    min-width: min(520px, 82vw);
+}
+
+mat-form-field {
+    width: 100%;
+}
+
+mat-slide-toggle {
+    margin-top: 0.5rem;
+}
+
+mat-progress-spinner {
+    width: 18px !important;
+    height: 18px !important;
+}
