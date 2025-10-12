@@ -1,0 +1,17 @@
+.apoderado-form__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem 1.5rem;
+}
+
+.apoderado-form mat-dialog-content {
+    margin-top: 0.5rem;
+}
+
+.apoderado-form__grid mat-slide-toggle {
+    grid-column: 1 / -1;
+}
+
+.apoderado-form mat-dialog-actions {
+    padding: 1rem 1.5rem;
+}
