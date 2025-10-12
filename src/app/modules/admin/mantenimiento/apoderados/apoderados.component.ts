@@ -1,6 +1,7 @@
 import { AsyncPipe, NgIf } from '@angular/common';
 import {
     ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
     OnDestroy,
     OnInit,
@@ -92,7 +93,8 @@ export class ApoderadosComponent implements OnInit, OnDestroy {
         private readonly fb: FormBuilder,
         private readonly dialog: MatDialog,
         private readonly snackBar: MatSnackBar,
-        private readonly apoderadosService: ApoderadosService
+        private readonly apoderadosService: ApoderadosService,
+        private readonly cdr: ChangeDetectorRef
     ) {}
 
     ngOnInit(): void {
@@ -133,6 +135,7 @@ export class ApoderadosComponent implements OnInit, OnDestroy {
             .subscribe((apoderados) => {
                 this.apoderados$.next(apoderados);
                 this.applyFilter(this.searchControl.value);
+                this.cdr.markForCheck();
             });
     }
 
@@ -142,6 +145,7 @@ export class ApoderadosComponent implements OnInit, OnDestroy {
 
         if (!normalized) {
             this.filteredApoderados$.next([...apoderados]);
+            this.cdr.markForCheck();
             return;
         }
 
@@ -159,6 +163,7 @@ export class ApoderadosComponent implements OnInit, OnDestroy {
         });
 
         this.filteredApoderados$.next(filtered);
+        this.cdr.markForCheck();
     }
 
     private openApoderadoDialog(apoderado?: Apoderado): void {
@@ -204,5 +209,6 @@ export class ApoderadosComponent implements OnInit, OnDestroy {
 
         this.apoderados$.next(current);
         this.applyFilter(this.searchControl.value);
+        this.cdr.markForCheck();
     }
 }
