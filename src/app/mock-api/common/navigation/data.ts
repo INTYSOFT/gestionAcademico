@@ -120,6 +120,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 link : '/mantenimiento/colegios'
             },
             {
+                id   : 'mantenimiento.apoderados',
+                title: 'Apoderados',
+                type : 'basic',
+                icon : 'heroicons_outline:user-group',
+                link : '/mantenimiento/apoderados'
+            },
+            {
                 id   : 'mantenimiento.alumnos',
                 title: 'Alumnos',
                 type : 'basic',
