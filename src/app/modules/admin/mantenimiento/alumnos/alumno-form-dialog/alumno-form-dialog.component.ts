@@ -119,6 +119,8 @@ export class AlumnoFormDialogComponent implements OnInit, OnDestroy {
             .list()
             .pipe(map((colegios) => colegios.filter((colegio) => colegio.activo)));
 
+            console.log(this.data.alumno);
+
         if (this.data.alumno) {
             this.patchForm(this.data.alumno);
         }
