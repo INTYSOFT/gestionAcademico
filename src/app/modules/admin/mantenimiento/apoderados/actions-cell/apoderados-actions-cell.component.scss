@@ -1,0 +1,9 @@
+:host {
+    display: flex;
+    justify-content: center;
+}
+
+button[mat-icon-button] {
+    width: 36px;
+    height: 36px;
+}
