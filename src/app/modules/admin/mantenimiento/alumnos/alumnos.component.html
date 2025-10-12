@@ -31,8 +31,7 @@
                 [rowData]="filteredAlumnos$ | async"
                 [columnDefs]="columnDefs"
                 [defaultColDef]="defaultColDef"
-                [animateRows]="true"
-                [rowHeight]="56"
+                [animateRows]="true"                
                 [domLayout]="'autoHeight'"
                 (gridReady)="onGridReady($event)"></ag-grid-angular>
         </section>
