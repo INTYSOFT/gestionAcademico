@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe, NgFor, NgIf } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -53,6 +53,7 @@ export type AlumnoFormDialogResult =
     imports: [
         AsyncPipe,
         NgIf,
+        NgFor,
         ReactiveFormsModule,
         MatDialogModule,
         MatFormFieldModule,
