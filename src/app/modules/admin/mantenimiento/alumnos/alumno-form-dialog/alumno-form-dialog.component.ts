@@ -25,7 +25,15 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { BehaviorSubject, Observable, Subject, finalize, map, takeUntil } from 'rxjs';
+import {
+    BehaviorSubject,
+    Observable,
+    Subject,
+    finalize,
+    map,
+    switchMap,
+    takeUntil,
+} from 'rxjs';
 import {
     Alumno,
     CreateAlumnoPayload,
@@ -141,7 +149,9 @@ export class AlumnoFormDialogComponent implements OnInit, OnDestroy {
         this.isSaving$.next(true);
 
         const request$ = alumno
-            ? this.alumnosService.updatePartial(alumno.id, payload as UpdateAlumnoPayload)
+            ? this.alumnosService
+                  .updatePartial(alumno.id, payload as UpdateAlumnoPayload)
+                  .pipe(switchMap(() => this.alumnosService.get(alumno.id)))
             : this.alumnosService.create(payload as CreateAlumnoPayload);
 
         request$
