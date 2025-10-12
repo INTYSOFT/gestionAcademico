@@ -20,10 +20,21 @@ export class UniversidadService extends ApiMainService {
     }
 
     updateUniversidad(id: number, payload: UpdateUniversidadPayload): Observable<Universidad> {
-        const body: UpdateUniversidadPayload = {
-            ...payload,
-            id,
+        const body: Record<string, unknown> = {
+            Id: id,
         };
+
+        if ('nombre' in payload) {
+            body['Nombre'] = payload.nombre;
+        }
+
+        if ('ciudad' in payload) {
+            body['Ciudad'] = payload.ciudad ?? null;
+        }
+
+        if ('activo' in payload) {
+            body['Activo'] = payload.activo;
+        }
 
         return this.patch<Universidad>(`${this.resourcePath}/${id}`, body);
     }
