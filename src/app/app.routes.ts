@@ -84,6 +84,11 @@ export const appRoutes: Route[] = [
                 path: 'mantenimiento',
                 children: [
                     {
+                        path: 'universidades',
+                        loadChildren: () =>
+                            import('app/modules/admin/mantenimiento/universidades/universidades.routes'),
+                    },
+                    {
                         path: 'sedes',
                         loadChildren: () =>
                             import('app/modules/admin/mantenimiento/sedes/sedes.routes'),
