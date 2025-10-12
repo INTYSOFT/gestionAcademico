@@ -23,6 +23,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 link : '/mantenimiento/sedes'
             },
             {
+                id   : 'mantenimiento.universidades',
+                title: 'Universidades',
+                type : 'basic',
+                icon : 'heroicons_outline:building-office-2',
+                link : '/mantenimiento/universidades'
+            },
+            {
                 id   : 'mantenimiento.colegios',
                 title: 'Colegios',
                 type : 'basic',
@@ -89,6 +96,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:building-office',
                 link : '/mantenimiento/sedes'
+            },
+            {
+                id   : 'mantenimiento.universidades',
+                title: 'Universidades',
+                type : 'basic',
+                icon : 'heroicons_outline:building-office-2',
+                link : '/mantenimiento/universidades'
             },
             {
                 id   : 'mantenimiento.colegios',
