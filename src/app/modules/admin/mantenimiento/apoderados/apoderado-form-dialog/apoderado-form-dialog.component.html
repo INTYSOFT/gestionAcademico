@@ -1,0 +1,88 @@
+<h2 mat-dialog-title>{{ title }}</h2>
+
+<mat-dialog-content>
+    <form class="apoderado-form" [formGroup]="form" autocomplete="off">
+        <mat-form-field appearance="outline">
+            <mat-label>Apellidos</mat-label>
+            <input matInput formControlName="apellidos" maxlength="150" />
+            <mat-error *ngIf="getControl('apellidos').hasError('required')">
+                Los apellidos son obligatorios.
+            </mat-error>
+            <mat-error *ngIf="getControl('apellidos').hasError('maxlength')">
+                Máximo 150 caracteres.
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Nombres</mat-label>
+            <input matInput formControlName="nombres" maxlength="150" />
+            <mat-error *ngIf="getControl('nombres').hasError('required')">
+                Los nombres son obligatorios.
+            </mat-error>
+            <mat-error *ngIf="getControl('nombres').hasError('maxlength')">
+                Máximo 150 caracteres.
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>DNI</mat-label>
+            <input
+                matInput
+                formControlName="documento"
+                maxlength="15"
+                inputmode="numeric"
+            />
+            <mat-error *ngIf="getControl('documento').hasError('required')">
+                El documento es obligatorio.
+            </mat-error>
+            <mat-error *ngIf="getControl('documento').hasError('minlength')">
+                Debe tener al menos 8 dígitos.
+            </mat-error>
+            <mat-error *ngIf="getControl('documento').hasError('maxlength')">
+                Máximo 15 dígitos.
+            </mat-error>
+            <mat-error *ngIf="getControl('documento').hasError('pattern')">
+                Solo se permiten números.
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Celular</mat-label>
+            <input matInput formControlName="celular" maxlength="15" inputmode="numeric" />
+            <mat-hint>Entre 9 y 15 dígitos.</mat-hint>
+            <mat-error *ngIf="getControl('celular').hasError('pattern')">
+                Ingrese un número de celular válido.
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Correo</mat-label>
+            <input matInput formControlName="correo" maxlength="150" />
+            <mat-error *ngIf="getControl('correo').hasError('email')">
+                Ingrese un correo electrónico válido.
+            </mat-error>
+            <mat-error *ngIf="getControl('correo').hasError('maxlength')">
+                Máximo 150 caracteres.
+            </mat-error>
+        </mat-form-field>
+
+        <mat-slide-toggle formControlName="activo">Activo</mat-slide-toggle>
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cancel()" [disabled]="isSaving$ | async">
+        Cancelar
+    </button>
+    <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="save()"
+        [disabled]="(isSaving$ | async) || form.invalid">
+        <ng-container *ngIf="isSaving$ | async; else saveLabel">
+            <mat-progress-spinner diameter="18" mode="indeterminate"></mat-progress-spinner>
+        </ng-container>
+        <ng-template #saveLabel>Guardar</ng-template>
+    </button>
+</mat-dialog-actions>
