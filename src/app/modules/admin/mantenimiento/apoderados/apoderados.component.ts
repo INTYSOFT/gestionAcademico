@@ -167,7 +167,10 @@ export class ApoderadosComponent implements OnInit, OnDestroy {
             )
             .subscribe({
                 next: (apoderados) => {
-                    this.apoderados$.next(apoderados);
+                    const normalized = apoderados.map((item) =>
+                        this.normalizeApoderado(item)
+                    );
+                    this.apoderados$.next(normalized);
                     Promise.resolve().then(() => this.gridApi?.sizeColumnsToFit());
                 },
                 error: (error: Error) => {
@@ -238,15 +241,119 @@ export class ApoderadosComponent implements OnInit, OnDestroy {
     }
 
     private upsertApoderado(apoderado: Apoderado): void {
+        const normalized = this.normalizeApoderado(apoderado);
         const current = [...this.apoderados$.value];
-        const index = current.findIndex((item) => item.id === apoderado.id);
+        const index = current.findIndex((item) => item.id === normalized.id);
 
         if (index > -1) {
-            current[index] = apoderado;
+            current[index] = normalized;
         } else {
-            current.unshift(apoderado);
+            current.unshift(normalized);
         }
 
         this.apoderados$.next(current);
+    }
+
+    private normalizeApoderado(
+        apoderado: Partial<Apoderado> & Record<string, unknown>
+    ): Apoderado {
+        const idSource = apoderado.id ?? apoderado['Id'];
+        const rawActivo = apoderado.activo ?? apoderado['Activo'];
+
+        const documentoValue = apoderado.documento ?? apoderado['Documento'];
+        const apellidosValue = apoderado.apellidos ?? apoderado['Apellidos'];
+        const nombresValue = apoderado.nombres ?? apoderado['Nombres'];
+        const celularValue = apoderado.celular ?? apoderado['Celular'];
+        const correoValue = apoderado.correo ?? apoderado['Correo'];
+        const fechaRegistroValue =
+            apoderado.fechaRegistro ?? apoderado['FechaRegistro'];
+        const fechaActualizacionValue =
+            apoderado.fechaActualizacion ?? apoderado['FechaActualizacion'];
+        const usuarioRegistroValue =
+            apoderado.usuaraioRegistroId ?? apoderado['UsuaraioRegistroId'];
+        const usuarioActualizacionValue =
+            apoderado.usuaraioActualizacionId ??
+            apoderado['UsuaraioActualizacionId'];
+
+        let activo = false;
+        if (typeof rawActivo === 'string') {
+            const normalizedActivo = rawActivo.trim().toLowerCase();
+            if (['true', '1', 'sí', 'si', 'yes'].includes(normalizedActivo)) {
+                activo = true;
+            } else if (
+                ['false', '0', 'no', 'n'].includes(normalizedActivo)
+            ) {
+                activo = false;
+            } else {
+                activo = Boolean(normalizedActivo);
+            }
+        } else {
+            activo = Boolean(rawActivo);
+        }
+
+        let id: number;
+        if (typeof idSource === 'number') {
+            id = idSource;
+        } else if (idSource !== undefined && idSource !== null) {
+            id = Number(idSource);
+        } else {
+            id = 0;
+        }
+
+        let usuarioRegistroId: number | null = null;
+        if (typeof usuarioRegistroValue === 'number') {
+            usuarioRegistroId = usuarioRegistroValue;
+        } else if (
+            usuarioRegistroValue !== undefined &&
+            usuarioRegistroValue !== null
+        ) {
+            usuarioRegistroId = Number(usuarioRegistroValue);
+        }
+
+        let usuarioActualizacionId: number | null = null;
+        if (typeof usuarioActualizacionValue === 'number') {
+            usuarioActualizacionId = usuarioActualizacionValue;
+        } else if (
+            usuarioActualizacionValue !== undefined &&
+            usuarioActualizacionValue !== null
+        ) {
+            usuarioActualizacionId = Number(usuarioActualizacionValue);
+        }
+
+        return {
+            id,
+            documento:
+                documentoValue !== undefined && documentoValue !== null
+                    ? String(documentoValue)
+                    : null,
+            apellidos:
+                apellidosValue !== undefined && apellidosValue !== null
+                    ? String(apellidosValue)
+                    : null,
+            nombres:
+                nombresValue !== undefined && nombresValue !== null
+                    ? String(nombresValue)
+                    : null,
+            celular:
+                celularValue !== undefined && celularValue !== null
+                    ? String(celularValue)
+                    : null,
+            correo:
+                correoValue !== undefined && correoValue !== null
+                    ? String(correoValue)
+                    : null,
+            activo,
+            fechaRegistro:
+                fechaRegistroValue !== undefined && fechaRegistroValue !== null
+                    ? String(fechaRegistroValue)
+                    : null,
+            fechaActualizacion:
+                fechaActualizacionValue !== undefined &&
+                fechaActualizacionValue !== null
+                    ? String(fechaActualizacionValue)
+                    : null,
+            usuaraioRegistroId: usuarioRegistroId,
+            usuaraioActualizacionId: usuarioActualizacionId,
+        };
     }
 }
