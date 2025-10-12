@@ -18,7 +18,16 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { Apoderado } from 'app/core/models/centro-estudios/apoderado.model';
 import { ApoderadosService } from 'app/core/services/centro-estudios/apoderados.service';
-import { BehaviorSubject, Subject, debounceTime, finalize, takeUntil } from 'rxjs';
+import {
+    BehaviorSubject,
+    Subject,
+    combineLatest,
+    debounceTime,
+    finalize,
+    map,
+    startWith,
+    takeUntil,
+} from 'rxjs';
 import { ApoderadosActionsCellComponent } from './actions-cell/apoderados-actions-cell.component';
 import type { ApoderadoFormDialogResult } from './apoderado-form-dialog/apoderado-form-dialog.component';
 
@@ -93,6 +102,7 @@ export class ApoderadosComponent implements OnInit, OnDestroy {
     };
 
     private gridApi?: GridApi<Apoderado>;
+    private quickFilterText = '';
     private readonly destroy$ = new Subject<void>();
 
     constructor(
@@ -105,21 +115,27 @@ export class ApoderadosComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.loadApoderados();
 
-        this.filtersForm.valueChanges
-            .pipe(debounceTime(300), takeUntil(this.destroy$))
-            .subscribe(() => {
-                this.applyFilter();
-                const quickFilter = [
-                    this.filtersForm.controls.documento.value,
-                    this.filtersForm.controls.nombres.value,
-                ]
-                    .map((value) => value.trim())
+        const filtersChanges$ = this.filtersForm.valueChanges.pipe(
+            debounceTime(300),
+            startWith(this.filtersForm.getRawValue()),
+            map(({ documento, nombres }) => ({
+                documento: documento.trim().toLowerCase(),
+                nombres: nombres.trim().toLowerCase(),
+            })),
+            takeUntil(this.destroy$)
+        );
+
+        combineLatest([this.apoderados$, filtersChanges$])
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(([apoderados, filters]) => {
+                this.quickFilterText = [filters.documento, filters.nombres]
                     .filter((value) => value.length > 0)
                     .join(' ');
-                this.gridApi?.setGridOption('quickFilterText', quickFilter);
-            });
+                this.gridApi?.setGridOption('quickFilterText', this.quickFilterText);
 
-        this.applyFilter();
+                const filtered = this.filterApoderados(apoderados, filters);
+                this.filteredApoderados$.next(filtered);
+            });
     }
 
     ngOnDestroy(): void {
@@ -131,6 +147,9 @@ export class ApoderadosComponent implements OnInit, OnDestroy {
     protected onGridReady(event: GridReadyEvent<Apoderado>): void {
         this.gridApi = event.api;
         event.api.sizeColumnsToFit();
+        if (this.quickFilterText.length > 0) {
+            event.api.setGridOption('quickFilterText', this.quickFilterText);
+        }
     }
 
     protected createApoderado(): void {
@@ -149,7 +168,7 @@ export class ApoderadosComponent implements OnInit, OnDestroy {
             .subscribe({
                 next: (apoderados) => {
                     this.apoderados$.next(apoderados);
-                    this.applyFilter();
+                    Promise.resolve().then(() => this.gridApi?.sizeColumnsToFit());
                 },
                 error: (error: Error) => {
                     this.snackBar.open(
@@ -161,33 +180,30 @@ export class ApoderadosComponent implements OnInit, OnDestroy {
             });
     }
 
-    private applyFilter(): void {
-        const { documento, nombres } = this.filtersForm.getRawValue();
-        const normalizedDocumento = documento.trim().toLowerCase();
-        const normalizedNombres = nombres.trim().toLowerCase();
-        const apoderados = this.apoderados$.value;
+    private filterApoderados(
+        apoderados: Apoderado[],
+        filters: { documento: string; nombres: string }
+    ): Apoderado[] {
+        const { documento, nombres } = filters;
 
-        if (!normalizedDocumento && !normalizedNombres) {
-            this.filteredApoderados$.next([...apoderados]);
-            return;
+        if (!documento && !nombres) {
+            return [...apoderados];
         }
 
-        const filtered = apoderados.filter((apoderado) => {
-            const matchesDocumento = normalizedDocumento
-                ? (apoderado.documento ?? '').toLowerCase().includes(normalizedDocumento)
+        return apoderados.filter((apoderado) => {
+            const matchesDocumento = documento
+                ? (apoderado.documento ?? '').toLowerCase().includes(documento)
                 : true;
-            const matchesNombres = normalizedNombres
+            const matchesNombres = nombres
                 ? [apoderado.apellidos, apoderado.nombres]
                       .filter((value): value is string => !!value)
                       .join(' ')
                       .toLowerCase()
-                      .includes(normalizedNombres)
+                      .includes(nombres)
                 : true;
 
             return matchesDocumento && matchesNombres;
         });
-
-        this.filteredApoderados$.next(filtered);
     }
 
     private openApoderadoDialog(apoderado?: Apoderado): void {
@@ -232,6 +248,5 @@ export class ApoderadosComponent implements OnInit, OnDestroy {
         }
 
         this.apoderados$.next(current);
-        this.applyFilter();
     }
 }

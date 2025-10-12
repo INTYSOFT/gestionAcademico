@@ -24,7 +24,12 @@
 }
 
 .apoderados__grid {
+    display: block;
     width: 100%;
+    min-height: 320px;
+}
+
+.apoderados__grid .ag-root-wrapper {
     border-radius: 12px;
     overflow: hidden;
 }

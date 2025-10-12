@@ -164,8 +164,21 @@ export class ApoderadoFormDialogComponent implements OnInit, OnDestroy {
             )
             .subscribe({
                 next: (result) => {
+                    const updatedApoderado = apoderado
+                        ? { ...apoderado, ...payload, ...(result ?? {}) }
+                        : result ?? null;
+
+                    if (!updatedApoderado) {
+                        this.snackBar.open(
+                            'No se pudo obtener la información del apoderado.',
+                            'Cerrar',
+                            { duration: 5000 }
+                        );
+                        return;
+                    }
+
                     this.dialogRef.close({
-                        apoderado: result,
+                        apoderado: updatedApoderado,
                         action,
                     });
                 },
