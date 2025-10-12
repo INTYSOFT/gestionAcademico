@@ -19,8 +19,18 @@ import { Alumno } from 'app/core/models/centro-estudios/alumno.model';
 import { AlumnoApoderado } from 'app/core/models/centro-estudios/alumno-apoderado.model';
 import { Parentesco } from 'app/core/models/centro-estudios/parentesco.model';
 import { AlumnoApoderadoService } from 'app/core/services/centro-estudios/alumno-apoderado.service';
+import { ApoderadosService } from 'app/core/services/centro-estudios/apoderados.service';
 import { ParentescosService } from 'app/core/services/centro-estudios/parentescos.service';
-import { BehaviorSubject, Subject, finalize, takeUntil } from 'rxjs';
+import {
+    BehaviorSubject,
+    Subject,
+    finalize,
+    forkJoin,
+    map,
+    of,
+    switchMap,
+    takeUntil,
+} from 'rxjs';
 import { ApoderadoFormDialogComponent, ApoderadoFormDialogResult } from './apoderado-form-dialog.component';
 
 export interface AlumnoApoderadosDialogData {
@@ -71,7 +81,8 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
         private readonly dialog: MatDialog,
         private readonly snackBar: MatSnackBar,
         private readonly alumnoApoderadoService: AlumnoApoderadoService,
-        private readonly parentescosService: ParentescosService
+        private readonly parentescosService: ParentescosService,
+        private readonly apoderadosService: ApoderadosService
     ) {}
 
     ngOnInit(): void {
@@ -185,6 +196,22 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
         this.alumnoApoderadoService
             .listByAlumno(this.data.alumno.id)
             .pipe(
+                switchMap((relaciones) => {
+                    if (!relaciones.length) {
+                        return of(relaciones);
+                    }
+
+                    const requests = relaciones.map((relacion) =>
+                        this.apoderadosService.get(relacion.apoderadoId).pipe(
+                            map((apoderado) => ({
+                                ...relacion,
+                                apoderado,
+                            }))
+                        )
+                    );
+
+                    return forkJoin(requests);
+                }),
                 finalize(() => this.isLoading$.next(false)),
                 takeUntil(this.destroy$)
             )
