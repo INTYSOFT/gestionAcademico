@@ -9,7 +9,7 @@ import { ApiMainService } from '../api/api-main.service';
 
 @Injectable({ providedIn: 'root' })
 export class ColegiosService extends ApiMainService {
-    private readonly resourcePath = 'api/centro-estudios/colegios';
+    private readonly resourcePath = 'api/Colegios';
 
     list(): Observable<Colegio[]> {
         return this.getColegios();
