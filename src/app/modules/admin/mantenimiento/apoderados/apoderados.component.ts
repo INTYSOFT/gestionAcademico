@@ -99,6 +99,7 @@ export class ApoderadosComponent implements OnInit, OnDestroy {
         resizable: true,
         filter: true,
         flex: 1,
+        
     };
 
     private gridApi?: GridApi<Apoderado>;
