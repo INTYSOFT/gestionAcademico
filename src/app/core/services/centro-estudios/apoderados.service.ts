@@ -27,6 +27,7 @@ export class ApoderadosService {
             );
     }
 
+    // Search for apoderados by term in documento, apellidos, or nombres
     search(term: string): Observable<Apoderado[]> {
         const normalized = term.trim().toLowerCase();
         return this.list().pipe(
