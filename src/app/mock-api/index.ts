@@ -16,10 +16,7 @@ import { NotificationsMockApi } from 'app/mock-api/common/notifications/api';
 import { SearchMockApi } from 'app/mock-api/common/search/api';
 import { ShortcutsMockApi } from 'app/mock-api/common/shortcuts/api';
 import { UserMockApi } from 'app/mock-api/common/user/api';
-import { AlumnosMockApi } from 'app/mock-api/mantenimiento/alumnos/api';
-import { ColegiosMockApi } from 'app/mock-api/mantenimiento/colegios/api';
-import { SedesMockApi } from 'app/mock-api/mantenimiento/sedes/api';
-import { UniversidadesMockApi } from 'app/mock-api/mantenimiento/universidades/api';
+
 import { AnalyticsMockApi } from 'app/mock-api/dashboards/analytics/api';
 import { CryptoMockApi } from 'app/mock-api/dashboards/crypto/api';
 import { FinanceMockApi } from 'app/mock-api/dashboards/finance/api';
@@ -30,9 +27,7 @@ import { IconsMockApi } from 'app/mock-api/ui/icons/api';
 @Injectable({ providedIn: 'root' })
 export class MockApiService {
     academyMockApi = inject(AcademyMockApi);
-    activitiesMockApi = inject(ActivitiesMockApi);
-    alumnosMockApi = inject(AlumnosMockApi);
-    colegiosMockApi = inject(ColegiosMockApi);
+    activitiesMockApi = inject(ActivitiesMockApi);    
     analyticsMockApi = inject(AnalyticsMockApi);
     authMockApi = inject(AuthMockApi);
     chatMockApi = inject(ChatMockApi);
@@ -49,8 +44,7 @@ export class MockApiService {
     notesMockApi = inject(NotesMockApi);
     notificationsMockApi = inject(NotificationsMockApi);
     projectMockApi = inject(ProjectMockApi);
-    sedesMockApi = inject(SedesMockApi);
-    universidadesMockApi = inject(UniversidadesMockApi);
+    
     searchMockApi = inject(SearchMockApi);
     scrumboardMockApi = inject(ScrumboardMockApi);
     shortcutsMockApi = inject(ShortcutsMockApi);
