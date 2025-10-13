@@ -21,4 +21,6 @@ export interface CreateApoderadoPayload {
     activo: boolean;
 }
 
-export type UpdateApoderadoPayload = Partial<CreateApoderadoPayload>;
+export interface UpdateApoderadoPayload extends CreateApoderadoPayload {
+    id: number;
+}

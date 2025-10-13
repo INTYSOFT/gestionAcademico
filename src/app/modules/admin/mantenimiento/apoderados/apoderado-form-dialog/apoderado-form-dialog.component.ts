@@ -19,7 +19,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { BehaviorSubject, finalize, switchMap, takeUntil } from 'rxjs';
+import { BehaviorSubject, Observable, finalize, switchMap, takeUntil } from 'rxjs';
 import {
     Apoderado,
     CreateApoderadoPayload,
@@ -104,15 +104,24 @@ export class ApoderadoFormDialogComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const payload = this.buildPayload();
+        const basePayload = this.buildPayload();
         const apoderado = this.data.apoderado;
         this.isSaving$.next(true);
 
-        const request$ = apoderado
-            ? this.apoderadosService
-                  .update(apoderado.id, payload as UpdateApoderadoPayload)
-                  .pipe(switchMap(() => this.apoderadosService.get(apoderado.id)))
-            : this.apoderadosService.create(payload as CreateApoderadoPayload);
+        let request$: Observable<Apoderado>;
+
+        if (apoderado) {
+            const updatePayload: UpdateApoderadoPayload = {
+                ...basePayload,
+                id: apoderado.id,
+            };
+
+            request$ = this.apoderadosService
+                .update(apoderado.id, updatePayload)
+                .pipe(switchMap(() => this.apoderadosService.get(apoderado.id)));
+        } else {
+            request$ = this.apoderadosService.create(basePayload);
+        }
 
         request$
             .pipe(
@@ -142,7 +151,7 @@ export class ApoderadoFormDialogComponent implements OnInit, OnDestroy {
         });
     }
 
-    private buildPayload(): CreateApoderadoPayload | UpdateApoderadoPayload {
+    private buildPayload(): CreateApoderadoPayload {
         const raw = this.form.value;
 
         return {
