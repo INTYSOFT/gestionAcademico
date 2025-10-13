@@ -19,6 +19,7 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SedeService } from 'app/core/services/centro-estudios/sede.service';
 import { CreateSedePayload, Sede } from 'app/core/models/centro-estudios/sede.model';
+import { blurActiveElement } from 'app/core/utils/focus.util';
 import { BehaviorSubject, finalize, tap } from 'rxjs';
 import {
     SedeDialogResult,
@@ -117,6 +118,8 @@ export class SedesComponent implements OnInit {
     }
 
     openSedeDialog(sede?: Sede): void {
+        blurActiveElement();
+
         const dialogRef = this.dialog.open<SedeFormDialogComponent, Sede | null, SedeDialogResult>(
             SedeFormDialogComponent,
             {

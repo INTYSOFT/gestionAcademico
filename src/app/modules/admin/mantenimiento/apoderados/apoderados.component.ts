@@ -19,6 +19,7 @@ import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { Apoderado } from 'app/core/models/centro-estudios/apoderado.model';
 import { ApoderadosService } from 'app/core/services/centro-estudios/apoderados.service';
 import { BehaviorSubject, Subject, debounceTime, finalize, takeUntil } from 'rxjs';
+import { blurActiveElement } from 'app/core/utils/focus.util';
 import { ApoderadosActionsCellComponent } from './actions-cell/apoderados-actions-cell.component';
 import type { ApoderadoFormDialogResult } from './apoderado-form-dialog/apoderado-form-dialog.component';
 
@@ -164,6 +165,8 @@ export class ApoderadosComponent implements OnInit, OnDestroy {
     }
 
     private openApoderadoDialog(apoderado?: Apoderado): void {
+        blurActiveElement();
+
         import('./apoderado-form-dialog/apoderado-form-dialog.component').then(
             ({ ApoderadoFormDialogComponent }) => {
                 const dialogRef = this.dialog.open(ApoderadoFormDialogComponent, {

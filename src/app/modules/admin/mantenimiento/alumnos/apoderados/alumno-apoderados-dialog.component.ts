@@ -21,6 +21,7 @@ import { Parentesco } from 'app/core/models/centro-estudios/parentesco.model';
 import { AlumnoApoderadoService } from 'app/core/services/centro-estudios/alumno-apoderado.service';
 import { ApoderadosService } from 'app/core/services/centro-estudios/apoderados.service';
 import { ParentescosService } from 'app/core/services/centro-estudios/parentescos.service';
+import { blurActiveElement } from 'app/core/utils/focus.util';
 import {
     BehaviorSubject,
     Subject,
@@ -96,6 +97,8 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
     }
 
     protected addApoderado(): void {
+        blurActiveElement();
+
         this.dialog
             .open(ApoderadoFormDialogComponent, {
                 width: '760px',

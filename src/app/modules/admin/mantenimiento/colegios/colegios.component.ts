@@ -18,6 +18,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BehaviorSubject, finalize, tap } from 'rxjs';
+import { blurActiveElement } from 'app/core/utils/focus.util';
 import {
     Colegio,
     CreateColegioPayload,
@@ -130,6 +131,8 @@ export class ColegiosComponent implements OnInit {
     }
 
     openColegioDialog(colegio?: Colegio): void {
+        blurActiveElement();
+
         const dialogRef = this.dialog.open<
             ColegioFormDialogComponent,
             Colegio | null,
