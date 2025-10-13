@@ -8,7 +8,6 @@
                     <mat-label>Seleccionar sede</mat-label>
                     <mat-select
                         [formControl]="selectedSedeControl"
-                        [disabled]="isLoadingSedes$ | async"
                         placeholder="Sede">
                         <mat-option
                             *ngFor="let sede of sedes$ | async; trackBy: trackBySedeId"

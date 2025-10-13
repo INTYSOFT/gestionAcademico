@@ -120,7 +120,9 @@ export class CiclosComponent implements OnInit, OnDestroy {
         private readonly snackBar: MatSnackBar,
         private readonly ciclosService: CiclosService,
         private readonly sedeService: SedeService
-    ) {}
+    ) {
+        this.syncSedeControlState();
+    }
 
     ngOnInit(): void {
         this.loadSedes();
@@ -168,13 +170,21 @@ export class CiclosComponent implements OnInit, OnDestroy {
 
     private loadSedes(): void {
         this.isLoadingSedes$.next(true);
+        this.syncSedeControlState();
 
         this.sedeService
             .getSedes()
-            .pipe(finalize(() => this.isLoadingSedes$.next(false)), takeUntil(this.destroy$))
+            .pipe(
+                finalize(() => {
+                    this.isLoadingSedes$.next(false);
+                    this.syncSedeControlState();
+                }),
+                takeUntil(this.destroy$)
+            )
             .subscribe({
                 next: (sedes) => {
                     this.sedes$.next(sedes);
+                    this.syncSedeControlState();
 
                     const current = this.selectedSedeControl.value;
                     if (current && sedes.some((sede) => sede.id === current)) {
@@ -188,6 +198,7 @@ export class CiclosComponent implements OnInit, OnDestroy {
                     } else {
                         this.selectedSedeControl.setValue(null);
                         this.ciclos$.next([]);
+                        this.syncSedeControlState();
                     }
                 },
                 error: (error) => {
@@ -200,6 +211,19 @@ export class CiclosComponent implements OnInit, OnDestroy {
                     );
                 },
             });
+    }
+
+    private syncSedeControlState(): void {
+        const shouldDisable = this.isLoadingSedes$.value || this.sedes$.value.length === 0;
+
+        if (shouldDisable && this.selectedSedeControl.enabled) {
+            this.selectedSedeControl.disable({ emitEvent: false });
+            return;
+        }
+
+        if (!shouldDisable && this.selectedSedeControl.disabled) {
+            this.selectedSedeControl.enable({ emitEvent: false });
+        }
     }
 
     private loadCiclos(sedeId: number): void {
