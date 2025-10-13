@@ -219,7 +219,7 @@ export class AlumnosComponent implements OnInit, OnDestroy {
             ({ AlumnoApoderadosDialogComponent }) => {
                 this.dialog.open(AlumnoApoderadosDialogComponent, {
                     width: '860px',
-                    data: { alumno },
+                    data: alumno,
                 });
             }
         );

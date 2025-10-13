@@ -35,11 +35,6 @@ import {
 } from 'rxjs';
 import { ApoderadoFormDialogComponent, ApoderadoFormDialogResult } from './apoderado-form-dialog.component';
 
-export interface AlumnoApoderadosDialogData {
-    alumno: Alumno;
-    relaciones?: AlumnoApoderado[];
-}
-
 @Component({
     selector: 'app-alumno-apoderados-dialog',
     standalone: true,
@@ -80,7 +75,7 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
     private readonly destroy$ = new Subject<void>();
 
     constructor(
-        @Inject(MAT_DIALOG_DATA) protected readonly data: AlumnoApoderadosDialogData,
+        @Inject(MAT_DIALOG_DATA) protected readonly data: Alumno,
         private readonly dialog: MatDialog,
         private readonly snackBar: MatSnackBar,
         private readonly alumnoApoderadoService: AlumnoApoderadoService,
@@ -90,7 +85,7 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.loadParentescos();
-        this.loadRelaciones(this.data.relaciones);
+        this.loadRelaciones();
     }
 
     ngOnDestroy(): void {
@@ -104,7 +99,7 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
         this.dialog
             .open(ApoderadoFormDialogComponent, {
                 width: '760px',
-                data: { alumnoId: this.data.alumno.id },
+                data: { alumnoId: this.data.id },
                 disableClose: true,
             })
             .afterClosed()
@@ -196,15 +191,12 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
             });
     }
 
-    private loadRelaciones(initialRelaciones?: AlumnoApoderado[]): void {
+    private loadRelaciones(): void {
         this.isLoading$.next(true);
         this.relaciones$.next([]);
 
-        const source$ = initialRelaciones
-            ? of(initialRelaciones)
-            : this.alumnoApoderadoService.listByAlumno(this.data.alumno.id);
-
-        source$
+        this.alumnoApoderadoService
+            .listByAlumno(this.data.id)
             .pipe(
                 switchMap((relaciones) => {
                     if (!relaciones.length) {
@@ -244,7 +236,7 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
     private linkApoderado(result: ApoderadoFormDialogResult): void {
         this.isLoading$.next(true);
         this.alumnoApoderadoService
-            .link(this.data.alumno.id, result.apoderado.id, result.parentescoId)
+            .link(this.data.id, result.apoderado.id, result.parentescoId)
             .pipe(
                 finalize(() => this.isLoading$.next(false)),
                 takeUntil(this.destroy$)
