@@ -17,6 +17,7 @@
         <div class="apoderado-dialog__grid-wrapper" *ngIf="!(isLoading$ | async)">
             <ag-grid-angular
                 class="ag-theme-material apoderado-dialog__grid"
+                [theme]="'legacy'"
                 [columnDefs]="columnDefs"
                 [defaultColDef]="defaultColDef"
                 [rowData]="filteredApoderados$ | async"
