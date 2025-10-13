@@ -33,6 +33,7 @@
 
             <ag-grid-angular
                 class="ag-theme-material apoderados__grid"
+                [theme]="'legacy'"
                 [rowData]="filteredApoderados$ | async"
                 [columnDefs]="columnDefs"
                 [defaultColDef]="defaultColDef"

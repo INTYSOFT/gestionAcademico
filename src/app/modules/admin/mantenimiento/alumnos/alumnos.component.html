@@ -28,6 +28,7 @@
 
             <ag-grid-angular
                 class="ag-theme-material alumnos__grid"
+                [theme]="'legacy'"
                 [rowData]="filteredAlumnos$ | async"
                 [columnDefs]="columnDefs"
                 [defaultColDef]="defaultColDef"
