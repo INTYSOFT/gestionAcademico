@@ -25,6 +25,7 @@ import { blurActiveElement } from 'app/core/utils/focus.util';
 import {
     BehaviorSubject,
     Subject,
+    catchError,
     finalize,
     forkJoin,
     map,
@@ -197,6 +198,7 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
 
     private loadRelaciones(initialRelaciones?: AlumnoApoderado[]): void {
         this.isLoading$.next(true);
+        this.relaciones$.next([]);
 
         const source$ = initialRelaciones
             ? of(initialRelaciones)
@@ -219,6 +221,17 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
                     );
 
                     return forkJoin(requests);
+                }),
+                catchError(() => {
+                    this.snackBar.open(
+                        'No se pudieron cargar los apoderados del alumno.',
+                        'Cerrar',
+                        {
+                            duration: 4000,
+                        }
+                    );
+
+                    return of<AlumnoApoderado[]>([]);
                 }),
                 finalize(() => this.isLoading$.next(false)),
                 takeUntil(this.destroy$)

@@ -23,13 +23,11 @@ import {
     Subject,
     debounceTime,
     finalize,
-    take,
     takeUntil,
 } from 'rxjs';
 import { blurActiveElement } from 'app/core/utils/focus.util';
 import { AlumnosActionsCellComponent } from './actions-cell/alumnos-actions-cell.component';
 import type { AlumnoFormDialogResult } from './alumno-form-dialog/alumno-form-dialog.component';
-import { AlumnoApoderadoService } from 'app/core/services/centro-estudios/alumno-apoderado.service';
 
 @Component({
     selector: 'app-alumnos',
@@ -109,8 +107,7 @@ export class AlumnosComponent implements OnInit, OnDestroy {
         private readonly fb: FormBuilder,
         private readonly dialog: MatDialog,
         private readonly snackBar: MatSnackBar,
-        private readonly alumnosService: AlumnosService,
-        private readonly alumnoApoderadoService: AlumnoApoderadoService
+        private readonly alumnosService: AlumnosService
     ) {}
 
     ngOnInit(): void {
@@ -218,30 +215,14 @@ export class AlumnosComponent implements OnInit, OnDestroy {
     private openApoderadosDialog(alumno: Alumno): void {
         blurActiveElement();
 
-        this.alumnoApoderadoService
-            .listByAlumno(alumno.id)
-            .pipe(take(1), takeUntil(this.destroy$))
-            .subscribe({
-                next: (relaciones) => {
-                    void import(
-                        './apoderados/alumno-apoderados-dialog.component'
-                    ).then(({ AlumnoApoderadosDialogComponent }) => {
-                        this.dialog.open(AlumnoApoderadosDialogComponent, {
-                            width: '860px',
-                            data: { alumno, relaciones },
-                        });
-                    });
-                },
-                error: () => {
-                    this.snackBar.open(
-                        'No se pudieron cargar los apoderados del alumno.',
-                        'Cerrar',
-                        {
-                            duration: 4000,
-                        }
-                    );
-                },
-            });
+        void import('./apoderados/alumno-apoderados-dialog.component').then(
+            ({ AlumnoApoderadosDialogComponent }) => {
+                this.dialog.open(AlumnoApoderadosDialogComponent, {
+                    width: '860px',
+                    data: { alumno },
+                });
+            }
+        );
     }
 
     private upsertAlumno(alumno: Alumno): void {
