@@ -19,6 +19,7 @@
     <table
         mat-table
         [dataSource]="relaciones$ | async"
+        [trackBy]="trackByRelacionId"
         class="apoderados__table"
         *ngIf="(relaciones$ | async)?.length || (isLoading$ | async)"
     >
@@ -97,10 +98,7 @@
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr
-            mat-row
-            *matRowDef="let row; columns: displayedColumns; trackBy: trackByRelacionId"
-        ></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
     </table>
 
     <p class="apoderados__empty" *ngIf="!(isLoading$ | async) && !(relaciones$ | async)?.length">
