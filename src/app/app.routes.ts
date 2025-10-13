@@ -97,14 +97,7 @@ export const appRoutes: Route[] = [
                         path: 'colegios',
                         loadChildren: () =>
                             import('app/modules/admin/mantenimiento/colegios/colegios.routes'),
-                    },
-                    {
-                        path: 'apoderados',
-                        loadChildren: () =>
-                            import('app/modules/admin/mantenimiento/apoderados/apoderados.routes').then(
-                                (m) => m.apoderadosRoutes
-                            ),
-                    },
+                    },                 
 
                     {
                         path: 'alumnos',
