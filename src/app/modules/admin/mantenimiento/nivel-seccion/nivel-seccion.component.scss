@@ -1,0 +1,36 @@
+.niveles {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.niveles__header {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    @media (min-width: 768px) {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.niveles__search-field {
+    width: 100%;
+    max-width: 400px;
+}
+
+.niveles__new-button {
+    align-self: flex-start;
+}
+
+.niveles__grid {
+    width: 100%;
+}
+
+.niveles__empty {
+    margin-top: 16px;
+    text-align: center;
+    color: var(--fuse-text-secondary, rgba(0, 0, 0, 0.6));
+}

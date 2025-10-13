@@ -1,0 +1,11 @@
+.nivel-dialog__form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 320px;
+    width: 100%;
+}
+
+mat-slide-toggle {
+    align-self: flex-start;
+}

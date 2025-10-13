@@ -94,6 +94,15 @@ export class ApiMainService {
             );
     }
 
+    protected put<T>(endpoint: string, body: unknown, options?: Parameters<typeof this.createOptions>[0]): Observable<T> {
+        return this.http
+            .put<T>(this.buildUrl(endpoint), body, this.createOptions(options))
+            .pipe(
+                retry(this.config.retryAttempts),
+                catchError((error) => this.handleError(error))
+            );
+    }
+
     protected patch<T>(endpoint: string, body: unknown, options?: Parameters<typeof this.createOptions>[0]): Observable<T> {
         return this.http
             .patch<T>(this.buildUrl(endpoint), body, this.createOptions(options))
