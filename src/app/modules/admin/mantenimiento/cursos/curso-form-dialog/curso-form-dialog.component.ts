@@ -1,4 +1,4 @@
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -15,12 +15,10 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { BehaviorSubject, finalize } from 'rxjs';
-import { Ciclo } from 'app/core/models/centro-estudios/ciclo.model';
 import {
     Curso,
     CreateCursoPayload,
@@ -29,7 +27,6 @@ import { CursosService } from 'app/core/services/centro-estudios/cursos.service'
 
 export interface CursoFormDialogData {
     curso: Curso | null;
-    ciclos: Ciclo[];
 }
 
 export type CursoFormDialogResult =
@@ -45,14 +42,12 @@ export type CursoFormDialogResult =
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         NgIf,
-        NgFor,
         AsyncPipe,
         ReactiveFormsModule,
         MatDialogModule,
         MatButtonModule,
         MatFormFieldModule,
         MatInputModule,
-        MatSelectModule,
         MatSnackBarModule,
         MatSlideToggleModule,
         MatProgressBarModule,
@@ -73,7 +68,6 @@ export class CursoFormDialogComponent {
         private readonly cursosService: CursosService
     ) {
         this.form = this.fb.group({
-            cicloId: [null, [Validators.required]],
             nombre: ['', [Validators.required, Validators.maxLength(150)]],
             descripcion: ['', [Validators.maxLength(255)]],
             activo: [true],
@@ -127,13 +121,8 @@ export class CursoFormDialogComponent {
         this.dialogRef.close();
     }
 
-    protected hasCiclos(): boolean {
-        return Array.isArray(this.data.ciclos) && this.data.ciclos.length > 0;
-    }
-
     private patchForm(curso: Curso): void {
         this.form.patchValue({
-            cicloId: curso.cicloId,
             nombre: curso.nombre,
             descripcion: curso.descripcion ?? '',
             activo: curso.activo,
@@ -142,11 +131,6 @@ export class CursoFormDialogComponent {
 
     private buildPayload(): CreateCursoPayload {
         const raw = this.form.value;
-        const cicloIdRaw = raw.cicloId;
-        const cicloId =
-            typeof cicloIdRaw === 'number'
-                ? cicloIdRaw
-                : Number(cicloIdRaw ?? 0);
         const nombre = String(raw.nombre ?? '').trim();
         const descripcionRaw = raw.descripcion;
         const descripcion =
@@ -155,7 +139,6 @@ export class CursoFormDialogComponent {
                 : String(descripcionRaw).trim();
 
         const payload: CreateCursoPayload = {
-            cicloId,
             nombre,
             descripcion: descripcion && descripcion.length > 0 ? descripcion : null,
             activo: !!raw.activo,

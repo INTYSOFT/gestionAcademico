@@ -10,22 +10,6 @@
 <mat-dialog-content>
     <form class="curso-dialog__form" [formGroup]="form">
         <mat-form-field appearance="outline">
-            <mat-label>Ciclo</mat-label>
-            <mat-select formControlName="cicloId" [disabled]="!hasCiclos()">
-                <mat-option *ngFor="let ciclo of data.ciclos" [value]="ciclo.id">
-                    {{ ciclo.nombre }}
-                </mat-option>
-            </mat-select>
-            <mat-error *ngIf="form.get('cicloId')?.hasError('required')">
-                Selecciona un ciclo.
-            </mat-error>
-        </mat-form-field>
-
-        <p class="curso-dialog__no-ciclos" *ngIf="!hasCiclos()">
-            No hay ciclos disponibles. Registra un ciclo antes de crear un curso.
-        </p>
-
-        <mat-form-field appearance="outline">
             <mat-label>Nombre del curso</mat-label>
             <input
                 matInput
@@ -68,7 +52,7 @@
         color="primary"
         type="button"
         (click)="save()"
-        [disabled]="(isSaving$ | async) || !hasCiclos()">
+        [disabled]="isSaving$ | async">
         Guardar
     </button>
 </mat-dialog-actions>
