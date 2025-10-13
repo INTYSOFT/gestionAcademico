@@ -23,6 +23,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 link : '/mantenimiento/sedes'
             },
             {
+                id   : 'mantenimiento.ciclos',
+                title: 'Ciclos',
+                type : 'basic',
+                icon : 'heroicons_outline:calendar-days',
+                link : '/mantenimiento/ciclos'
+            },
+            {
                 id   : 'mantenimiento.universidades',
                 title: 'Universidades',
                 type : 'basic',
@@ -104,6 +111,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:building-office',
                 link : '/mantenimiento/sedes'
+            },
+            {
+                id   : 'mantenimiento.ciclos',
+                title: 'Ciclos',
+                type : 'basic',
+                icon : 'heroicons_outline:calendar-days',
+                link : '/mantenimiento/ciclos'
             },
             {
                 id   : 'mantenimiento.universidades',

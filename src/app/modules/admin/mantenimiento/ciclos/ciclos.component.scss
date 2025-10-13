@@ -1,0 +1,33 @@
+.ciclos {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.ciclos__header {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    @media (min-width: 640px) {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.ciclos__sede-field {
+    width: 100%;
+    max-width: 320px;
+}
+
+.ciclos__grid {
+    width: 100%;
+    min-height: 200px;
+}
+
+.ciclos__empty {
+    margin: 1rem 0 0;
+    font-size: 0.95rem;
+    color: rgba(0, 0, 0, 0.6);
+}
