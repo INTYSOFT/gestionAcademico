@@ -30,11 +30,17 @@
 
     &__item {
         border-radius: 0.5rem;
-        transition: background-color 0.2s ease, color 0.2s ease;
+        cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+
+        &:hover {
+            background-color: var(--mat-sys-color-surface-variant);
+        }
 
         &.apoderado-dialog__item--selected {
-            background-color: var(--mat-sys-color-primary-container) !important;
-            color: var(--mat-sys-color-on-primary-container);
+            background-color: var(--mat-sys-color-primary) !important;
+            color: var(--mat-sys-color-on-primary);
+            box-shadow: 0 0 0 2px var(--mat-sys-color-primary);
         }
     }
 
@@ -46,7 +52,7 @@
 
     &__item--selected &__item-subtitle,
     &__item.apoderado-dialog__item--selected &__item-subtitle {
-        color: var(--mat-sys-color-on-primary-container);
+        color: var(--mat-sys-color-on-primary);
     }
 
     &__empty {
