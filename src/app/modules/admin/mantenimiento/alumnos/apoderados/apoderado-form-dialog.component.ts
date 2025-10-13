@@ -30,11 +30,13 @@ import {
 } from 'ag-grid-community';
 import {
     BehaviorSubject,
+    EMPTY,
     Subject,
     combineLatest,
     debounceTime,
     finalize,
     map,
+    switchMap,
     takeUntil,
 } from 'rxjs';
 import {
@@ -255,19 +257,55 @@ export class ApoderadoFormDialogComponent implements OnInit, OnDestroy {
 
         this.isCreating$.next(true);
         this.apoderadosService
-            .create(payload)
+            .getByDocumento(payload.documento)
             .pipe(
+                switchMap((existing) => {
+                    if (existing) {
+                        const current = this.apoderados$.value;
+                        const alreadyInList = current.some(
+                            (item) => item.id === existing.id
+                        );
+
+                        this.apoderados$.next(
+                            alreadyInList ? current : [existing, ...current]
+                        );
+                        this.applyFilter(this.searchControl.value);
+                        this.selectApoderado(existing);
+                        this.snackBar.open(
+                            'El documento ingresado ya está registrado. Se seleccionó al apoderado existente.',
+                            'Cerrar',
+                            {
+                                duration: 5000,
+                            }
+                        );
+
+                        return EMPTY;
+                    }
+
+                    return this.apoderadosService.create(payload);
+                }),
                 finalize(() => this.isCreating$.next(false)),
                 takeUntil(this.destroy$)
             )
-            .subscribe((created) => {
-                const current = [created, ...this.apoderados$.value];
-                this.apoderados$.next(current);
-                this.applyFilter(this.searchControl.value);
-                this.selectApoderado(created);
-                this.snackBar.open('Apoderado registrado correctamente.', 'Cerrar', {
-                    duration: 4000,
-                });
+            .subscribe({
+                next: (created) => {
+                    const current = [created, ...this.apoderados$.value];
+                    this.apoderados$.next(current);
+                    this.applyFilter(this.searchControl.value);
+                    this.selectApoderado(created);
+                    this.snackBar.open(
+                        'Apoderado registrado correctamente.',
+                        'Cerrar',
+                        {
+                            duration: 4000,
+                        }
+                    );
+                },
+                error: (error: Error) => {
+                    this.snackBar.open(error.message, 'Cerrar', {
+                        duration: 5000,
+                    });
+                },
             });
     }
 
