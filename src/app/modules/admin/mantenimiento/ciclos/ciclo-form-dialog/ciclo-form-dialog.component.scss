@@ -1,35 +1,76 @@
+/* ===== Ciclo Dialog (ciclo-form-dialog.component.scss) ===== */
+
+:host {
+  display: block;
+}
+
+/* --- Evita recortes por el surface del diálogo (MDC) --- */
+/* Usa ::ng-deep si NO usas ViewEncapsulation.None; si usas None,
+   puedes omitir ::ng-deep y apuntar directo a .mat-mdc-dialog-surface */
+:host ::ng-deep .mat-mdc-dialog-surface {
+  overflow: visible; /* por defecto es hidden y “corta” bordes/sombras */
+}
+
+/* También evita recortes en el contenido si hay elementos con sombras */
+mat-dialog-content {
+  overflow: visible;
+}
+
+/* --- Contenido del diálogo --- */
 .ciclo-dialog__sede {
-    margin-bottom: 1rem;
-    font-size: 0.95rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
 }
 
 .ciclo-dialog__form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .ciclo-dialog__dates {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
 
-.ciclo-dialog__dates mat-form-field {
+  mat-form-field {
     flex: 1 1 200px;
+    min-width: 200px;
+  }
 }
 
 mat-slide-toggle {
-    align-self: flex-start;
+  align-self: flex-start;
 }
 
+/* --- Acciones del diálogo (botones) --- */
 mat-dialog-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 
-    button {
-        flex-shrink: 0;
-        white-space: nowrap;
-    }
+  /* Aire interno para que el botón no quede pegado al borde redondeado */
+  padding: 0 16px 16px 16px;
+
+  /* Alinea a la derecha (ajusta a tu gusto) */
+  justify-content: flex-end;
+
+  /* Asegura no recortar pill/shadows del botón */
+  overflow: visible;
+
+  /* Evita que los botones se encojan y se “corten” */
+  button,
+  .mat-mdc-button-base {
+    flex: 0 0 auto;
+    min-width: max-content;
+    white-space: nowrap;
+  }
+}
+
+/* (Opcional) Si tienes un botón destacado muy pegado al borde,
+   añade un margen extra para más separación visual */
+mat-dialog-actions .mat-mdc-raised-button,
+mat-dialog-actions .mat-mdc-unelevated-button,
+mat-dialog-actions .mat-mdc-outlined-button {
+  margin-right: 2px;
 }

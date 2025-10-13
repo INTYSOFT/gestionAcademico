@@ -1,44 +1,83 @@
+/* ===== Ciclos Component (ciclos.component.scss) ===== */
+
+:host {
+  display: block;
+}
+
+/* Contenedor principal */
 .ciclos {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
+/* Header: selector de sede + botón */
 .ciclos__header {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 
-    @media (min-width: 640px) {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        column-gap: 1rem;
-        row-gap: 0.75rem;
-    }
-}
+  /* Evita que se recorte el botón cuando el padre tenga radios/overflow */
+  overflow: visible;
+  padding-right: 0.5rem;
 
-.ciclos__new-button {
-    display: inline-flex;
+  @media (min-width: 640px) {
+    flex-direction: row;
     align-items: center;
-    gap: 0.5rem;
-    flex-shrink: 0;
-    white-space: nowrap;
+    flex-wrap: wrap;
+    column-gap: 1rem;
+    row-gap: 0.75rem;
+    justify-content: flex-start;
+  }
 }
 
+/* Campo de sede */
 .ciclos__sede-field {
-    width: 100%;
-    max-width: 320px;
+  width: 100%;
+  max-width: 320px;
 }
 
+/* Botón "Nuevo ciclo" */
+.ciclos__new-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  /* Que no se encoja ni se recorte */
+  flex: 0 0 auto;
+  min-width: max-content;
+  white-space: nowrap;
+
+  /* Da aire por si algún contenedor externo tiene overflow */
+  margin-right: 0.25rem;
+
+  @media (min-width: 640px) {
+    /* Empuja el botón a la derecha de forma estable */
+    margin-left: auto;
+    margin-top: 0;
+  }
+
+  /* Ajuste fino del icono dentro del botón (Material) */
+  .mat-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    line-height: 20px;
+  }
+}
+
+/* Grid */
 .ciclos__grid {
-    width: 100%;
-    min-height: 200px;
+  width: 100%;
+  min-height: 200px;
+
+  /* Evita recortes de tooltips/menus del grid si el contenedor padre recorta */
+  overflow: visible;
 }
 
+/* Mensajes vacíos */
 .ciclos__empty {
-    margin: 1rem 0 0;
-    font-size: 0.95rem;
-    color: rgba(0, 0, 0, 0.6);
+  margin: 1rem 0 0;
+  font-size: 0.95rem;
+  color: rgba(0, 0, 0, 0.6);
 }

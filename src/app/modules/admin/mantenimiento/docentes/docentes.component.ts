@@ -107,18 +107,6 @@ export class DocentesComponent implements OnInit, OnDestroy {
             valueFormatter: (params) => (params.value ? 'Sí' : 'No'),
         },
         {
-            headerName: 'Fecha registro',
-            field: 'fechaRegistro',
-            minWidth: 170,
-            valueFormatter: (params) => params.value ?? '',
-        },
-        {
-            headerName: 'Fecha actualización',
-            field: 'fechaActualizacion',
-            minWidth: 190,
-            valueFormatter: (params) => params.value ?? '',
-        },
-        {
             headerName: 'Acciones',
             cellRenderer: DocentesActionsCellComponent,
             cellRendererParams: {

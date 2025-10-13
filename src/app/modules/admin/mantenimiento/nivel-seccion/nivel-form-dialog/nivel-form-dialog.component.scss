@@ -1,11 +1,55 @@
-.nivel-dialog__form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    min-width: 320px;
-    width: 100%;
+/* ===== Nivel Dialog (nivel-dialog.component.scss) ===== */
+
+:host {
+  display: block;
 }
 
+/* Si NO usas ViewEncapsulation.None, deja ::ng-deep.
+   Si usas None, puedes apuntar directo a .mat-mdc-dialog-surface */
+:host ::ng-deep .mat-mdc-dialog-surface {
+  overflow: visible; /* evita que se “corten” bordes/sombras de botones */
+}
+
+/* También deja respirar el contenido del dialog */
+mat-dialog-content {
+  overflow: visible;
+}
+
+/* Form principal */
+.nivel-dialog__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  /* ancho mínimo cómodo para fields; evita colapsos */
+  min-width: 320px;
+  width: 100%;
+
+  /* en pantallas pequeñas, usa todo el ancho disponible del diálogo */
+  @media (max-width: 400px) {
+    min-width: 0;
+  }
+}
+
+/* Alineación del toggle al inicio del formulario */
 mat-slide-toggle {
-    align-self: flex-start;
+  align-self: flex-start;
+}
+
+/* Acciones del diálogo: evita recortes y da aire a la derecha */
+mat-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 0 16px 16px 16px;
+  overflow: visible;
+
+  /* botones resistentes a recortes */
+  button,
+  .mat-mdc-button-base {
+    flex: 0 0 auto;
+    min-width: max-content;
+    white-space: nowrap;
+  }
 }

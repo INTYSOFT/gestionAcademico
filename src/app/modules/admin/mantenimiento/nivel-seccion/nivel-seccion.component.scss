@@ -1,36 +1,74 @@
+/* ===== Niveles (niveles.component.scss) ===== */
+
+:host {
+  display: block;
+}
+
 .niveles {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
+/* Header: buscador + botón */
 .niveles__header {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 
-    @media (min-width: 768px) {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-    }
+  /* Evita recortes del botón por bordes redondeados/overflow del padre */
+  overflow: visible;
+  padding-right: 8px; // aire a la derecha
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px 16px;     // row-gap col-gap
+    justify-content: flex-start; // más estable con wrap
+  }
 }
 
+/* Campo de búsqueda */
 .niveles__search-field {
-    width: 100%;
-    max-width: 400px;
+  width: 100%;
+  max-width: 400px;
 }
 
+/* Botón "Nuevo nivel" (o similar) */
 .niveles__new-button {
-    align-self: flex-start;
+  /* Colocación vertical por defecto (mobile) */
+  align-self: flex-start;
+
+  /* Evita que el botón se encoja y se “corte” */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-width: max-content;
+  white-space: nowrap;
+
+  /* Un poco de margen para separarlo del borde recortante */
+  margin-right: 4px;
+
+  @media (min-width: 768px) {
+    /* Empuja el botón a la derecha sin depender de space-between */
+    margin-left: auto;
+  }
 }
 
+/* Grid/listado */
 .niveles__grid {
-    width: 100%;
+  width: 100%;
+  min-height: 200px;
+
+  /* No recortar tooltips/menus internos del grid */
+  overflow: visible;
 }
 
+/* Vacío */
 .niveles__empty {
-    margin-top: 16px;
-    text-align: center;
-    color: var(--fuse-text-secondary, rgba(0, 0, 0, 0.6));
+  margin-top: 16px;
+  text-align: center;
+  color: var(--fuse-text-secondary, rgba(0, 0, 0, 0.6));
 }
