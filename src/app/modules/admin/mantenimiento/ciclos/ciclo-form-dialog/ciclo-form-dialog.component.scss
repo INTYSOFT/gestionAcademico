@@ -22,3 +22,14 @@
 mat-slide-toggle {
     align-self: flex-start;
 }
+
+mat-dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+
+    button {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+}

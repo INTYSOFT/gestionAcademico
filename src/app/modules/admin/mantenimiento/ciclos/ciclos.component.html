@@ -21,6 +21,7 @@
                     mat-raised-button
                     color="primary"
                     type="button"
+                    class="ciclos__new-button"
                     (click)="createCiclo()"
                     [disabled]="(isLoadingSedes$ | async) || selectedSedeControl.value == null">
                     <mat-icon>add</mat-icon>
