@@ -36,6 +36,7 @@ import { ApoderadoFormDialogComponent, ApoderadoFormDialogResult } from './apode
 
 export interface AlumnoApoderadosDialogData {
     alumno: Alumno;
+    relaciones?: AlumnoApoderado[];
 }
 
 @Component({
@@ -88,7 +89,7 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.loadParentescos();
-        this.loadRelaciones();
+        this.loadRelaciones(this.data.relaciones);
     }
 
     ngOnDestroy(): void {
@@ -194,10 +195,14 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
             });
     }
 
-    private loadRelaciones(): void {
+    private loadRelaciones(initialRelaciones?: AlumnoApoderado[]): void {
         this.isLoading$.next(true);
-        this.alumnoApoderadoService
-            .listByAlumno(this.data.alumno.id)
+
+        const source$ = initialRelaciones
+            ? of(initialRelaciones)
+            : this.alumnoApoderadoService.listByAlumno(this.data.alumno.id);
+
+        source$
             .pipe(
                 switchMap((relaciones) => {
                     if (!relaciones.length) {
@@ -232,7 +237,11 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
                 takeUntil(this.destroy$)
             )
             .subscribe((relacion) => {
-                const current = [relacion, ...this.relaciones$.value];
+                const relationWithApoderado: AlumnoApoderado = {
+                    ...relacion,
+                    apoderado: result.apoderado,
+                };
+                const current = [relationWithApoderado, ...this.relaciones$.value];
                 this.relaciones$.next(current);
                 this.snackBar.open('Apoderado vinculado correctamente.', 'Cerrar', {
                     duration: 4000,
