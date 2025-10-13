@@ -17,17 +17,13 @@ export class AlumnoApoderadoService {
     private readonly errorService = inject(HttpErrorService);
 
     listByAlumno(alumnoId: number): Observable<AlumnoApoderado[]> {
-        const params = new HttpParams().set('alumnoId', String(alumnoId));
         return this.http
             .get<AlumnoApoderado[]>(
-                this.buildUrl(CENTRO_ESTUDIOS_API.alumnoApoderados),
-                { params }
+                this.buildUrl(`${CENTRO_ESTUDIOS_API.alumnoApoderados}/alumnoId/${alumnoId}`)
             )
             .pipe(
-                map((response) => response ?? []),
-                catchError((error) =>
-                    throwError(() => this.errorService.createError(error))
-                )
+                map(r => r ?? []),
+                catchError(err => throwError(() => this.errorService.createError(err)))
             );
     }
 
