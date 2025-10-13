@@ -18,6 +18,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BehaviorSubject, finalize, tap } from 'rxjs';
+import { blurActiveElement } from 'app/core/utils/focus.util';
 import {
     CreateUniversidadPayload,
     Universidad,
@@ -122,6 +123,8 @@ export class UniversidadesComponent implements OnInit {
     }
 
     openUniversidadDialog(universidad?: Universidad): void {
+        blurActiveElement();
+
         const dialogRef = this.dialog.open<
             UniversidadFormDialogComponent,
             Universidad | null,

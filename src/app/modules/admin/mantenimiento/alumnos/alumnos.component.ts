@@ -19,6 +19,7 @@ import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { Alumno } from 'app/core/models/centro-estudios/alumno.model';
 import { AlumnosService } from 'app/core/services/centro-estudios/alumnos.service';
 import { BehaviorSubject, Subject, debounceTime, finalize, takeUntil } from 'rxjs';
+import { blurActiveElement } from 'app/core/utils/focus.util';
 import { AlumnosActionsCellComponent } from './actions-cell/alumnos-actions-cell.component';
 import type { AlumnoFormDialogResult } from './alumno-form-dialog/alumno-form-dialog.component';
 
@@ -173,6 +174,8 @@ export class AlumnosComponent implements OnInit, OnDestroy {
     }
 
     private openAlumnoDialog(alumno?: Alumno): void {
+        blurActiveElement();
+
         import('./alumno-form-dialog/alumno-form-dialog.component').then(
             ({ AlumnoFormDialogComponent }) => {
                 const dialogRef = this.dialog.open(AlumnoFormDialogComponent, {
@@ -204,6 +207,8 @@ export class AlumnosComponent implements OnInit, OnDestroy {
     }
 
     private openApoderadosDialog(alumno: Alumno): void {
+        blurActiveElement();
+
         import('./apoderados/alumno-apoderados-dialog.component').then(
             ({ AlumnoApoderadosDialogComponent }) => {
                 this.dialog.open(AlumnoApoderadosDialogComponent, {
