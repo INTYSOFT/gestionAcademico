@@ -26,8 +26,6 @@ import type {
     CursoFormDialogData,
     CursoFormDialogResult,
 } from './curso-form-dialog/curso-form-dialog.component';
-import { CiclosService } from 'app/core/services/centro-estudios/ciclos.service';
-import { Ciclo } from 'app/core/models/centro-estudios/ciclo.model';
 
 @Component({
     selector: 'app-cursos',
@@ -59,15 +57,8 @@ export class CursosComponent implements OnInit, OnDestroy {
     protected readonly isLoading$ = new BehaviorSubject<boolean>(false);
     protected readonly cursos$ = new BehaviorSubject<Curso[]>([]);
     protected readonly filteredCursos$ = new BehaviorSubject<Curso[]>([]);
-    protected readonly ciclos$ = new BehaviorSubject<Ciclo[]>([]);
 
     protected readonly columnDefs: ColDef<Curso>[] = [
-        {
-            headerName: 'Ciclo',
-            field: 'cicloId',
-            minWidth: 160,
-            valueFormatter: (params) => this.getCicloNombre(params.value ?? params.data?.cicloId),
-        },
         { headerName: 'Nombre', field: 'nombre', minWidth: 200, flex: 1 },
         {
             headerName: 'Descripción',
@@ -117,18 +108,15 @@ export class CursosComponent implements OnInit, OnDestroy {
 
     private gridApi?: GridApi<Curso>;
     private readonly destroy$ = new Subject<void>();
-    private readonly cicloNames = new Map<number, string>();
 
     constructor(
         private readonly fb: FormBuilder,
         private readonly dialog: MatDialog,
         private readonly snackBar: MatSnackBar,
-        private readonly cursosService: CursosService,
-        private readonly ciclosService: CiclosService
+        private readonly cursosService: CursosService
     ) {}
 
     ngOnInit(): void {
-        this.loadCiclos();
         this.loadCursos();
 
         this.searchControl.valueChanges
@@ -152,43 +140,7 @@ export class CursosComponent implements OnInit, OnDestroy {
     }
 
     protected createCurso(): void {
-        if (this.ciclos$.value.length === 0) {
-            this.snackBar.open(
-                'Registra al menos un ciclo antes de crear cursos.',
-                'Cerrar',
-                {
-                    duration: 4000,
-                }
-            );
-            return;
-        }
-
         void this.openCursoDialog();
-    }
-
-    private loadCiclos(): void {
-        this.ciclosService
-            .listAll()
-            .pipe(takeUntil(this.destroy$))
-            .subscribe({
-                next: (ciclos) => {
-                    this.ciclos$.next(ciclos);
-                    this.cicloNames.clear();
-                    ciclos.forEach((ciclo) => {
-                        this.cicloNames.set(ciclo.id, ciclo.nombre);
-                    });
-                    this.gridApi?.refreshCells({ force: true });
-                },
-                error: (error) => {
-                    this.snackBar.open(
-                        error.message ?? 'Ocurrió un error al cargar los ciclos.',
-                        'Cerrar',
-                        {
-                            duration: 5000,
-                        }
-                    );
-                },
-            });
     }
 
     private loadCursos(): void {
@@ -230,7 +182,6 @@ export class CursosComponent implements OnInit, OnDestroy {
             const values = [
                 curso.nombre,
                 curso.descripcion ?? '',
-                this.getCicloNombre(curso.cicloId),
                 curso.fechaRegistro ?? '',
                 curso.fechaActualizacion ?? '',
             ]
@@ -250,7 +201,6 @@ export class CursosComponent implements OnInit, OnDestroy {
             ({ CursoFormDialogComponent }) => {
                 const data: CursoFormDialogData = {
                     curso: curso ?? null,
-                    ciclos: this.ciclos$.value,
                 };
 
                 const dialogRef = this.dialog.open(CursoFormDialogComponent, {
@@ -288,28 +238,5 @@ export class CursosComponent implements OnInit, OnDestroy {
         this.cursos$.next(data);
         this.applyFilter(this.searchControl.value);
         this.gridApi?.refreshCells({ force: true });
-    }
-
-    private getCicloNombre(value: unknown): string {
-        const cicloId = this.toNumber(value);
-
-        if (cicloId === null) {
-            return '';
-        }
-
-        return this.cicloNames.get(cicloId) ?? `ID ${cicloId}`;
-    }
-
-    private toNumber(value: unknown): number | null {
-        if (typeof value === 'number' && !Number.isNaN(value)) {
-            return value;
-        }
-
-        if (typeof value === 'string' && value.trim().length > 0) {
-            const parsed = Number(value);
-            return Number.isNaN(parsed) ? null : parsed;
-        }
-
-        return null;
     }
 }

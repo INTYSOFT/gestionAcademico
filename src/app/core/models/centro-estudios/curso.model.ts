@@ -1,6 +1,5 @@
 export interface Curso {
     id: number;
-    cicloId: number;
     nombre: string;
     descripcion: string | null;
     activo: boolean;
@@ -11,7 +10,6 @@ export interface Curso {
 }
 
 export interface CreateCursoPayload {
-    cicloId: number;
     nombre: string;
     descripcion?: string | null;
     activo: boolean;

@@ -10,7 +10,6 @@ import {
 
 interface CursoApi extends Partial<Curso> {
     Id?: number | string;
-    CicloId?: number | string;
     Nombre?: string | null;
     Descripcion?: string | null;
     Activo?: boolean | string | number | null;
@@ -78,16 +77,14 @@ export class CursosService extends ApiMainService {
         }
 
         const id = this.coerceNumber(raw.id ?? raw.Id);
-        const cicloId = this.coerceNumber(raw.cicloId ?? raw.CicloId);
         const nombre = this.coerceOptionalString(raw.nombre ?? raw.Nombre);
 
-        if (id === null || cicloId === null || !nombre) {
+        if (id === null || !nombre) {
             return null;
         }
 
         return {
             id,
-            cicloId,
             nombre,
             descripcion: this.coerceOptionalString(raw.descripcion ?? raw.Descripcion),
             activo: this.coerceBoolean(raw.activo ?? raw.Activo, true),
