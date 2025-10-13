@@ -94,6 +94,13 @@ export const appRoutes: Route[] = [
                             import('app/modules/admin/mantenimiento/cursos/cursos.routes'),
                     },
                     {
+                        path: 'especialidad-docente',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/mantenimiento/especialidades/especialidades.routes'
+                            ),
+                    },
+                    {
                         path: 'ciclos',
                         loadChildren: () =>
                             import('app/modules/admin/mantenimiento/ciclos/ciclos.routes'),
