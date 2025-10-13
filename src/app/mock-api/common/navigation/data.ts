@@ -37,6 +37,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 link : '/mantenimiento/cursos'
             },
             {
+                id   : 'mantenimiento.especialidades',
+                title: 'Especialidad Docente',
+                type : 'basic',
+                icon : 'heroicons_outline:academic-cap',
+                link : '/mantenimiento/especialidad-docente'
+            },
+            {
                 id   : 'mantenimiento.universidades',
                 title: 'Universidades',
                 type : 'basic',
@@ -132,6 +139,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:book-open',
                 link : '/mantenimiento/cursos'
+            },
+            {
+                id   : 'mantenimiento.especialidades',
+                title: 'Especialidad Docente',
+                type : 'basic',
+                icon : 'heroicons_outline:academic-cap',
+                link : '/mantenimiento/especialidad-docente'
             },
             {
                 id   : 'mantenimiento.universidades',
