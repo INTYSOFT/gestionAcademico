@@ -30,6 +30,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 link : '/mantenimiento/ciclos'
             },
             {
+                id   : 'mantenimiento.cursos',
+                title: 'Cursos',
+                type : 'basic',
+                icon : 'heroicons_outline:book-open',
+                link : '/mantenimiento/cursos'
+            },
+            {
                 id   : 'mantenimiento.universidades',
                 title: 'Universidades',
                 type : 'basic',
@@ -118,6 +125,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:calendar-days',
                 link : '/mantenimiento/ciclos'
+            },
+            {
+                id   : 'mantenimiento.cursos',
+                title: 'Cursos',
+                type : 'basic',
+                icon : 'heroicons_outline:book-open',
+                link : '/mantenimiento/cursos'
             },
             {
                 id   : 'mantenimiento.universidades',

@@ -3,18 +3,16 @@ import { Injectable } from '@angular/core';
 import { Observable, catchError, map, of, switchMap } from 'rxjs';
 import { ApiMainService } from '../api/api-main.service';
 import {
-    Ciclo,
-    CreateCicloPayload,
-    UpdateCicloPayload,
-} from 'app/core/models/centro-estudios/ciclo.model';
+    Curso,
+    CreateCursoPayload,
+    UpdateCursoPayload,
+} from 'app/core/models/centro-estudios/curso.model';
 
-interface CicloApi extends Partial<Ciclo> {
+interface CursoApi extends Partial<Curso> {
     Id?: number | string;
-    SedeId?: number | string;
+    CicloId?: number | string;
     Nombre?: string | null;
-    FechaInicio?: string | null;
-    FechaFin?: string | null;
-    CapacidadTotal?: number | string | null;
+    Descripcion?: string | null;
     Activo?: boolean | string | number | null;
     FechaRegistro?: string | null;
     FechaActualizacion?: string | null;
@@ -23,14 +21,14 @@ interface CicloApi extends Partial<Ciclo> {
 }
 
 @Injectable({ providedIn: 'root' })
-export class CiclosService extends ApiMainService {
-    private readonly resourcePath = 'api/Cicloes';
+export class CursosService extends ApiMainService {
+    private readonly resourcePath = 'api/Cursoes';
 
-    listAll(): Observable<Ciclo[]> {
+    list(): Observable<Curso[]> {
         return this.http
-            .get<CicloApi[]>(this.buildUrl(this.resourcePath), this.createOptions())
+            .get<CursoApi[]>(this.buildUrl(this.resourcePath), this.createOptions())
             .pipe(
-                map((response) => this.normalizeCiclos(response)),
+                map((response) => this.normalizeCursos(response)),
                 catchError((error: HttpErrorResponse) => {
                     if (error.status === 404) {
                         return of([]);
@@ -41,78 +39,57 @@ export class CiclosService extends ApiMainService {
             );
     }
 
-    listBySede(sedeId: number): Observable<Ciclo[]> {
-        const url = this.buildUrl(`${this.resourcePath}/sede/${sedeId}`);
-
-        return this.http
-            .get<CicloApi[]>(url, this.createOptions())
-            .pipe(
-                map((response) => this.normalizeCiclos(response)),
-                catchError((error: HttpErrorResponse) => {
-                    if (error.status === 404) {
-                        return of([]);
-                    }
-
-                    return this.handleError(error);
-                })
-            );
-    }
-
-    getCiclo(id: number): Observable<Ciclo> {
-        return this.get<CicloApi>(`${this.resourcePath}/${id}`).pipe(
-            map((response) => this.normalizeCicloOrThrow(response))
+    getCurso(id: number): Observable<Curso> {
+        return this.get<CursoApi>(`${this.resourcePath}/${id}`).pipe(
+            map((response) => this.normalizeCursoOrThrow(response))
         );
     }
 
-    createCiclo(payload: CreateCicloPayload): Observable<Ciclo> {
-        return this.post<CicloApi>(this.resourcePath, payload).pipe(
-            map((response) => this.normalizeCicloOrThrow(response))
+    createCurso(payload: CreateCursoPayload): Observable<Curso> {
+        return this.post<CursoApi>(this.resourcePath, payload).pipe(
+            map((response) => this.normalizeCursoOrThrow(response))
         );
     }
 
-    updateCiclo(id: number, payload: UpdateCicloPayload): Observable<Ciclo> {
-        const body: UpdateCicloPayload & { id: number } = {
+    updateCurso(id: number, payload: UpdateCursoPayload): Observable<Curso> {
+        const body: UpdateCursoPayload & { id: number } = {
             ...payload,
             id,
         };
 
         return this.patch<unknown>(`${this.resourcePath}/${id}`, body).pipe(
-            switchMap(() => this.getCiclo(id))
+            switchMap(() => this.getCurso(id))
         );
     }
 
-    private normalizeCiclos(response: CicloApi[] | null | undefined): Ciclo[] {
+    private normalizeCursos(response: CursoApi[] | null | undefined): Curso[] {
         if (!Array.isArray(response)) {
             return [];
         }
 
         return response
-            .map((item) => this.normalizeCiclo(item))
-            .filter((ciclo): ciclo is Ciclo => ciclo !== null);
+            .map((item) => this.normalizeCurso(item))
+            .filter((curso): curso is Curso => curso !== null);
     }
 
-    private normalizeCiclo(raw: CicloApi | null | undefined): Ciclo | null {
+    private normalizeCurso(raw: CursoApi | null | undefined): Curso | null {
         if (!raw) {
             return null;
         }
 
         const id = this.coerceNumber(raw.id ?? raw.Id);
-        const sedeId = this.coerceNumber(raw.sedeId ?? raw.SedeId);
+        const cicloId = this.coerceNumber(raw.cicloId ?? raw.CicloId);
         const nombre = this.coerceOptionalString(raw.nombre ?? raw.Nombre);
 
-        if (id === null || sedeId === null || !nombre) {
+        if (id === null || cicloId === null || !nombre) {
             return null;
         }
 
         return {
             id,
-            sedeId,
+            cicloId,
             nombre,
-            fechaInicio: this.coerceOptionalString(raw.fechaInicio ?? raw.FechaInicio),
-            fechaFin: this.coerceOptionalString(raw.fechaFin ?? raw.FechaFin),
-            capacidadTotal: this.coerceOptionalNumber(
-                raw.capacidadTotal ?? raw.CapacidadTotal
-            ),
+            descripcion: this.coerceOptionalString(raw.descripcion ?? raw.Descripcion),
             activo: this.coerceBoolean(raw.activo ?? raw.Activo, true),
             fechaRegistro: this.coerceOptionalString(
                 raw.fechaRegistro ?? raw.FechaRegistro
@@ -129,14 +106,14 @@ export class CiclosService extends ApiMainService {
         };
     }
 
-    private normalizeCicloOrThrow(raw: CicloApi | null | undefined): Ciclo {
-        const ciclo = this.normalizeCiclo(raw);
+    private normalizeCursoOrThrow(raw: CursoApi | null | undefined): Curso {
+        const curso = this.normalizeCurso(raw);
 
-        if (!ciclo) {
+        if (!curso) {
             throw new Error('La respuesta del servidor no tiene el formato esperado.');
         }
 
-        return ciclo;
+        return curso;
     }
 
     private coerceNumber(value: unknown): number | null {
