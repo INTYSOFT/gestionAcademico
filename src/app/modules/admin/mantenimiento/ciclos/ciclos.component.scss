@@ -13,7 +13,18 @@
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
+        flex-wrap: wrap;
+        column-gap: 1rem;
+        row-gap: 0.75rem;
     }
+}
+
+.ciclos__new-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .ciclos__sede-field {
