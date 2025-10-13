@@ -1,0 +1,23 @@
+.docentes {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.5rem;
+
+    &__header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    &__search-field {
+        flex: 1 1 280px;
+        max-width: 420px;
+    }
+
+    &__grid {
+        width: 100%;
+        min-height: 360px;
+    }
+}

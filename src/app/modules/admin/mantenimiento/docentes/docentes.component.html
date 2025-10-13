@@ -1,0 +1,35 @@
+<div class="flex min-w-0 flex-auto flex-col">
+    <div class="flex-auto p-6 sm:p-10">
+        <section class="docentes">
+            <header class="docentes__header">
+                <mat-form-field appearance="outline" class="docentes__search-field">
+                    <mat-label>Buscar docentes</mat-label>
+                    <input
+                        matInput
+                        type="search"
+                        [formControl]="searchControl"
+                        placeholder="DNI, nombre o especialidad" />
+                </mat-form-field>
+                <button mat-raised-button color="primary" type="button" (click)="createDocente()">
+                    <mat-icon>add</mat-icon>
+                    Nuevo docente
+                </button>
+            </header>
+
+            <mat-progress-bar
+                *ngIf="isLoading$ | async"
+                mode="indeterminate"
+                color="primary"></mat-progress-bar>
+
+            <ag-grid-angular
+                class="ag-theme-material docentes__grid"
+                [theme]="'legacy'"
+                [rowData]="filteredDocentes$ | async"
+                [columnDefs]="columnDefs"
+                [defaultColDef]="defaultColDef"
+                [animateRows]="true"
+                [domLayout]="'autoHeight'"
+                (gridReady)="onGridReady($event)"></ag-grid-angular>
+        </section>
+    </div>
+</div>
