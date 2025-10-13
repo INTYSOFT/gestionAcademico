@@ -28,13 +28,25 @@
         }
     }
 
-    &__item--selected {
-        background-color: rgba(63, 81, 181, 0.1);
+    &__item {
+        border-radius: 0.5rem;
+        transition: background-color 0.2s ease, color 0.2s ease;
+
+        &.apoderado-dialog__item--selected {
+            background-color: var(--mat-sys-color-primary-container) !important;
+            color: var(--mat-sys-color-on-primary-container);
+        }
     }
 
     &__item-subtitle {
         font-size: 0.85rem;
         color: var(--mat-sys-color-outline);
+        transition: color 0.2s ease;
+    }
+
+    &__item--selected &__item-subtitle,
+    &__item.apoderado-dialog__item--selected &__item-subtitle {
+        color: var(--mat-sys-color-on-primary-container);
     }
 
     &__empty {

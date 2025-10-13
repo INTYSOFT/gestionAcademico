@@ -18,6 +18,7 @@
             <a
                 mat-list-item
                 *ngFor="let apoderado of filteredApoderados$ | async; trackBy: trackByApoderadoId"
+                class="apoderado-dialog__item"
                 (click)="selectApoderado(apoderado)"
                 [class.apoderado-dialog__item--selected]="isSelected(apoderado)"
             >
@@ -35,7 +36,10 @@
         </p>
     </section>
 
-    <section class="apoderado-dialog__section">
+    <section
+        class="apoderado-dialog__section"
+        *ngIf="!(isLoading$ | async) && !(filteredApoderados$ | async)?.length"
+    >
         <h3>2. Registrar nuevo apoderado</h3>
         <form [formGroup]="createForm" (ngSubmit)="createApoderado()" class="apoderado-dialog__form">
             <mat-form-field appearance="outline">
