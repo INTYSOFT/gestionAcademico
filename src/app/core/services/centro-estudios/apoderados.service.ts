@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { API_CONFIG } from 'app/core/config/api.config';
 import { HttpErrorService } from 'app/core/services/http-error.service';
@@ -7,7 +7,7 @@ import {
     CreateApoderadoPayload,
     UpdateApoderadoPayload,
 } from 'app/core/models/centro-estudios/apoderado.model';
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { Observable, catchError, map, of, throwError } from 'rxjs';
 import { CENTRO_ESTUDIOS_API } from './centro-estudios-api.constants';
 
 @Injectable({ providedIn: 'root' })
@@ -24,6 +24,26 @@ export class ApoderadosService {
                 catchError((error) =>
                     throwError(() => this.errorService.createError(error))
                 )
+            );
+    }
+
+    getByDocumento(documento: string): Observable<Apoderado | null> {
+        const encodedDocumento = encodeURIComponent(documento);
+
+        return this.http
+            .get<Apoderado>(
+                `${this.buildUrl(CENTRO_ESTUDIOS_API.apoderados)}/documento/${encodedDocumento}`
+            )
+            .pipe(
+                catchError((error: HttpErrorResponse) => {
+                    if (error.status === 404) {
+                        return of(null);
+                    }
+
+                    return throwError(() =>
+                        this.errorService.createError(error)
+                    );
+                })
             );
     }
 
