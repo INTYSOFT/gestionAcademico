@@ -1,0 +1,25 @@
+.apoderado-form {
+    position: relative;
+
+    &__grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        align-items: start;
+    }
+
+    &__loading {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(2px);
+        z-index: 2;
+    }
+}
+
+mat-dialog-content {
+    overflow: visible;
+}
