@@ -14,22 +14,21 @@
             mode="indeterminate"
         ></mat-progress-spinner>
 
-        <mat-nav-list *ngIf="!(isLoading$ | async)">
-            <a
-                mat-list-item
-                *ngFor="let apoderado of filteredApoderados$ | async; trackBy: trackByApoderadoId"
-                class="apoderado-dialog__item"
-                (click)="selectApoderado(apoderado)"
-                [class.apoderado-dialog__item--selected]="isSelected(apoderado)"
-            >
-                <div matLine>{{ apoderado.apellidos }} {{ apoderado.nombres }}</div>
-                <div matLine class="apoderado-dialog__item-subtitle">
-                    DNI: {{ apoderado.documento || '—' }} · Celular:
-                    {{ apoderado.celular || '—' }} · Correo:
-                    {{ apoderado.correo || '—' }}
-                </div>
-            </a>
-        </mat-nav-list>
+        <div class="apoderado-dialog__grid-wrapper" *ngIf="!(isLoading$ | async)">
+            <ag-grid-angular
+                class="ag-theme-material apoderado-dialog__grid"
+                [columnDefs]="columnDefs"
+                [defaultColDef]="defaultColDef"
+                [rowData]="filteredApoderados$ | async"
+                [rowSelection]="rowSelection"
+                [rowClassRules]="rowClassRules"
+                [domLayout]="'autoHeight'"
+                [suppressCellFocus]="true"
+                [getRowId]="getRowId"
+                (gridReady)="onGridReady($event)"
+                (selectionChanged)="onSelectionChanged()"
+            ></ag-grid-angular>
+        </div>
 
         <p *ngIf="showCreateSection$ | async" class="apoderado-dialog__empty">
             No se encontraron coincidencias.

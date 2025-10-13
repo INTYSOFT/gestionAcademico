@@ -16,11 +16,18 @@ import {
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
+import { AgGridAngular } from 'ag-grid-angular';
+import {
+    ColDef,
+    GetRowIdParams,
+    GridApi,
+    GridReadyEvent,
+    RowClassRules,
+} from 'ag-grid-community';
 import {
     BehaviorSubject,
     Subject,
@@ -63,11 +70,11 @@ export interface ApoderadoFormDialogResult {
         MatDialogModule,
         MatFormFieldModule,
         MatInputModule,
-        MatListModule,
         MatButtonModule,
         MatSnackBarModule,
         MatProgressSpinnerModule,
         MatSelectModule,
+        AgGridAngular,
     ],
 })
 export class ApoderadoFormDialogComponent implements OnInit, OnDestroy {
@@ -82,6 +89,9 @@ export class ApoderadoFormDialogComponent implements OnInit, OnDestroy {
         Validators.required,
     ]);
 
+    protected readonly isLoading$ = new BehaviorSubject<boolean>(true);
+    protected readonly isCreating$ = new BehaviorSubject<boolean>(false);
+
     protected readonly showCreateSection$ = combineLatest([
         this.isLoading$,
         this.filteredApoderados$,
@@ -93,10 +103,50 @@ export class ApoderadoFormDialogComponent implements OnInit, OnDestroy {
 
     protected readonly createForm: FormGroup;
 
-    protected readonly isLoading$ = new BehaviorSubject<boolean>(true);
-    protected readonly isCreating$ = new BehaviorSubject<boolean>(false);
+    protected readonly columnDefs: ColDef<Apoderado>[] = [
+        {
+            headerName: 'Apellidos y nombres',
+            valueGetter: ({ data }) =>
+                data ? `${data.apellidos ?? ''} ${data.nombres ?? ''}`.trim() : '',
+            flex: 2,
+        },
+        {
+            headerName: 'Documento',
+            field: 'documento',
+            flex: 1,
+        },
+        {
+            headerName: 'Celular',
+            field: 'celular',
+            flex: 1,
+        },
+        {
+            headerName: 'Correo',
+            field: 'correo',
+            flex: 1.5,
+        },
+    ];
+
+    protected readonly defaultColDef: ColDef<Apoderado> = {
+        sortable: true,
+        resizable: true,
+        flex: 1,
+    };
+
+    protected readonly rowSelection: 'single' = 'single';
+
+    protected readonly rowClassRules: RowClassRules<Apoderado> = {
+        'apoderado-dialog__row--selected': ({ data }) =>
+            !!data && this.selectedApoderado$.value?.id === data.id,
+    };
+
+    protected readonly getRowId = (params: GetRowIdParams<Apoderado>): string => {
+        const id = params.data?.id;
+        return id ? id.toString() : '';
+    };
 
     private readonly destroy$ = new Subject<void>();
+    private gridApi: GridApi<Apoderado> | null = null;
 
     constructor(
         @Inject(MAT_DIALOG_DATA) protected readonly data: ApoderadoFormDialogData,
@@ -135,6 +185,18 @@ export class ApoderadoFormDialogComponent implements OnInit, OnDestroy {
         this.searchControl.valueChanges
             .pipe(debounceTime(300), takeUntil(this.destroy$))
             .subscribe((term) => this.applyFilter(term));
+
+        this.filteredApoderados$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((apoderados) => {
+                const selectedId = this.selectedApoderado$.value?.id;
+
+                if (selectedId && !apoderados.some((item) => item.id === selectedId)) {
+                    this.selectApoderado(null, { resetParentesco: false });
+                } else {
+                    this.refreshGridStyles();
+                }
+            });
     }
 
     ngOnDestroy(): void {
@@ -142,9 +204,19 @@ export class ApoderadoFormDialogComponent implements OnInit, OnDestroy {
         this.destroy$.complete();
     }
 
-    protected selectApoderado(apoderado: Apoderado): void {
-        this.selectedApoderado$.next(apoderado);
-        this.selectedParentesco.reset();
+    protected onGridReady(event: GridReadyEvent<Apoderado>): void {
+        this.gridApi = event.api;
+        this.refreshGridStyles();
+        this.syncGridSelection();
+    }
+
+    protected onSelectionChanged(): void {
+        if (!this.gridApi) {
+            return;
+        }
+
+        const [selected] = this.gridApi.getSelectedRows();
+        this.selectApoderado(selected ?? null, { syncGrid: false });
     }
 
     protected save(): void {
@@ -199,16 +271,27 @@ export class ApoderadoFormDialogComponent implements OnInit, OnDestroy {
             });
     }
 
-    protected isSelected(apoderado: Apoderado): boolean {
-        return this.selectedApoderado$.value?.id === apoderado.id;
-    }
-
-    protected trackByApoderadoId(index: number, apoderado: Apoderado): number {
-        return apoderado.id;
-    }
-
     protected trackByParentescoId(index: number, parentesco: Parentesco): number {
         return parentesco.id;
+    }
+
+    protected selectApoderado(
+        apoderado: Apoderado | null,
+        options: { syncGrid?: boolean; resetParentesco?: boolean } = {}
+    ): void {
+        const { syncGrid = true, resetParentesco = true } = options;
+
+        this.selectedApoderado$.next(apoderado);
+
+        if (resetParentesco) {
+            this.selectedParentesco.reset();
+        }
+
+        if (syncGrid) {
+            this.syncGridSelection();
+        } else {
+            this.refreshGridStyles();
+        }
     }
 
     private loadApoderados(): void {
@@ -260,5 +343,31 @@ export class ApoderadoFormDialogComponent implements OnInit, OnDestroy {
         });
 
         this.filteredApoderados$.next(filtered);
+    }
+
+    private syncGridSelection(): void {
+        if (!this.gridApi) {
+            return;
+        }
+
+        const selectedId = this.selectedApoderado$.value?.id;
+
+        this.gridApi.forEachNode((node) => {
+            const isSelected = !!selectedId && node.data?.id === selectedId;
+
+            if (node.isSelected() !== isSelected) {
+                node.setSelected(isSelected);
+            }
+
+            if (isSelected) {
+                this.gridApi?.ensureNodeVisible(node, 'middle');
+            }
+        });
+
+        this.refreshGridStyles();
+    }
+
+    private refreshGridStyles(): void {
+        this.gridApi?.refreshCells({ force: true });
     }
 }
