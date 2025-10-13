@@ -21,16 +21,11 @@ import { Subject, takeUntil } from 'rxjs';
     styles: [
         `
             settings {
-                position: static;
-                display: block;
-                flex: none;
-                width: auto;
+                display: contents;
             }
 
-            @media (screen and min-width: 1280px) {
-                empty-layout + settings .settings-cog {
-                    right: 0 !important;
-                }
+            .settings-button {
+                color: inherit;
             }
         `,
     ],
