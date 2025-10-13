@@ -21,7 +21,15 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
-import { BehaviorSubject, Subject, debounceTime, finalize, takeUntil } from 'rxjs';
+import {
+    BehaviorSubject,
+    Subject,
+    combineLatest,
+    debounceTime,
+    finalize,
+    map,
+    takeUntil,
+} from 'rxjs';
 import {
     Apoderado,
     CreateApoderadoPayload,
@@ -74,9 +82,18 @@ export class ApoderadoFormDialogComponent implements OnInit, OnDestroy {
         Validators.required,
     ]);
 
+    protected readonly showCreateSection$ = combineLatest([
+        this.isLoading$,
+        this.filteredApoderados$,
+    ]).pipe(map(([isLoading, apoderados]) => !isLoading && apoderados.length === 0));
+
+    protected readonly parentescoStep$ = this.showCreateSection$.pipe(
+        map((showCreateSection) => (showCreateSection ? 3 : 2))
+    );
+
     protected readonly createForm: FormGroup;
 
-    protected readonly isLoading$ = new BehaviorSubject<boolean>(false);
+    protected readonly isLoading$ = new BehaviorSubject<boolean>(true);
     protected readonly isCreating$ = new BehaviorSubject<boolean>(false);
 
     private readonly destroy$ = new Subject<void>();

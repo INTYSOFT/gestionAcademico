@@ -31,14 +31,14 @@
             </a>
         </mat-nav-list>
 
-        <p *ngIf="!(isLoading$ | async) && !(filteredApoderados$ | async)?.length" class="apoderado-dialog__empty">
+        <p *ngIf="showCreateSection$ | async" class="apoderado-dialog__empty">
             No se encontraron coincidencias.
         </p>
     </section>
 
     <section
         class="apoderado-dialog__section"
-        *ngIf="!(isLoading$ | async) && !(filteredApoderados$ | async)?.length"
+        *ngIf="showCreateSection$ | async"
     >
         <h3>2. Registrar nuevo apoderado</h3>
         <form [formGroup]="createForm" (ngSubmit)="createApoderado()" class="apoderado-dialog__form">
@@ -100,7 +100,7 @@
     </section>
 
     <section class="apoderado-dialog__section">
-        <h3>3. Seleccionar parentesco</h3>
+        <h3>{{ (parentescoStep$ | async) }}. Seleccionar parentesco</h3>
         <mat-form-field appearance="outline" class="apoderado-dialog__select">
             <mat-label>Parentesco</mat-label>
             <mat-select [formControl]="selectedParentesco">
