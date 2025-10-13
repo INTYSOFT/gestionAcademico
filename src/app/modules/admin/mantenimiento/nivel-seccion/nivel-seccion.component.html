@@ -1,0 +1,58 @@
+<div class="flex min-w-0 flex-auto flex-col">
+    <div class="flex-auto p-6 sm:p-10">
+        <section class="niveles">
+            <header class="niveles__header">
+                <mat-form-field
+                    appearance="outline"
+                    class="niveles__search-field">
+                    <mat-label>Buscar nivel</mat-label>
+                    <input
+                        matInput
+                        type="search"
+                        [formControl]="searchControl"
+                        placeholder="Buscar por nombre o descripción" />
+                    <button
+                        mat-icon-button
+                        type="button"
+                        matSuffix
+                        *ngIf="searchControl.value"
+                        (click)="clearSearch()"
+                        matTooltip="Limpiar búsqueda">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                </mat-form-field>
+
+                <button
+                    mat-raised-button
+                    color="primary"
+                    type="button"
+                    class="niveles__new-button"
+                    (click)="createNivel()">
+                    <mat-icon>add</mat-icon>
+                    Nuevo nivel
+                </button>
+            </header>
+
+            <mat-progress-bar
+                *ngIf="isLoading$ | async"
+                mode="indeterminate"
+                color="primary"></mat-progress-bar>
+
+            <div class="ag-theme-material niveles__grid" *ngIf="(niveles$ | async) as niveles">
+                <ag-grid-angular
+                    class="w-full h-full"
+                    [theme]="'legacy'"
+                    [rowData]="niveles"
+                    [columnDefs]="columnDefs"
+                    [defaultColDef]="defaultColDef"
+                    [animateRows]="true"
+                    [domLayout]="'autoHeight'"
+                    (gridReady)="onGridReady($event)"></ag-grid-angular>
+
+                <p class="niveles__empty" *ngIf="!niveles.length && !(isLoading$ | async)">
+                    No se encontraron niveles.
+                </p>
+            </div>
+        </section>
+    </div>
+</div>
