@@ -28,31 +28,33 @@
         }
     }
 
-    &__item {
+    &__grid-wrapper {
+        width: 100%;
+    }
+
+    &__grid {
+        width: 100%;
         border-radius: 0.5rem;
-        cursor: pointer;
-        transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        overflow: hidden;
 
-        &:hover {
-            background-color: var(--mat-sys-color-surface-variant);
+        .ag-root-wrapper,
+        .ag-root-wrapper-body,
+        .ag-center-cols-viewport {
+            border-radius: 0.5rem;
         }
 
-        &.apoderado-dialog__item--selected {
-            background-color: var(--mat-sys-color-primary) !important;
-            color: var(--mat-sys-color-on-primary);
-            box-shadow: 0 0 0 2px var(--mat-sys-color-primary);
+        .ag-header-cell-label {
+            font-weight: 600;
         }
     }
 
-    &__item-subtitle {
-        font-size: 0.85rem;
-        color: var(--mat-sys-color-outline);
-        transition: color 0.2s ease;
-    }
-
-    &__item--selected &__item-subtitle,
-    &__item.apoderado-dialog__item--selected &__item-subtitle {
+    &__row--selected {
+        background-color: var(--mat-sys-color-primary) !important;
         color: var(--mat-sys-color-on-primary);
+
+        .ag-cell {
+            color: inherit;
+        }
     }
 
     &__empty {
