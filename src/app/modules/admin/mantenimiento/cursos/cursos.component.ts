@@ -73,18 +73,7 @@ export class CursosComponent implements OnInit, OnDestroy {
             minWidth: 120,
             valueFormatter: (params) => (params.value ? 'Sí' : 'No'),
         },
-        {
-            headerName: 'Fecha registro',
-            field: 'fechaRegistro',
-            minWidth: 160,
-            valueFormatter: (params) => params.value ?? '',
-        },
-        {
-            headerName: 'Fecha actualización',
-            field: 'fechaActualizacion',
-            minWidth: 180,
-            valueFormatter: (params) => params.value ?? '',
-        },
+       
         {
             headerName: 'Acciones',
             cellRenderer: CursosActionsCellComponent,
