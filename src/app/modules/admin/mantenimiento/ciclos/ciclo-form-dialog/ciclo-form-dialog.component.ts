@@ -194,8 +194,8 @@ export class CicloFormDialogComponent {
     }
 
     private patchForm(ciclo: Ciclo): void {
-        const fechaInicio = ciclo.fechaInicio ? new Date(ciclo.fechaInicio) : null;
-        const fechaFin = ciclo.fechaFin ? new Date(ciclo.fechaFin) : null;
+        const fechaInicio = this.toDateValue(ciclo.fechaInicio);
+        const fechaFin = this.toDateValue(ciclo.fechaFin);
 
         this.form.patchValue({
             nombre: ciclo.nombre,
@@ -208,12 +208,8 @@ export class CicloFormDialogComponent {
 
     private buildPayload(): CreateCicloPayload {
         const raw = this.form.value;
-        const fechaInicio = raw.fechaInicio
-            ? this.datePipe.transform(raw.fechaInicio, 'yyyy-MM-dd')
-            : null;
-        const fechaFin = raw.fechaFin
-            ? this.datePipe.transform(raw.fechaFin, 'yyyy-MM-dd')
-            : null;
+        const fechaInicio = this.formatDateValue(raw.fechaInicio);
+        const fechaFin = this.formatDateValue(raw.fechaFin);
 
         const capacidadTotalRaw = raw.capacidadTotal;
         const capacidadTotal =
@@ -234,6 +230,10 @@ export class CicloFormDialogComponent {
 
 
     private normalizeDateValue(value: unknown): string | null {
+        return this.formatDateValue(value);
+    }
+
+    private toDateValue(value: unknown): Date | null {
         if (value === null || value === undefined || value === '') {
             return null;
         }
@@ -243,7 +243,7 @@ export class CicloFormDialogComponent {
                 return null;
             }
 
-            return this.datePipe.transform(value, 'yyyy-MM-dd');
+            return new Date(value.getFullYear(), value.getMonth(), value.getDate());
         }
 
         if (typeof value === 'string') {
@@ -252,15 +252,39 @@ export class CicloFormDialogComponent {
                 return null;
             }
 
-            const parsed = new Date(trimmed);
-            if (!Number.isNaN(parsed.getTime())) {
-                return this.datePipe.transform(parsed, 'yyyy-MM-dd');
+            const hyphenParts = trimmed.split('-');
+            if (hyphenParts.length === 3) {
+                const [yearRaw, monthRaw, dayRaw] = hyphenParts;
+                const year = Number(yearRaw);
+                const month = Number(monthRaw);
+                const day = Number(dayRaw);
+
+                if (!Number.isNaN(year) && !Number.isNaN(month) && !Number.isNaN(day)) {
+                    const date = new Date(year, month - 1, day);
+                    if (!Number.isNaN(date.getTime())) {
+                        return date;
+                    }
+                }
             }
 
-            return trimmed;
+            const parsed = new Date(trimmed);
+            if (!Number.isNaN(parsed.getTime())) {
+                return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+            }
         }
 
         return null;
+    }
+
+    private formatDateValue(value: unknown): string | null {
+        const date = this.toDateValue(value);
+
+        if (!date) {
+            return null;
+        }
+
+        const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        return this.datePipe.transform(utcDate, 'yyyy-MM-dd', 'UTC');
     }
 
 }
