@@ -38,6 +38,11 @@ import {
     AddSeccionDialogData,
     AddSeccionDialogResult,
 } from './add-seccion-dialog/add-seccion-dialog.component';
+import {
+    EditSeccionDialogComponent,
+    EditSeccionDialogData,
+    EditSeccionDialogResult,
+} from './edit-seccion-dialog/edit-seccion-dialog.component';
 
 interface SeccionCicloViewModel extends SeccionCiclo {
     seccionNombre: string;
@@ -511,8 +516,8 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
             {
                 headerName: 'Acciones',
                 field: 'id',
-                minWidth: 130,
-                maxWidth: 150,
+                minWidth: 200,
+                maxWidth: 220,
                 filter: false,
                 sortable: false,
                 resizable: false,
@@ -528,6 +533,32 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
     ): HTMLElement {
         const container = document.createElement('div');
         container.classList.add('seccion-ciclo__actions');
+
+        const editButton = document.createElement('button');
+        editButton.type = 'button';
+        editButton.classList.add('seccion-ciclo__edit-button');
+        editButton.setAttribute('aria-label', 'Editar sección');
+        editButton.title = 'Editar';
+
+        const editIcon = document.createElement('span');
+        editIcon.classList.add('material-icons', 'seccion-ciclo__edit-icon');
+        editIcon.setAttribute('aria-hidden', 'true');
+        editIcon.textContent = 'edit';
+
+        const editText = document.createElement('span');
+        editText.classList.add('seccion-ciclo__edit-text');
+        editText.textContent = 'Editar';
+
+        editButton.append(editIcon, editText);
+
+        editButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (params.data) {
+                this.openEditSeccionDialog(params.data);
+            }
+        });
 
         const deleteButton = document.createElement('button');
         deleteButton.type = 'button';
@@ -555,9 +586,68 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
             }
         });
 
-        container.append(deleteButton);
+        container.append(editButton, deleteButton);
 
         return container;
+    }
+
+    private openEditSeccionDialog(seccionCiclo: SeccionCicloViewModel): void {
+        blurActiveElement();
+
+        const cicloId = this.selectedCicloControl.value;
+
+        if (cicloId === null || cicloId === undefined) {
+            this.snackBar.open('Selecciona un ciclo válido para editar la sección.', 'Cerrar', {
+                duration: 4000,
+            });
+            return;
+        }
+
+        const niveles = this.niveles$.value.filter(
+            (nivel) => nivel.activo || nivel.id === seccionCiclo.nivelId
+        );
+        const secciones = this.secciones$.value.filter(
+            (seccion) => seccion.activo || seccion.id === seccionCiclo.seccionId
+        );
+
+        if (!niveles.length || !secciones.length) {
+            this.snackBar.open(
+                'No hay niveles o secciones disponibles para editar este registro.',
+                'Cerrar',
+                {
+                    duration: 5000,
+                }
+            );
+            return;
+        }
+
+        const data: EditSeccionDialogData = {
+            cicloId,
+            seccionCiclo,
+            niveles,
+            secciones,
+            existingSeccionCiclos: [...this.seccionCiclosData],
+        };
+
+        const dialogRef = this.dialog.open<
+            EditSeccionDialogComponent,
+            EditSeccionDialogData,
+            EditSeccionDialogResult
+        >(EditSeccionDialogComponent, {
+            width: '520px',
+            disableClose: true,
+            data,
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+            if (!result) {
+                return;
+            }
+
+            if (result.action === 'updated') {
+                this.addOrUpdateSeccionCiclo(result.seccionCiclo);
+            }
+        });
     }
 
     private confirmDeleteSeccionCiclo(seccionCiclo: SeccionCicloViewModel): void {
