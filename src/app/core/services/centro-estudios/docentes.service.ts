@@ -23,9 +23,16 @@ interface DocenteApi extends Partial<Docente> {
     UsuaraioActualizacionId?: number | string | null;
 }
 
+type JsonPatchOperation = {
+    op: 'replace';
+    path: string;
+    value: unknown;
+};
+
 @Injectable({ providedIn: 'root' })
 export class DocentesService extends ApiMainService {
     private readonly resourcePath = 'api/Docentes';
+    private readonly jsonPatchHeaders = { 'Content-Type': 'application/json-patch+json' } as const;
 
     list(): Observable<Docente[]> {
         return this.http
@@ -55,14 +62,35 @@ export class DocentesService extends ApiMainService {
     }
 
     updateDocente(id: number, payload: UpdateDocentePayload): Observable<Docente> {
-        const body: UpdateDocentePayload & { id: number } = {
-            ...payload,
-            id,
-        };
+        const patchOperations = this.buildJsonPatchDocument(payload);
 
-        return this.patch<unknown>(`${this.resourcePath}/${id}`, body).pipe(
+        if (patchOperations.length === 0) {
+            return this.getDocente(id);
+        }
+
+        return this.patch<unknown>(`${this.resourcePath}/${id}`, patchOperations, {
+            headers: this.jsonPatchHeaders,
+        }).pipe(
             switchMap(() => this.getDocente(id))
         );
+    }
+
+    private buildJsonPatchDocument(payload: UpdateDocentePayload): JsonPatchOperation[] {
+        const operations: JsonPatchOperation[] = [];
+
+        Object.entries(payload).forEach(([key, value]) => {
+            if (value === undefined) {
+                return;
+            }
+
+            operations.push({
+                op: 'replace',
+                path: `/${key}`,
+                value,
+            });
+        });
+
+        return operations;
     }
 
     private normalizeDocentes(response: DocenteApi[] | null | undefined): Docente[] {
