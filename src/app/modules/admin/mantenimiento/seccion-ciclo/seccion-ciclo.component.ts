@@ -15,7 +15,12 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
+import {
+    ColDef,
+    GridApi,
+    GridReadyEvent,
+    ICellRendererParams,
+} from 'ag-grid-community';
 import { Ciclo } from 'app/core/models/centro-estudios/ciclo.model';
 import { Nivel } from 'app/core/models/centro-estudios/nivel.model';
 import { Seccion } from 'app/core/models/centro-estudios/seccion.model';
@@ -76,26 +81,7 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
     protected readonly selectedSedeControl = this.fb.control<number | null>(null);
     protected readonly selectedCicloControl = this.fb.control<number | null>(null);
 
-    protected readonly columnDefs: ColDef<SeccionCicloViewModel>[] = [
-        { headerName: 'Sección', field: 'seccionNombre', minWidth: 200, flex: 1 },
-        { headerName: 'Nivel', field: 'nivelNombre', minWidth: 160, flex: 1 },
-        {
-            headerName: 'Capacidad',
-            field: 'capacidad',
-            minWidth: 140,
-            valueFormatter: (params) =>
-                params.value === null || params.value === undefined
-                    ? ''
-                    : String(params.value),
-        },
-        {
-            headerName: 'Activo',
-            field: 'activo',
-            minWidth: 120,
-            valueFormatter: (params) => (params.value ? 'Sí' : 'No'),
-        },
-      
-    ];
+    protected readonly columnDefs: ColDef<SeccionCicloViewModel>[];
 
     protected readonly defaultColDef: ColDef = {
         sortable: true,
@@ -119,6 +105,7 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
         private readonly seccionesService: SeccionesService,
         private readonly seccionCicloService: SeccionCicloService
     ) {
+        this.columnDefs = this.buildColumnDefs();
         this.syncSedeControlState();
         this.syncCicloControlState();
     }
@@ -432,6 +419,12 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
         this.updateViewModel();
     }
 
+    private removeSeccionCiclo(seccionCicloId: number): void {
+        const current = this.seccionCiclosData.filter((item) => item.id !== seccionCicloId);
+        this.seccionCiclosData = current;
+        this.updateViewModel();
+    }
+
     private updateViewModel(): void {
         const secciones = this.secciones$.value;
         const niveles = this.niveles$.value;
@@ -494,5 +487,112 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
         if (!shouldDisable && this.selectedCicloControl.disabled) {
             this.selectedCicloControl.enable({ emitEvent: false });
         }
+    }
+
+    private buildColumnDefs(): ColDef<SeccionCicloViewModel>[] {
+        return [
+            { headerName: 'Sección', field: 'seccionNombre', minWidth: 200, flex: 1 },
+            { headerName: 'Nivel', field: 'nivelNombre', minWidth: 160, flex: 1 },
+            {
+                headerName: 'Capacidad',
+                field: 'capacidad',
+                minWidth: 140,
+                valueFormatter: (params) =>
+                    params.value === null || params.value === undefined
+                        ? ''
+                        : String(params.value),
+            },
+            {
+                headerName: 'Activo',
+                field: 'activo',
+                minWidth: 120,
+                valueFormatter: (params) => (params.value ? 'Sí' : 'No'),
+            },
+            {
+                headerName: 'Acciones',
+                field: 'id',
+                minWidth: 130,
+                maxWidth: 150,
+                filter: false,
+                sortable: false,
+                resizable: false,
+                flex: 0,
+                menuTabs: [],
+                cellRenderer: (params) => this.renderActionsCell(params),
+            },
+        ];
+    }
+
+    private renderActionsCell(
+        params: ICellRendererParams<SeccionCicloViewModel, unknown>
+    ): HTMLElement {
+        const container = document.createElement('div');
+        container.classList.add('seccion-ciclo__actions');
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.classList.add('seccion-ciclo__delete-button');
+        deleteButton.setAttribute('aria-label', 'Eliminar sección');
+        deleteButton.title = 'Eliminar';
+
+        const icon = document.createElement('span');
+        icon.classList.add('material-icons', 'seccion-ciclo__delete-icon');
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = 'delete';
+
+        const text = document.createElement('span');
+        text.classList.add('seccion-ciclo__delete-text');
+        text.textContent = 'Eliminar';
+
+        deleteButton.append(icon, text);
+
+        deleteButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (params.data) {
+                this.confirmDeleteSeccionCiclo(params.data);
+            }
+        });
+
+        container.append(deleteButton);
+
+        return container;
+    }
+
+    private confirmDeleteSeccionCiclo(seccionCiclo: SeccionCicloViewModel): void {
+        const confirmed = window.confirm(
+            `¿Deseas eliminar la sección "${seccionCiclo.seccionNombre}" del ciclo seleccionado?`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        this.isLoadingSeccionCiclos$.next(true);
+
+        this.seccionCicloService
+            .delete(seccionCiclo.id)
+            .pipe(
+                takeUntil(this.destroy$),
+                finalize(() => this.isLoadingSeccionCiclos$.next(false))
+            )
+            .subscribe({
+                next: () => {
+                    this.removeSeccionCiclo(seccionCiclo.id);
+                    this.snackBar.open('La sección se eliminó correctamente.', 'Cerrar', {
+                        duration: 4000,
+                    });
+                },
+                error: (error) => {
+                    this.snackBar.open(
+                        error.message ?? 'Ocurrió un error al eliminar la sección.',
+                        'Cerrar',
+                        {
+                            duration: 5000,
+                        }
+                    );
+                },
+            });
     }
 }
