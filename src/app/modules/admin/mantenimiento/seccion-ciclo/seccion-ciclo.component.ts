@@ -94,12 +94,7 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
             minWidth: 120,
             valueFormatter: (params) => (params.value ? 'Sí' : 'No'),
         },
-        {
-            headerName: 'Fecha registro',
-            field: 'fechaRegistro',
-            minWidth: 200,
-            valueFormatter: (params) => params.value ?? '',
-        },
+      
     ];
 
     protected readonly defaultColDef: ColDef = {
