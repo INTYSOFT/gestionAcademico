@@ -11,7 +11,7 @@ import {
 interface SeccionApi extends Partial<Seccion> {
     Id?: number | string;
     Nombre?: string | null;
-    Descripcion?: string | null;
+    Capacidad?: number | string | null;
     Activo?: boolean | string | number | null;
     FechaRegistro?: string | null;
     FechaActualizacion?: string | null;
@@ -39,18 +39,30 @@ export class SeccionesService extends ApiMainService {
     }
 
     create(payload: CreateSeccionPayload): Observable<Seccion> {
-        return this.post<SeccionApi>(this.resourcePath, payload).pipe(
+        const capacidadValue = Number(payload.capacidad);
+        const sanitizedCapacidad = Number.isFinite(capacidadValue) ? capacidadValue : 0;
+        const body: CreateSeccionPayload = {
+            nombre: payload.nombre.trim(),
+            capacidad: sanitizedCapacidad,
+            activo: payload.activo,
+        };
+
+        return this.post<SeccionApi>(this.resourcePath, body).pipe(
             map((response) => this.normalizeSeccionOrThrow(response))
         );
     }
 
     update(id: number, payload: UpdateSeccionPayload): Observable<Seccion> {
+        const capacidadValue = Number(payload.capacidad);
+        const sanitizedCapacidad = Number.isFinite(capacidadValue) ? capacidadValue : 0;
         const body: UpdateSeccionPayload & { id: number } = {
             ...payload,
             id,
+            nombre: payload.nombre.trim(),
+            capacidad: sanitizedCapacidad,
         };
 
-        return this.patch<unknown>(`${this.resourcePath}/${id}`, body).pipe(
+        return this.put<unknown>(`${this.resourcePath}/${id}`, body).pipe(
             switchMap(() => this.getSeccion(id))
         );
     }
@@ -78,6 +90,7 @@ export class SeccionesService extends ApiMainService {
 
         const id = this.coerceNumber(raw.id ?? raw.Id);
         const nombre = this.coerceOptionalString(raw.nombre ?? raw.Nombre);
+        const capacidad = this.coerceOptionalNumber(raw.capacidad ?? raw.Capacidad);
 
         if (id === null || !nombre) {
             return null;
@@ -86,7 +99,7 @@ export class SeccionesService extends ApiMainService {
         return {
             id,
             nombre,
-            descripcion: this.coerceOptionalString(raw.descripcion ?? raw.Descripcion),
+            capacidad: capacidad ?? 0,
             activo: this.coerceBoolean(raw.activo ?? raw.Activo, true),
             fechaRegistro: this.coerceOptionalString(raw.fechaRegistro ?? raw.FechaRegistro),
             fechaActualizacion: this.coerceOptionalString(

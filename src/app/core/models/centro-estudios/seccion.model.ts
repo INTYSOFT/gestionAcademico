@@ -1,7 +1,7 @@
 export interface Seccion {
     id: number;
     nombre: string;
-    descripcion: string | null;
+    capacidad: number;
     activo: boolean;
     fechaRegistro: string | null;
     fechaActualizacion: string | null;
@@ -11,7 +11,7 @@ export interface Seccion {
 
 export interface CreateSeccionPayload {
     nombre: string;
-    descripcion?: string | null;
+    capacidad: number;
     activo: boolean;
 }
 
