@@ -1,6 +1,5 @@
 export interface Ciclo {
     id: number;
-    sedeId: number;
     nombre: string;
     fechaInicio: string | null;
     fechaFin: string | null;
@@ -13,7 +12,6 @@ export interface Ciclo {
 }
 
 export interface CreateCicloPayload {
-    sedeId: number;
     nombre: string;
     fechaInicio: string;
     fechaFin: string;

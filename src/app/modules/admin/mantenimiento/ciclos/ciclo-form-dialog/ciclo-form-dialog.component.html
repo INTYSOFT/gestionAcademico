@@ -8,11 +8,6 @@
     color="primary"></mat-progress-bar>
 
 <mat-dialog-content>
-    <p class="ciclo-dialog__sede">
-        Sede seleccionada:
-        <strong>{{ data.sede.nombre }}</strong>
-    </p>
-
     <form class="ciclo-dialog__form" [formGroup]="form">
         <mat-form-field appearance="outline">
             <mat-label>Nombre del ciclo</mat-label>
@@ -66,6 +61,9 @@
 
         <mat-error *ngIf="form.hasError('invalidDateRange')">
             La fecha de fin debe ser mayor o igual a la fecha de inicio.
+        </mat-error>
+        <mat-error *ngIf="form.hasError('duplicatePeriod')">
+            Ya existe un ciclo registrado con el mismo periodo.
         </mat-error>
 
         <mat-form-field appearance="outline">
