@@ -25,11 +25,9 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { BehaviorSubject, finalize } from 'rxjs';
 import { DatePipe } from '@angular/common';
 import { Ciclo, CreateCicloPayload } from 'app/core/models/centro-estudios/ciclo.model';
-import { Sede } from 'app/core/models/centro-estudios/sede.model';
 import { CiclosService } from 'app/core/services/centro-estudios/ciclos.service';
 
 export interface CicloFormDialogData {
-    sede: Sede;
     ciclo?: Ciclo | null;
 }
 
@@ -85,7 +83,6 @@ export class CicloFormDialogComponent {
             return { invalidDateRange: true };
         }
 
-        return null;
     };
 
     constructor(
@@ -107,7 +104,8 @@ export class CicloFormDialogComponent {
             activo: [true],
         });
 
-        this.form.setValidators(this.dateRangeValidator);
+        this.form.setValidators([this.dateRangeValidator]);
+        this.form.updateValueAndValidity({ emitEvent: false });
 
         if (data.ciclo) {
             this.patchForm(data.ciclo);
@@ -115,6 +113,7 @@ export class CicloFormDialogComponent {
     }
 
     protected save(): void {
+        this.form.updateValueAndValidity();
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             return;
@@ -186,7 +185,6 @@ export class CicloFormDialogComponent {
                 : Number(capacidadTotalRaw);
 
         const payload: CreateCicloPayload = {
-            sedeId: this.data.sede.id,
             nombre: String(raw.nombre ?? '').trim(),
             fechaInicio: fechaInicio ?? '',
             fechaFin: fechaFin ?? '',
@@ -196,4 +194,5 @@ export class CicloFormDialogComponent {
 
         return payload;
     }
+
 }

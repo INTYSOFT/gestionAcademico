@@ -2,19 +2,43 @@
     <div class="flex-auto p-6 sm:p-10">
         <section class="ciclos">
             <header class="ciclos__header">
-                <mat-form-field
-                    appearance="outline"
-                    class="ciclos__sede-field">
-                    <mat-label>Seleccionar sede</mat-label>
-                    <mat-select
-                        [formControl]="selectedSedeControl"
-                        placeholder="Sede">
-                        <mat-option
-                            *ngFor="let sede of sedes$ | async; trackBy: trackBySedeId"
-                            [value]="sede.id">
-                            {{ sede.nombre }}
-                        </mat-option>
-                    </mat-select>
+                <mat-form-field appearance="outline" class="ciclos__search-field">
+                    <mat-label>Buscar ciclo</mat-label>
+                    <input
+                        matInput
+                        type="text"
+                        placeholder="Buscar por nombre o fecha"
+                        [formControl]="searchControl"
+                        autocomplete="off" />
+                    <button
+                        mat-icon-button
+                        matSuffix
+                        type="button"
+                        aria-label="Limpiar búsqueda"
+                        *ngIf="searchControl.value"
+                        (click)="searchControl.setValue('')">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="ciclos__year-field">
+                    <mat-label>Año</mat-label>
+                    <input
+                        matInput
+                        type="number"
+                        placeholder="Ej. 2024"
+                        [formControl]="yearControl"
+                        inputmode="numeric"
+                        autocomplete="off" />
+                    <button
+                        mat-icon-button
+                        matSuffix
+                        type="button"
+                        aria-label="Limpiar filtro por año"
+                        *ngIf="yearControl.value"
+                        (click)="yearControl.setValue('')">
+                        <mat-icon>close</mat-icon>
+                    </button>
                 </mat-form-field>
 
                 <button
@@ -23,40 +47,32 @@
                     type="button"
                     class="ciclos__new-button"
                     (click)="createCiclo()"
-                    [disabled]="(isLoadingSedes$ | async) || selectedSedeControl.value == null">
+                    [disabled]="isLoadingCiclos$ | async">
                     <mat-icon>add</mat-icon>
                     Nuevo ciclo
                 </button>
             </header>
 
             <mat-progress-bar
-                *ngIf="(isLoadingCiclos$ | async) || (isLoadingSedes$ | async)"
+                *ngIf="isLoadingCiclos$ | async"
                 mode="indeterminate"
                 color="primary"></mat-progress-bar>
 
-            <ng-container *ngIf="(sedes$ | async)?.length; else noSedes">
-                <ag-grid-angular
-                    class="ag-theme-material ciclos__grid"
-                    [theme]="'legacy'"
-                    [rowData]="ciclos$ | async"
-                    [columnDefs]="columnDefs"
-                    [defaultColDef]="defaultColDef"
-                    [animateRows]="true"
-                    [domLayout]="'autoHeight'"
-                    (gridReady)="onGridReady($event)"></ag-grid-angular>
+            <ag-grid-angular
+                class="ag-theme-material ciclos__grid"
+                [theme]="'legacy'"
+                [rowData]="ciclos$ | async"
+                [columnDefs]="columnDefs"
+                [defaultColDef]="defaultColDef"
+                [animateRows]="true"
+                [domLayout]="'autoHeight'"
+                (gridReady)="onGridReady($event)"></ag-grid-angular>
 
-                <p
-                    class="ciclos__empty"
-                    *ngIf="!(isLoadingCiclos$ | async) && !(ciclos$ | async)?.length">
-                    No se encontraron ciclos para la sede seleccionada.
-                </p>
-            </ng-container>
-
-            <ng-template #noSedes>
-                <p class="ciclos__empty">
-                    No hay sedes registradas. Registra una sede para comenzar a gestionar ciclos.
-                </p>
-            </ng-template>
+            <p
+                class="ciclos__empty"
+                *ngIf="!(isLoadingCiclos$ | async) && !(ciclos$ | async)?.length">
+                No se encontraron ciclos registrados.
+            </p>
         </section>
     </div>
 </div>
