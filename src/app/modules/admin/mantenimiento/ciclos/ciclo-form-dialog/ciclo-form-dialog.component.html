@@ -62,6 +62,9 @@
         <mat-error *ngIf="form.hasError('invalidDateRange')">
             La fecha de fin debe ser mayor o igual a la fecha de inicio.
         </mat-error>
+        <mat-error *ngIf="form.hasError('duplicatePeriod')">
+            Ya existe un ciclo registrado con el mismo periodo.
+        </mat-error>
 
         <mat-form-field appearance="outline">
             <mat-label>Capacidad total</mat-label>

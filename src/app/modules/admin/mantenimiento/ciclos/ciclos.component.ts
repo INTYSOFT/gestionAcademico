@@ -57,9 +57,11 @@ export class CiclosComponent implements OnInit, OnDestroy {
     protected readonly searchControl = this.fb.control<string>('', {
         nonNullable: true,
     });
+
     protected readonly yearControl = this.fb.control<string>('', {
         nonNullable: true,
     });
+
 
     protected readonly columnDefs: ColDef<Ciclo>[] = [
         { headerName: 'Nombre', field: 'nombre', minWidth: 200, flex: 1 },
@@ -107,7 +109,7 @@ export class CiclosComponent implements OnInit, OnDestroy {
     protected readonly defaultColDef: ColDef = {
         sortable: true,
         resizable: true,
-        filter: true,
+            filter: true,
         flex: 1,
     };
 
@@ -123,11 +125,15 @@ export class CiclosComponent implements OnInit, OnDestroy {
     ) {
         this.searchControl.valueChanges
             .pipe(takeUntil(this.destroy$))
+
             .subscribe(() => this.applyFilters());
 
         this.yearControl.valueChanges
             .pipe(takeUntil(this.destroy$))
             .subscribe(() => this.applyFilters());
+
+            .subscribe((term) => this.applyFilter(term));
+
     }
 
     ngOnInit(): void {
@@ -158,7 +164,11 @@ export class CiclosComponent implements OnInit, OnDestroy {
             .subscribe({
                 next: (ciclos) => {
                     this.allCiclos = ciclos;
+
                     this.applyFilters();
+
+                    this.applyFilter(this.searchControl.value);
+
                     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 0);
                 },
                 error: (error) => {
@@ -177,6 +187,7 @@ export class CiclosComponent implements OnInit, OnDestroy {
         blurActiveElement();
         const data: CicloFormDialogData = {
             ciclo: ciclo ?? null,
+            existingCiclos: [...this.allCiclos],
         };
 
         const dialogRef = this.dialog.open<
@@ -195,6 +206,7 @@ export class CiclosComponent implements OnInit, OnDestroy {
             }
 
             this.loadCiclos();
+
         });
     }
 
@@ -207,6 +219,7 @@ export class CiclosComponent implements OnInit, OnDestroy {
             const matchesYear = !normalizedYear || this.matchesYear(ciclo, normalizedYear);
 
             return matchesTerm && matchesYear;
+
         });
 
         this.ciclos$.next(filtered);
@@ -243,6 +256,7 @@ export class CiclosComponent implements OnInit, OnDestroy {
     private normalizeTerm(value: string): string {
         return value.trim().toLowerCase();
     }
+
 
     private normalizeYear(value: string): string | null {
         const trimmed = value.trim();
@@ -281,6 +295,37 @@ export class CiclosComponent implements OnInit, OnDestroy {
         if (typeof value !== 'string') {
             return '';
         }
+
+
+    private applyFilter(term: string): void {
+        const normalized = term.trim().toLowerCase();
+        const filtered = !normalized
+            ? [...this.allCiclos]
+            : this.allCiclos.filter((ciclo) => this.matchesTerm(ciclo, normalized));
+
+        this.ciclos$.next(filtered);
+        setTimeout(() => this.gridApi?.sizeColumnsToFit(), 0);
+    }
+
+    private matchesTerm(ciclo: Ciclo, term: string): boolean {
+        const nombre = ciclo.nombre.toLowerCase();
+        const fechaInicio = this.formatDate(ciclo.fechaInicio).toLowerCase();
+        const fechaFin = this.formatDate(ciclo.fechaFin).toLowerCase();
+
+        return (
+            nombre.includes(term) ||
+            (ciclo.fechaInicio ?? '').toLowerCase().includes(term) ||
+            (ciclo.fechaFin ?? '').toLowerCase().includes(term) ||
+            fechaInicio.includes(term) ||
+            fechaFin.includes(term)
+        );
+    }
+
+    private formatDate(value: unknown): string {
+        if (typeof value !== 'string') {
+            return '';
+        }
+
 
         const trimmed = value.trim();
         if (!trimmed) {
