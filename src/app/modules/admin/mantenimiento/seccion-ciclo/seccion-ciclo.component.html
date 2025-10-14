@@ -1,0 +1,89 @@
+<div class="flex min-w-0 flex-auto flex-col">
+    <div class="flex-auto p-6 sm:p-10">
+        <section class="seccion-ciclo">
+            <header class="seccion-ciclo__header">
+                <mat-form-field
+                    appearance="outline"
+                    class="seccion-ciclo__field seccion-ciclo__field--sede">
+                    <mat-label>Seleccionar sede</mat-label>
+                    <mat-select [formControl]="selectedSedeControl" placeholder="Sede">
+                        <mat-option
+                            *ngFor="let sede of sedes$ | async; trackBy: trackBySedeId"
+                            [value]="sede.id">
+                            {{ sede.nombre }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field
+                    appearance="outline"
+                    class="seccion-ciclo__field seccion-ciclo__field--ciclo">
+                    <mat-label>Seleccionar ciclo</mat-label>
+                    <mat-select [formControl]="selectedCicloControl" placeholder="Ciclo">
+                        <mat-option
+                            *ngFor="let ciclo of ciclos$ | async; trackBy: trackByCicloId"
+                            [value]="ciclo.id">
+                            {{ ciclo.nombre }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <button
+                    mat-raised-button
+                    color="primary"
+                    type="button"
+                    class="seccion-ciclo__new-button"
+                    (click)="openAddSeccionDialog()"
+                    [disabled]="!canCreateSeccion()">
+                    <mat-icon>add</mat-icon>
+                    Agregar sección
+                </button>
+            </header>
+
+            <mat-progress-bar
+                *ngIf="
+                    (isLoadingSedes$ | async) ||
+                    (isLoadingCiclos$ | async) ||
+                    (isLoadingSeccionCiclos$ | async) ||
+                    (isLoadingCatalogs$ | async)
+                "
+                mode="indeterminate"
+                color="primary"></mat-progress-bar>
+
+            <ng-container *ngIf="(sedes$ | async)?.length; else noSedes">
+                <ng-container *ngIf="(ciclos$ | async)?.length; else noCiclos">
+                    <ag-grid-angular
+                        class="ag-theme-material seccion-ciclo__grid"
+                        [theme]="'legacy'"
+                        [rowData]="seccionCiclosView$ | async"
+                        [columnDefs]="columnDefs"
+                        [defaultColDef]="defaultColDef"
+                        [animateRows]="true"
+                        [domLayout]="'autoHeight'"
+                        (gridReady)="onGridReady($event)"></ag-grid-angular>
+
+                    <p
+                        class="seccion-ciclo__empty"
+                        *ngIf="
+                            !(isLoadingSeccionCiclos$ | async) &&
+                            !(seccionCiclosView$ | async)?.length
+                        ">
+                        No se encontraron secciones registradas para el ciclo seleccionado.
+                    </p>
+                </ng-container>
+
+                <ng-template #noCiclos>
+                    <p class="seccion-ciclo__empty">
+                        No hay ciclos activos registrados para la sede seleccionada.
+                    </p>
+                </ng-template>
+            </ng-container>
+
+            <ng-template #noSedes>
+                <p class="seccion-ciclo__empty">
+                    No hay sedes registradas. Registra una sede para comenzar a gestionar secciones por ciclo.
+                </p>
+            </ng-template>
+        </section>
+    </div>
+</div>

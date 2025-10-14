@@ -1,0 +1,63 @@
+:host {
+  display: block;
+}
+
+.seccion-ciclo {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.seccion-ciclo__header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow: visible;
+  padding-right: 0.5rem;
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    column-gap: 1rem;
+    row-gap: 0.75rem;
+  }
+}
+
+.seccion-ciclo__field {
+  width: 100%;
+  max-width: 320px;
+}
+
+.seccion-ciclo__new-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+  min-width: max-content;
+  white-space: nowrap;
+  margin-right: 0.25rem;
+
+  @media (min-width: 640px) {
+    margin-left: auto;
+  }
+
+  .mat-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    line-height: 20px;
+  }
+}
+
+.seccion-ciclo__grid {
+  width: 100%;
+  min-height: 200px;
+  overflow: visible;
+}
+
+.seccion-ciclo__empty {
+  margin: 1rem 0 0;
+  font-size: 0.95rem;
+  color: rgba(0, 0, 0, 0.6);
+}

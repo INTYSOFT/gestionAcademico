@@ -30,6 +30,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 link : '/mantenimiento/ciclos'
             },
             {
+                id   : 'mantenimiento.seccion-ciclo',
+                title: 'Secciones por ciclo',
+                type : 'basic',
+                icon : 'heroicons_outline:squares-2x2',
+                link : '/mantenimiento/seccion-ciclo'
+            },
+            {
                 id   : 'mantenimiento.nivel-seccion',
                 title: 'Nivel Sección',
                 type : 'basic',
@@ -146,6 +153,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:calendar-days',
                 link : '/mantenimiento/ciclos'
+            },
+            {
+                id   : 'mantenimiento.seccion-ciclo',
+                title: 'Secciones por ciclo',
+                type : 'basic',
+                icon : 'heroicons_outline:squares-2x2',
+                link : '/mantenimiento/seccion-ciclo'
             },
             {
                 id   : 'mantenimiento.nivel-seccion',
