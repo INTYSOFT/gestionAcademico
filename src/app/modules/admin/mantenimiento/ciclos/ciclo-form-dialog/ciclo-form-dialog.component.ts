@@ -25,12 +25,11 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { BehaviorSubject, finalize } from 'rxjs';
 import { DatePipe } from '@angular/common';
 import { Ciclo, CreateCicloPayload } from 'app/core/models/centro-estudios/ciclo.model';
-import { Sede } from 'app/core/models/centro-estudios/sede.model';
 import { CiclosService } from 'app/core/services/centro-estudios/ciclos.service';
 
 export interface CicloFormDialogData {
-    sede: Sede;
     ciclo?: Ciclo | null;
+    existingCiclos: Ciclo[];
 }
 
 export type CicloFormDialogResult =
@@ -88,6 +87,35 @@ export class CicloFormDialogComponent {
         return null;
     };
 
+    private readonly duplicatePeriodValidator: ValidatorFn = (
+        group: FormGroup
+    ): ValidationErrors | null => {
+        const start = group.get('fechaInicio')?.value;
+        const end = group.get('fechaFin')?.value;
+
+        const normalizedStart = this.normalizeDateValue(start);
+        const normalizedEnd = this.normalizeDateValue(end);
+
+        if (!normalizedStart || !normalizedEnd) {
+            return null;
+        }
+
+        const currentId = this.data.ciclo?.id ?? null;
+        const existing = this.data.existingCiclos ?? [];
+        const hasDuplicate = existing.some((item) => {
+            if (currentId !== null && item.id === currentId) {
+                return false;
+            }
+
+            const itemStart = this.normalizeDateValue(item.fechaInicio);
+            const itemEnd = this.normalizeDateValue(item.fechaFin);
+
+            return itemStart === normalizedStart && itemEnd === normalizedEnd;
+        });
+
+        return hasDuplicate ? { duplicatePeriod: true } : null;
+    };
+
     constructor(
         @Inject(MAT_DIALOG_DATA) protected readonly data: CicloFormDialogData,
         private readonly dialogRef: MatDialogRef<
@@ -107,7 +135,11 @@ export class CicloFormDialogComponent {
             activo: [true],
         });
 
-        this.form.setValidators(this.dateRangeValidator);
+        this.form.setValidators([
+            this.dateRangeValidator,
+            this.duplicatePeriodValidator,
+        ]);
+        this.form.updateValueAndValidity({ emitEvent: false });
 
         if (data.ciclo) {
             this.patchForm(data.ciclo);
@@ -115,6 +147,7 @@ export class CicloFormDialogComponent {
     }
 
     protected save(): void {
+        this.form.updateValueAndValidity();
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             return;
@@ -186,7 +219,6 @@ export class CicloFormDialogComponent {
                 : Number(capacidadTotalRaw);
 
         const payload: CreateCicloPayload = {
-            sedeId: this.data.sede.id,
             nombre: String(raw.nombre ?? '').trim(),
             fechaInicio: fechaInicio ?? '',
             fechaFin: fechaFin ?? '',
@@ -195,5 +227,35 @@ export class CicloFormDialogComponent {
         };
 
         return payload;
+    }
+
+    private normalizeDateValue(value: unknown): string | null {
+        if (value === null || value === undefined || value === '') {
+            return null;
+        }
+
+        if (value instanceof Date) {
+            if (Number.isNaN(value.getTime())) {
+                return null;
+            }
+
+            return this.datePipe.transform(value, 'yyyy-MM-dd');
+        }
+
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            if (!trimmed) {
+                return null;
+            }
+
+            const parsed = new Date(trimmed);
+            if (!Number.isNaN(parsed.getTime())) {
+                return this.datePipe.transform(parsed, 'yyyy-MM-dd');
+            }
+
+            return trimmed;
+        }
+
+        return null;
     }
 }

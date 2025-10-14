@@ -10,7 +10,6 @@ import {
 
 interface CicloApi extends Partial<Ciclo> {
     Id?: number | string;
-    SedeId?: number | string;
     Nombre?: string | null;
     FechaInicio?: string | null;
     FechaFin?: string | null;
@@ -41,21 +40,8 @@ export class CiclosService extends ApiMainService {
             );
     }
 
-    listBySede(sedeId: number): Observable<Ciclo[]> {
-        const url = this.buildUrl(`${this.resourcePath}/sede/${sedeId}`);
-
-        return this.http
-            .get<CicloApi[]>(url, this.createOptions())
-            .pipe(
-                map((response) => this.normalizeCiclos(response)),
-                catchError((error: HttpErrorResponse) => {
-                    if (error.status === 404) {
-                        return of([]);
-                    }
-
-                    return this.handleError(error);
-                })
-            );
+    listBySede(_sedeId: number): Observable<Ciclo[]> {
+        return this.listAll();
     }
 
     getCiclo(id: number): Observable<Ciclo> {
@@ -97,16 +83,14 @@ export class CiclosService extends ApiMainService {
         }
 
         const id = this.coerceNumber(raw.id ?? raw.Id);
-        const sedeId = this.coerceNumber(raw.sedeId ?? raw.SedeId);
         const nombre = this.coerceOptionalString(raw.nombre ?? raw.Nombre);
 
-        if (id === null || sedeId === null || !nombre) {
+        if (id === null || !nombre) {
             return null;
         }
 
         return {
             id,
-            sedeId,
             nombre,
             fechaInicio: this.coerceOptionalString(raw.fechaInicio ?? raw.FechaInicio),
             fechaFin: this.coerceOptionalString(raw.fechaFin ?? raw.FechaFin),
