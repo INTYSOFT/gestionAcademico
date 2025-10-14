@@ -57,26 +57,48 @@ export class CiclosService extends ApiMainService {
     }
 
     updateCiclo(id: number, payload: UpdateCicloPayload): Observable<Ciclo> {
-        const body: CicloApi = { id };
+        const normalizeDate = (value: string | null | undefined): string | null => {
+            if (value === null || value === undefined) {
+                return null;
+            }
+
+            const trimmed = value.trim();
+            return trimmed.length > 0 ? trimmed : null;
+        };
+
+        const body: CicloApi = { id, Id: id };
 
         if (payload.nombre !== undefined) {
-            body.nombre = payload.nombre;
+            const nombre = payload.nombre.trim();
+            body.nombre = nombre;
+            body.Nombre = nombre;
         }
 
         if (payload.fechaInicio !== undefined) {
-            body.fechaInicio = payload.fechaInicio ?? null;
+            const fechaInicio = normalizeDate(payload.fechaInicio);
+            body.fechaInicio = fechaInicio;
+            body.FechaInicio = fechaInicio;
         }
 
         if (payload.fechaFin !== undefined) {
-            body.fechaFin = payload.fechaFin ?? null;
+            const fechaFin = normalizeDate(payload.fechaFin);
+            body.fechaFin = fechaFin;
+            body.FechaFin = fechaFin;
         }
 
         if (payload.capacidadTotal !== undefined) {
-            body.capacidadTotal = payload.capacidadTotal ?? null;
+            const capacidadTotal =
+                payload.capacidadTotal === null || payload.capacidadTotal === undefined
+                    ? null
+                    : Number(payload.capacidadTotal);
+
+            body.capacidadTotal = capacidadTotal;
+            body.CapacidadTotal = capacidadTotal;
         }
 
         if (payload.activo !== undefined) {
             body.activo = payload.activo;
+            body.Activo = payload.activo;
         }
 
         return this.put<unknown>(`${this.resourcePath}/${id}`, body).pipe(
