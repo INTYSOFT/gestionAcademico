@@ -12,7 +12,7 @@
                 <mat-label>Sección</mat-label>
                 <mat-select formControlName="seccionId" placeholder="Seleccionar sección">
                     <mat-option *ngFor="let seccion of availableSecciones" [value]="seccion.id">
-                        {{ seccion.nombre }}
+                        {{ seccion.nombre }} (Capacidad: {{ seccion.capacidad }})
                     </mat-option>
                 </mat-select>
                 <mat-error *ngIf="form.get('seccionId')?.hasError('required')">
