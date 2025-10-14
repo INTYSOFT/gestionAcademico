@@ -283,8 +283,11 @@ export class CicloFormDialogComponent {
             return null;
         }
 
-        const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-        return this.datePipe.transform(utcDate, 'yyyy-MM-dd', 'UTC');
+        const normalizedUtcDate = new Date(
+            Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0)
+        );
+
+        return this.datePipe.transform(normalizedUtcDate, "yyyy-MM-dd'T'HH:mm:ss'Z'", 'UTC');
     }
 
 }
