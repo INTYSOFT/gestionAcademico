@@ -1,4 +1,4 @@
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -38,6 +38,7 @@ import {
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         AsyncPipe,
+        NgFor,
         NgIf,
         ReactiveFormsModule,
         MatButtonModule,
