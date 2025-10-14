@@ -313,7 +313,9 @@ export class CiclosComponent implements OnInit, OnDestroy {
             return String(parsed.getFullYear());
         }
 
-        const match = /^(\d{4})/.exec(trimmed);
+        // Support common non-ISO formats such as dd/MM/yyyy or MM-dd-yyyy by
+        // looking for a four digit sequence anywhere in the string.
+        const match = /(\d{4})/.exec(trimmed);
         return match ? match[1] : null;
     }
 
