@@ -1,0 +1,16 @@
+.ciclo-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    &__grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    &__date-error {
+        color: var(--mat-sys-error);
+        font-size: 0.875rem;
+    }
+}
