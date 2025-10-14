@@ -57,12 +57,29 @@ export class CiclosService extends ApiMainService {
     }
 
     updateCiclo(id: number, payload: UpdateCicloPayload): Observable<Ciclo> {
-        const body: UpdateCicloPayload & { id: number } = {
-            ...payload,
-            id,
-        };
+        const body: CicloApi = { id };
 
-        return this.patch<unknown>(`${this.resourcePath}/${id}`, body).pipe(
+        if (payload.nombre !== undefined) {
+            body.nombre = payload.nombre;
+        }
+
+        if (payload.fechaInicio !== undefined) {
+            body.fechaInicio = payload.fechaInicio ?? null;
+        }
+
+        if (payload.fechaFin !== undefined) {
+            body.fechaFin = payload.fechaFin ?? null;
+        }
+
+        if (payload.capacidadTotal !== undefined) {
+            body.capacidadTotal = payload.capacidadTotal ?? null;
+        }
+
+        if (payload.activo !== undefined) {
+            body.activo = payload.activo;
+        }
+
+        return this.put<unknown>(`${this.resourcePath}/${id}`, body).pipe(
             switchMap(() => this.getCiclo(id))
         );
     }
