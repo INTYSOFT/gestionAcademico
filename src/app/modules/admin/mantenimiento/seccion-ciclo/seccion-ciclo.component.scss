@@ -61,3 +61,44 @@
   font-size: 0.95rem;
   color: rgba(0, 0, 0, 0.6);
 }
+
+.seccion-ciclo__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  height: 100%;
+}
+
+.seccion-ciclo__delete-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border: none;
+  border-radius: 999px;
+  background-color: rgba(244, 67, 54, 0.12);
+  color: #c62828;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.seccion-ciclo__delete-button:hover {
+  background-color: rgba(244, 67, 54, 0.2);
+}
+
+.seccion-ciclo__delete-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.2);
+}
+
+.seccion-ciclo__delete-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.seccion-ciclo__delete-text {
+  line-height: 1;
+}
