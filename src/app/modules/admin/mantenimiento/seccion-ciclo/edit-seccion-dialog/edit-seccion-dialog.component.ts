@@ -146,6 +146,7 @@ export class EditSeccionDialogComponent {
         }
 
         const payload: UpdateSeccionCicloPayload = {
+            cicloId: this.data.cicloId,
             seccionId,
             nivelId,
             capacidad,
