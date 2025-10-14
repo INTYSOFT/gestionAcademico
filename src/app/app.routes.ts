@@ -112,11 +112,7 @@ export const appRoutes: Route[] = [
                                 'app/modules/admin/mantenimiento/especialidades/especialidades.routes'
                             ),
                     },
-                    {
-                        path: 'ciclos',
-                        loadChildren: () =>
-                            import('app/modules/admin/mantenimiento/ciclos/ciclos.routes'),
-                    },
+                    
                     {
                         path: 'secciones',
                         loadChildren: () =>
