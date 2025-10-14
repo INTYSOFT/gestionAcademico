@@ -118,6 +118,13 @@ export const appRoutes: Route[] = [
                             import('app/modules/admin/mantenimiento/ciclos/ciclos.routes'),
                     },
                     {
+                        path: 'seccion-ciclo',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/mantenimiento/seccion-ciclo/seccion-ciclo.routes'
+                            ),
+                    },
+                    {
                         path: 'sedes',
                         loadChildren: () =>
                             import('app/modules/admin/mantenimiento/sedes/sedes.routes'),
