@@ -24,23 +24,14 @@
 
                 <mat-form-field appearance="outline" class="ciclos__year-field">
                     <mat-label>Año</mat-label>
-                    <input
-                        matInput
-                        type="number"
-                        placeholder="Ej. 2024"
-                        [formControl]="yearControl"
-                        inputmode="numeric"
-                        autocomplete="off" />
-                    <button
-                        mat-icon-button
-                        matSuffix
-                        type="button"
-                        aria-label="Limpiar filtro por año"
-                        *ngIf="yearControl.value"
-                        (click)="yearControl.setValue('')">
-                        <mat-icon>close</mat-icon>
-                    </button>
-
+                    <mat-select [formControl]="yearControl" disableOptionCentering>
+                        <mat-option value="">Todos</mat-option>
+                        <mat-option
+                            *ngFor="let year of years$ | async"
+                            [value]="year">
+                            {{ year }}
+                        </mat-option>
+                    </mat-select>
                 </mat-form-field>
 
                 <button

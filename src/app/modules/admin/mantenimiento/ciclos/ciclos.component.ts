@@ -14,6 +14,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
@@ -46,6 +47,7 @@ import {
         MatInputModule,
         MatProgressBarModule,
         MatSnackBarModule,
+        MatSelectModule,
         MatTooltipModule,
         AgGridAngular,
     ],
@@ -53,6 +55,7 @@ import {
 export class CiclosComponent implements OnInit, OnDestroy {
     protected readonly ciclos$ = new BehaviorSubject<Ciclo[]>([]);
     protected readonly isLoadingCiclos$ = new BehaviorSubject<boolean>(false);
+    protected readonly years$ = new BehaviorSubject<string[]>([]);
 
     protected readonly searchControl = this.fb.control<string>('', {
         nonNullable: true,
@@ -140,6 +143,9 @@ export class CiclosComponent implements OnInit, OnDestroy {
         this.destroy$.next();
         this.destroy$.complete();
         this.gridApi?.destroy();
+        this.ciclos$.complete();
+        this.isLoadingCiclos$.complete();
+        this.years$.complete();
     }
 
     protected onGridReady(event: GridReadyEvent<Ciclo>): void {
@@ -160,7 +166,7 @@ export class CiclosComponent implements OnInit, OnDestroy {
             .subscribe({
                 next: (ciclos) => {
                     this.allCiclos = ciclos;
-
+                    this.updateYearOptions(ciclos);
                     this.applyFilters();
 
                     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 0);
@@ -202,6 +208,32 @@ export class CiclosComponent implements OnInit, OnDestroy {
             this.loadCiclos();
 
         });
+    }
+
+    private updateYearOptions(ciclos: Ciclo[]): void {
+        const years = new Set<string>();
+
+        ciclos.forEach((ciclo) => {
+            const startYear = this.extractYear(ciclo.fechaInicio);
+            const endYear = this.extractYear(ciclo.fechaFin);
+
+            if (startYear) {
+                years.add(startYear);
+            }
+
+            if (endYear) {
+                years.add(endYear);
+            }
+        });
+
+        const sortedYears = Array.from(years).sort((a, b) => Number(a) - Number(b));
+        const normalizedCurrent = this.normalizeYear(this.yearControl.value);
+
+        if (normalizedCurrent && !sortedYears.includes(normalizedCurrent)) {
+            this.yearControl.setValue('', { emitEvent: false });
+        }
+
+        this.years$.next(sortedYears);
     }
 
     private applyFilters(): void {
