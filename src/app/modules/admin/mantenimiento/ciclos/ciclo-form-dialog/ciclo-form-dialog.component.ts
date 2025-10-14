@@ -84,7 +84,6 @@ export class CicloFormDialogComponent {
             return { invalidDateRange: true };
         }
 
-        return null;
     };
 
     private readonly duplicatePeriodValidator: ValidatorFn = (
@@ -135,10 +134,14 @@ export class CicloFormDialogComponent {
             activo: [true],
         });
 
+
+        this.form.setValidators([this.dateRangeValidator]);
+
         this.form.setValidators([
             this.dateRangeValidator,
             this.duplicatePeriodValidator,
         ]);
+
         this.form.updateValueAndValidity({ emitEvent: false });
 
         if (data.ciclo) {
@@ -229,6 +232,7 @@ export class CicloFormDialogComponent {
         return payload;
     }
 
+
     private normalizeDateValue(value: unknown): string | null {
         if (value === null || value === undefined || value === '') {
             return null;
@@ -258,4 +262,5 @@ export class CicloFormDialogComponent {
 
         return null;
     }
+
 }

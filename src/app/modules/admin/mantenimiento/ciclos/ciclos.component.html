@@ -19,6 +19,28 @@
                         (click)="searchControl.setValue('')">
                         <mat-icon>close</mat-icon>
                     </button>
+
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="ciclos__year-field">
+                    <mat-label>Año</mat-label>
+                    <input
+                        matInput
+                        type="number"
+                        placeholder="Ej. 2024"
+                        [formControl]="yearControl"
+                        inputmode="numeric"
+                        autocomplete="off" />
+                    <button
+                        mat-icon-button
+                        matSuffix
+                        type="button"
+                        aria-label="Limpiar filtro por año"
+                        *ngIf="yearControl.value"
+                        (click)="yearControl.setValue('')">
+                        <mat-icon>close</mat-icon>
+                    </button>
+
                 </mat-form-field>
 
                 <button

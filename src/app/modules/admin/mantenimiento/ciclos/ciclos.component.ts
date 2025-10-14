@@ -58,6 +58,11 @@ export class CiclosComponent implements OnInit, OnDestroy {
         nonNullable: true,
     });
 
+    protected readonly yearControl = this.fb.control<string>('', {
+        nonNullable: true,
+    });
+
+
     protected readonly columnDefs: ColDef<Ciclo>[] = [
         { headerName: 'Nombre', field: 'nombre', minWidth: 200, flex: 1 },
         {
@@ -120,7 +125,15 @@ export class CiclosComponent implements OnInit, OnDestroy {
     ) {
         this.searchControl.valueChanges
             .pipe(takeUntil(this.destroy$))
+
+            .subscribe(() => this.applyFilters());
+
+        this.yearControl.valueChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => this.applyFilters());
+
             .subscribe((term) => this.applyFilter(term));
+
     }
 
     ngOnInit(): void {
@@ -151,7 +164,11 @@ export class CiclosComponent implements OnInit, OnDestroy {
             .subscribe({
                 next: (ciclos) => {
                     this.allCiclos = ciclos;
+
+                    this.applyFilters();
+
                     this.applyFilter(this.searchControl.value);
+
                     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 0);
                 },
                 error: (error) => {
@@ -189,8 +206,96 @@ export class CiclosComponent implements OnInit, OnDestroy {
             }
 
             this.loadCiclos();
+
         });
     }
+
+    private applyFilters(): void {
+        const normalizedTerm = this.normalizeTerm(this.searchControl.value);
+        const normalizedYear = this.normalizeYear(this.yearControl.value);
+
+        const filtered = this.allCiclos.filter((ciclo) => {
+            const matchesTerm = !normalizedTerm || this.matchesTerm(ciclo, normalizedTerm);
+            const matchesYear = !normalizedYear || this.matchesYear(ciclo, normalizedYear);
+
+            return matchesTerm && matchesYear;
+
+        });
+
+        this.ciclos$.next(filtered);
+        setTimeout(() => this.gridApi?.sizeColumnsToFit(), 0);
+    }
+
+    private matchesTerm(ciclo: Ciclo, term: string): boolean {
+        if (!term) {
+            return true;
+        }
+
+        const nombre = ciclo.nombre.toLowerCase();
+        const fechaInicio = this.formatDate(ciclo.fechaInicio).toLowerCase();
+        const fechaFin = this.formatDate(ciclo.fechaFin).toLowerCase();
+        const fechaInicioRaw = (ciclo.fechaInicio ?? '').toLowerCase();
+        const fechaFinRaw = (ciclo.fechaFin ?? '').toLowerCase();
+
+        return (
+            nombre.includes(term) ||
+            fechaInicioRaw.includes(term) ||
+            fechaFinRaw.includes(term) ||
+            fechaInicio.includes(term) ||
+            fechaFin.includes(term)
+        );
+    }
+
+    private matchesYear(ciclo: Ciclo, year: string): boolean {
+        const startYear = this.extractYear(ciclo.fechaInicio);
+        const endYear = this.extractYear(ciclo.fechaFin);
+
+        return startYear === year || endYear === year;
+    }
+
+    private normalizeTerm(value: string): string {
+        return value.trim().toLowerCase();
+    }
+
+
+    private normalizeYear(value: string): string | null {
+        const trimmed = value.trim();
+
+        if (!trimmed) {
+            return null;
+        }
+
+        if (!/^\d{4}$/.test(trimmed)) {
+            return null;
+        }
+
+        return trimmed;
+    }
+
+    private extractYear(value: string | null | undefined): string | null {
+        if (!value) {
+            return null;
+        }
+
+        const trimmed = value.trim();
+        if (!trimmed) {
+            return null;
+        }
+
+        const parsed = new Date(trimmed);
+        if (!Number.isNaN(parsed.getTime())) {
+            return String(parsed.getFullYear());
+        }
+
+        const match = /^(\d{4})/.exec(trimmed);
+        return match ? match[1] : null;
+    }
+
+    private formatDate(value: unknown): string {
+        if (typeof value !== 'string') {
+            return '';
+        }
+
 
     private applyFilter(term: string): void {
         const normalized = term.trim().toLowerCase();
@@ -220,6 +325,7 @@ export class CiclosComponent implements OnInit, OnDestroy {
         if (typeof value !== 'string') {
             return '';
         }
+
 
         const trimmed = value.trim();
         if (!trimmed) {
