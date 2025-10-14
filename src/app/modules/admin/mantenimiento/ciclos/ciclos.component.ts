@@ -62,7 +62,6 @@ export class CiclosComponent implements OnInit, OnDestroy {
         nonNullable: true,
     });
 
-
     protected readonly columnDefs: ColDef<Ciclo>[] = [
         { headerName: 'Nombre', field: 'nombre', minWidth: 200, flex: 1 },
         {
@@ -109,7 +108,7 @@ export class CiclosComponent implements OnInit, OnDestroy {
     protected readonly defaultColDef: ColDef = {
         sortable: true,
         resizable: true,
-            filter: true,
+        filter: true,
         flex: 1,
     };
 
@@ -125,14 +124,11 @@ export class CiclosComponent implements OnInit, OnDestroy {
     ) {
         this.searchControl.valueChanges
             .pipe(takeUntil(this.destroy$))
-
             .subscribe(() => this.applyFilters());
 
         this.yearControl.valueChanges
             .pipe(takeUntil(this.destroy$))
             .subscribe(() => this.applyFilters());
-
-            .subscribe((term) => this.applyFilter(term));
 
     }
 
@@ -166,8 +162,6 @@ export class CiclosComponent implements OnInit, OnDestroy {
                     this.allCiclos = ciclos;
 
                     this.applyFilters();
-
-                    this.applyFilter(this.searchControl.value);
 
                     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 0);
                 },
@@ -227,22 +221,23 @@ export class CiclosComponent implements OnInit, OnDestroy {
     }
 
     private matchesTerm(ciclo: Ciclo, term: string): boolean {
-        if (!term) {
+        const normalizedTerm = term.trim().toLowerCase();
+        if (!normalizedTerm) {
             return true;
         }
 
         const nombre = ciclo.nombre.toLowerCase();
-        const fechaInicio = this.formatDate(ciclo.fechaInicio).toLowerCase();
-        const fechaFin = this.formatDate(ciclo.fechaFin).toLowerCase();
         const fechaInicioRaw = (ciclo.fechaInicio ?? '').toLowerCase();
         const fechaFinRaw = (ciclo.fechaFin ?? '').toLowerCase();
+        const fechaInicioFormatted = this.formatDate(ciclo.fechaInicio).toLowerCase();
+        const fechaFinFormatted = this.formatDate(ciclo.fechaFin).toLowerCase();
 
         return (
-            nombre.includes(term) ||
-            fechaInicioRaw.includes(term) ||
-            fechaFinRaw.includes(term) ||
-            fechaInicio.includes(term) ||
-            fechaFin.includes(term)
+            nombre.includes(normalizedTerm) ||
+            fechaInicioRaw.includes(normalizedTerm) ||
+            fechaFinRaw.includes(normalizedTerm) ||
+            fechaInicioFormatted.includes(normalizedTerm) ||
+            fechaFinFormatted.includes(normalizedTerm)
         );
     }
 
@@ -256,7 +251,6 @@ export class CiclosComponent implements OnInit, OnDestroy {
     private normalizeTerm(value: string): string {
         return value.trim().toLowerCase();
     }
-
 
     private normalizeYear(value: string): string | null {
         const trimmed = value.trim();
@@ -295,37 +289,6 @@ export class CiclosComponent implements OnInit, OnDestroy {
         if (typeof value !== 'string') {
             return '';
         }
-
-
-    private applyFilter(term: string): void {
-        const normalized = term.trim().toLowerCase();
-        const filtered = !normalized
-            ? [...this.allCiclos]
-            : this.allCiclos.filter((ciclo) => this.matchesTerm(ciclo, normalized));
-
-        this.ciclos$.next(filtered);
-        setTimeout(() => this.gridApi?.sizeColumnsToFit(), 0);
-    }
-
-    private matchesTerm(ciclo: Ciclo, term: string): boolean {
-        const nombre = ciclo.nombre.toLowerCase();
-        const fechaInicio = this.formatDate(ciclo.fechaInicio).toLowerCase();
-        const fechaFin = this.formatDate(ciclo.fechaFin).toLowerCase();
-
-        return (
-            nombre.includes(term) ||
-            (ciclo.fechaInicio ?? '').toLowerCase().includes(term) ||
-            (ciclo.fechaFin ?? '').toLowerCase().includes(term) ||
-            fechaInicio.includes(term) ||
-            fechaFin.includes(term)
-        );
-    }
-
-    private formatDate(value: unknown): string {
-        if (typeof value !== 'string') {
-            return '';
-        }
-
 
         const trimmed = value.trim();
         if (!trimmed) {
