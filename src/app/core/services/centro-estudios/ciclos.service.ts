@@ -12,6 +12,8 @@ interface CicloApi extends Partial<Ciclo> {
     Id?: number | string;
     Nombre?: string | null;
     FechaInicio?: string | null;
+    FechaAperturaInscripcion?: string | null;
+    FechaCierreInscripcion?: string | null;
     FechaFin?: string | null;
     CapacidadTotal?: number | string | null;
     Activo?: boolean | string | number | null;
@@ -51,7 +53,30 @@ export class CiclosService extends ApiMainService {
     }
 
     createCiclo(payload: CreateCicloPayload): Observable<Ciclo> {
-        return this.post<CicloApi>(this.resourcePath, payload).pipe(
+        const body: CicloApi = {
+            nombre: payload.nombre.trim(),
+            Nombre: payload.nombre.trim(),
+            fechaInicio: payload.fechaInicio,
+            FechaInicio: payload.fechaInicio,
+            fechaAperturaInscripcion: payload.fechaAperturaInscripcion,
+            FechaAperturaInscripcion: payload.fechaAperturaInscripcion,
+            fechaCierreInscripcion: payload.fechaCierreInscripcion,
+            FechaCierreInscripcion: payload.fechaCierreInscripcion,
+            fechaFin: payload.fechaFin,
+            FechaFin: payload.fechaFin,
+            capacidadTotal:
+                payload.capacidadTotal === null || payload.capacidadTotal === undefined
+                    ? null
+                    : Number(payload.capacidadTotal),
+            CapacidadTotal:
+                payload.capacidadTotal === null || payload.capacidadTotal === undefined
+                    ? null
+                    : Number(payload.capacidadTotal),
+            activo: payload.activo,
+            Activo: payload.activo,
+        };
+
+        return this.post<CicloApi>(this.resourcePath, body).pipe(
             map((response) => this.normalizeCicloOrThrow(response))
         );
     }
@@ -78,6 +103,18 @@ export class CiclosService extends ApiMainService {
             const fechaInicio = normalizeDate(payload.fechaInicio);
             body.fechaInicio = fechaInicio;
             body.FechaInicio = fechaInicio;
+        }
+
+        if (payload.fechaAperturaInscripcion !== undefined) {
+            const fechaApertura = normalizeDate(payload.fechaAperturaInscripcion);
+            body.fechaAperturaInscripcion = fechaApertura;
+            body.FechaAperturaInscripcion = fechaApertura;
+        }
+
+        if (payload.fechaCierreInscripcion !== undefined) {
+            const fechaCierre = normalizeDate(payload.fechaCierreInscripcion);
+            body.fechaCierreInscripcion = fechaCierre;
+            body.FechaCierreInscripcion = fechaCierre;
         }
 
         if (payload.fechaFin !== undefined) {
@@ -132,6 +169,12 @@ export class CiclosService extends ApiMainService {
             id,
             nombre,
             fechaInicio: this.coerceOptionalString(raw.fechaInicio ?? raw.FechaInicio),
+            fechaAperturaInscripcion: this.coerceOptionalString(
+                raw.fechaAperturaInscripcion ?? raw.FechaAperturaInscripcion
+            ),
+            fechaCierreInscripcion: this.coerceOptionalString(
+                raw.fechaCierreInscripcion ?? raw.FechaCierreInscripcion
+            ),
             fechaFin: this.coerceOptionalString(raw.fechaFin ?? raw.FechaFin),
             capacidadTotal: this.coerceOptionalNumber(
                 raw.capacidadTotal ?? raw.CapacidadTotal

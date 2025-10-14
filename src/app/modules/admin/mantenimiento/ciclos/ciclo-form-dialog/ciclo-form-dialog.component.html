@@ -32,6 +32,32 @@
             </mat-form-field>
 
             <mat-form-field appearance="outline">
+                <mat-label>Fecha apertura inscripción</mat-label>
+                <input
+                    matInput
+                    [matDatepicker]="pickerApertura"
+                    formControlName="fechaAperturaInscripcion" />
+                <mat-datepicker-toggle matSuffix [for]="pickerApertura"></mat-datepicker-toggle>
+                <mat-datepicker #pickerApertura></mat-datepicker>
+                <mat-error *ngIf="form.get('fechaAperturaInscripcion')?.hasError('required')">
+                    La fecha de apertura de inscripción es obligatoria.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Fecha cierre inscripción</mat-label>
+                <input
+                    matInput
+                    [matDatepicker]="pickerCierre"
+                    formControlName="fechaCierreInscripcion" />
+                <mat-datepicker-toggle matSuffix [for]="pickerCierre"></mat-datepicker-toggle>
+                <mat-datepicker #pickerCierre></mat-datepicker>
+                <mat-error *ngIf="form.get('fechaCierreInscripcion')?.hasError('required')">
+                    La fecha de cierre de inscripción es obligatoria.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
                 <mat-label>Fecha de fin</mat-label>
                 <input matInput [matDatepicker]="pickerFin" formControlName="fechaFin" />
                 <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
