@@ -70,29 +70,45 @@ export class CicloFormDialogComponent implements OnInit, OnDestroy {
         const group = control as FormGroup;
         const fechaInicio = group.get('fechaInicio')?.value;
         const fechaFin = group.get('fechaFin')?.value;
+        const fechaApertura = group.get('fechaAperturaInscripcion')?.value;
+        const fechaCierre = group.get('fechaCierreInscripcion')?.value;
 
-        if (!fechaInicio || !fechaFin) {
-            return null;
+        const errors: ValidationErrors = {};
+
+        if (fechaInicio && fechaFin) {
+            const inicioDate =
+                fechaInicio instanceof Date ? fechaInicio : new Date(fechaInicio);
+            const finDate = fechaFin instanceof Date ? fechaFin : new Date(fechaFin);
+
+            if (Number.isNaN(inicioDate.getTime()) || Number.isNaN(finDate.getTime())) {
+                errors['invalidDate'] = true;
+            } else if (finDate < inicioDate) {
+                errors['endBeforeStart'] = true;
+            }
         }
 
-        const inicioDate = fechaInicio instanceof Date ? fechaInicio : new Date(fechaInicio);
-        const finDate = fechaFin instanceof Date ? fechaFin : new Date(fechaFin);
+        if (fechaApertura && fechaCierre) {
+            const aperturaDate =
+                fechaApertura instanceof Date ? fechaApertura : new Date(fechaApertura);
+            const cierreDate =
+                fechaCierre instanceof Date ? fechaCierre : new Date(fechaCierre);
 
-        if (Number.isNaN(inicioDate.getTime()) || Number.isNaN(finDate.getTime())) {
-            return { invalidDate: true };
+            if (Number.isNaN(aperturaDate.getTime()) || Number.isNaN(cierreDate.getTime())) {
+                errors['invalidInscriptionDate'] = true;
+            } else if (cierreDate < aperturaDate) {
+                errors['inscriptionEndBeforeStart'] = true;
+            }
         }
 
-        if (finDate < inicioDate) {
-            return { endBeforeStart: true };
-        }
-
-        return null;
+        return Object.keys(errors).length > 0 ? errors : null;
     };
 
     protected readonly form: FormGroup = this.fb.group(
         {
             nombre: ['', [Validators.required, Validators.maxLength(150)]],
             fechaInicio: [null, [Validators.required]],
+            fechaAperturaInscripcion: [null, [Validators.required]],
+            fechaCierreInscripcion: [null, [Validators.required]],
             fechaFin: [null, [Validators.required]],
             capacidadTotal: [null, [Validators.min(0)]],
             activo: [true],
@@ -182,16 +198,32 @@ export class CicloFormDialogComponent implements OnInit, OnDestroy {
             return 'La fecha fin debe ser posterior o igual a la fecha de inicio.';
         }
 
+        if (errors['invalidInscriptionDate']) {
+            return 'Las fechas de inscripción seleccionadas no son válidas.';
+        }
+
+        if (errors['inscriptionEndBeforeStart']) {
+            return 'La fecha de cierre de inscripción debe ser posterior o igual a la fecha de apertura.';
+        }
+
         return null;
     }
 
     private patchForm(ciclo: Ciclo): void {
         const fechaInicio = ciclo.fechaInicio ? new Date(ciclo.fechaInicio) : null;
+        const fechaApertura = ciclo.fechaAperturaInscripcion
+            ? new Date(ciclo.fechaAperturaInscripcion)
+            : null;
+        const fechaCierre = ciclo.fechaCierreInscripcion
+            ? new Date(ciclo.fechaCierreInscripcion)
+            : null;
         const fechaFin = ciclo.fechaFin ? new Date(ciclo.fechaFin) : null;
 
         this.form.patchValue({
             nombre: ciclo.nombre,
             fechaInicio,
+            fechaAperturaInscripcion: fechaApertura,
+            fechaCierreInscripcion: fechaCierre,
             fechaFin,
             capacidadTotal: ciclo.capacidadTotal ?? null,
             activo: ciclo.activo,
@@ -202,6 +234,8 @@ export class CicloFormDialogComponent implements OnInit, OnDestroy {
         const raw = this.form.value as {
             nombre: string;
             fechaInicio: Date | string;
+            fechaAperturaInscripcion: Date | string;
+            fechaCierreInscripcion: Date | string;
             fechaFin: Date | string;
             capacidadTotal: number | null;
             activo: boolean;
@@ -218,6 +252,8 @@ export class CicloFormDialogComponent implements OnInit, OnDestroy {
         return {
             nombre: raw.nombre.trim(),
             fechaInicio: formatDate(raw.fechaInicio),
+            fechaAperturaInscripcion: formatDate(raw.fechaAperturaInscripcion),
+            fechaCierreInscripcion: formatDate(raw.fechaCierreInscripcion),
             fechaFin: formatDate(raw.fechaFin),
             capacidadTotal,
             activo: raw.activo,
