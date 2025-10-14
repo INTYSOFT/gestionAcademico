@@ -70,6 +70,39 @@
   height: 100%;
 }
 
+.seccion-ciclo__edit-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border: none;
+  border-radius: 999px;
+  background-color: rgba(33, 150, 243, 0.12);
+  color: #1565c0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.seccion-ciclo__edit-button:hover {
+  background-color: rgba(33, 150, 243, 0.2);
+}
+
+.seccion-ciclo__edit-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+}
+
+.seccion-ciclo__edit-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.seccion-ciclo__edit-text {
+  line-height: 1;
+}
+
 .seccion-ciclo__delete-button {
   display: inline-flex;
   align-items: center;
