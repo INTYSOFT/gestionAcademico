@@ -31,8 +31,20 @@ import { NivelesService } from 'app/core/services/centro-estudios/niveles.servic
 import { SeccionCicloService } from 'app/core/services/centro-estudios/seccion-ciclo.service';
 import { SeccionesService } from 'app/core/services/centro-estudios/secciones.service';
 import { SedeService } from 'app/core/services/centro-estudios/sede.service';
+import { AperturaCicloService } from 'app/core/services/centro-estudios/apertura-ciclo.service';
 import { blurActiveElement } from 'app/core/utils/focus.util';
-import { BehaviorSubject, Subject, finalize, takeUntil } from 'rxjs';
+import {
+    BehaviorSubject,
+    Observable,
+    Subject,
+    catchError,
+    finalize,
+    forkJoin,
+    map,
+    of,
+    switchMap,
+    takeUntil,
+} from 'rxjs';
 import {
     AddSeccionDialogComponent,
     AddSeccionDialogData,
@@ -108,7 +120,8 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
         private readonly ciclosService: CiclosService,
         private readonly nivelesService: NivelesService,
         private readonly seccionesService: SeccionesService,
-        private readonly seccionCicloService: SeccionCicloService
+        private readonly seccionCicloService: SeccionCicloService,
+        private readonly aperturaCicloService: AperturaCicloService
     ) {
         this.columnDefs = this.buildColumnDefs();
         this.syncSedeControlState();
@@ -347,6 +360,7 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
         this.ciclosService
             .listBySede(sedeId)
             .pipe(
+                switchMap((ciclos) => this.filterAvailableCiclos(ciclos, sedeId)),
                 finalize(() => {
                     this.isLoadingCiclos$.next(false);
                     this.syncCicloControlState();
@@ -355,17 +369,16 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
             )
             .subscribe({
                 next: (ciclos) => {
-                    const activos = ciclos.filter((ciclo) => ciclo.activo);
-                    this.ciclos$.next(activos);
+                    this.ciclos$.next(ciclos);
                     this.syncCicloControlState();
 
                     const current = this.selectedCicloControl.value;
-                    if (current && activos.some((ciclo) => ciclo.id === current)) {
+                    if (current && ciclos.some((ciclo) => ciclo.id === current)) {
                         this.loadSeccionCiclos(current);
                         return;
                     }
 
-                    const first = activos[0];
+                    const first = ciclos[0];
                     if (first) {
                         this.selectedCicloControl.setValue(first.id);
                     } else {
@@ -413,6 +426,37 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
                     );
                 },
             });
+    }
+
+    private filterAvailableCiclos(ciclos: Ciclo[], sedeId: number): Observable<Ciclo[]> {
+        const activos = ciclos.filter((ciclo) => ciclo.activo);
+
+        if (!activos.length) {
+            return of([]);
+        }
+
+        const requests = activos.map((ciclo) =>
+            this.aperturaCicloService.listByCiclo(ciclo.id).pipe(
+                map((aperturas) => ({
+                    ciclo,
+                    hasActiveApertura: aperturas.some(
+                        (apertura) => apertura.activo && apertura.sedeId === sedeId
+                    ),
+                })),
+                catchError((error) => {
+                    console.error('Error al verificar la apertura del ciclo', error);
+                    return of({ ciclo, hasActiveApertura: false });
+                })
+            )
+        );
+
+        return forkJoin(requests).pipe(
+            map((results) =>
+                results
+                    .filter((result) => result.hasActiveApertura)
+                    .map((result) => result.ciclo)
+            )
+        );
     }
 
     private setSeccionCiclos(seccionCiclos: SeccionCiclo[]): void {
