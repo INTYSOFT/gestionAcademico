@@ -23,11 +23,26 @@
 
             <mat-form-field appearance="outline">
                 <mat-label>Fecha de inicio</mat-label>
-                <input matInput [matDatepicker]="pickerInicio" formControlName="fechaInicio" />
-                <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+                <input matInput [matDatepicker]="pickerInicio"
+                    formControlName="fechaInicio" />
+                <mat-datepicker-toggle matSuffix
+                    [for]="pickerInicio"></mat-datepicker-toggle>
                 <mat-datepicker #pickerInicio></mat-datepicker>
-                <mat-error *ngIf="form.get('fechaInicio')?.hasError('required')">
+                <mat-error
+                    *ngIf="form.get('fechaInicio')?.hasError('required')">
                     La fecha de inicio es obligatoria.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Fecha de fin</mat-label>
+                <input matInput [matDatepicker]="pickerFin"
+                    formControlName="fechaFin" />
+                <mat-datepicker-toggle matSuffix
+                    [for]="pickerFin"></mat-datepicker-toggle>
+                <mat-datepicker #pickerFin></mat-datepicker>
+                <mat-error *ngIf="form.get('fechaFin')?.hasError('required')">
+                    La fecha de fin es obligatoria.
                 </mat-error>
             </mat-form-field>
 
@@ -37,9 +52,11 @@
                     matInput
                     [matDatepicker]="pickerApertura"
                     formControlName="fechaAperturaInscripcion" />
-                <mat-datepicker-toggle matSuffix [for]="pickerApertura"></mat-datepicker-toggle>
+                <mat-datepicker-toggle matSuffix
+                    [for]="pickerApertura"></mat-datepicker-toggle>
                 <mat-datepicker #pickerApertura></mat-datepicker>
-                <mat-error *ngIf="form.get('fechaAperturaInscripcion')?.hasError('required')">
+                <mat-error
+                    *ngIf="form.get('fechaAperturaInscripcion')?.hasError('required')">
                     La fecha de apertura de inscripción es obligatoria.
                 </mat-error>
             </mat-form-field>
@@ -50,26 +67,19 @@
                     matInput
                     [matDatepicker]="pickerCierre"
                     formControlName="fechaCierreInscripcion" />
-                <mat-datepicker-toggle matSuffix [for]="pickerCierre"></mat-datepicker-toggle>
+                <mat-datepicker-toggle matSuffix
+                    [for]="pickerCierre"></mat-datepicker-toggle>
                 <mat-datepicker #pickerCierre></mat-datepicker>
-                <mat-error *ngIf="form.get('fechaCierreInscripcion')?.hasError('required')">
+                <mat-error
+                    *ngIf="form.get('fechaCierreInscripcion')?.hasError('required')">
                     La fecha de cierre de inscripción es obligatoria.
                 </mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-                <mat-label>Fecha de fin</mat-label>
-                <input matInput [matDatepicker]="pickerFin" formControlName="fechaFin" />
-                <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
-                <mat-datepicker #pickerFin></mat-datepicker>
-                <mat-error *ngIf="form.get('fechaFin')?.hasError('required')">
-                    La fecha de fin es obligatoria.
-                </mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
                 <mat-label>Capacidad total</mat-label>
-                <input matInput type="number" formControlName="capacidadTotal" min="0" />
+                <input matInput type="number" formControlName="capacidadTotal"
+                    min="0" />
                 <mat-error *ngIf="form.get('capacidadTotal')?.hasError('min')">
                     Debe ser un número mayor o igual a 0.
                 </mat-error>

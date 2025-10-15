@@ -74,6 +74,12 @@ export class CiclosComponent implements OnInit, OnDestroy {
             valueFormatter: (params) => this.formatDate(params.value),
         },
         {
+            headerName: 'Fecha fin',
+            field: 'fechaFin',
+            minWidth: 150,
+            valueFormatter: (params) => this.formatDate(params.value),
+        },
+        {
             headerName: 'Apertura inscripción',
             field: 'fechaAperturaInscripcion',
             minWidth: 180,
@@ -83,12 +89,6 @@ export class CiclosComponent implements OnInit, OnDestroy {
             headerName: 'Cierre inscripción',
             field: 'fechaCierreInscripcion',
             minWidth: 170,
-            valueFormatter: (params) => this.formatDate(params.value),
-        },
-        {
-            headerName: 'Fecha fin',
-            field: 'fechaFin',
-            minWidth: 150,
             valueFormatter: (params) => this.formatDate(params.value),
         },
         {
