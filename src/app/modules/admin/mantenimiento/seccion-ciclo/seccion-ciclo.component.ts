@@ -399,11 +399,18 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
     }
 
     private loadSeccionCiclos(cicloId: number): void {
+        const sedeId = this.selectedSedeControl.value;
+
+        if (sedeId === null || sedeId === undefined) {
+            this.setSeccionCiclos([]);
+            return;
+        }
+
         this.isLoadingSeccionCiclos$.next(true);
-        const expectedSedeId = this.selectedSedeControl.value;
+        const expectedSedeId = sedeId;
 
         this.seccionCicloService
-            .listByCiclo(cicloId)
+            .listBySedeAndCiclo(sedeId, cicloId)
             .pipe(finalize(() => this.isLoadingSeccionCiclos$.next(false)))
             .subscribe({
                 next: (seccionCiclos) => {
