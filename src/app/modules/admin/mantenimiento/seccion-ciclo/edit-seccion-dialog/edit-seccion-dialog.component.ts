@@ -25,6 +25,7 @@ import { SeccionCicloService } from 'app/core/services/centro-estudios/seccion-c
 
 export interface EditSeccionDialogData {
     cicloId: number;
+    sedeId: number;
     seccionCiclo: SeccionCiclo;
     niveles: Nivel[];
     secciones: Seccion[];
@@ -66,7 +67,10 @@ export class EditSeccionDialogComponent {
 
     private readonly otherSeccionIds = new Set(
         this.data.existingSeccionCiclos
-            .filter((item) => item.id !== this.data.seccionCiclo.id)
+            .filter(
+                (item) =>
+                    item.id !== this.data.seccionCiclo.id && item.sedeId === this.data.sedeId
+            )
             .map((item) => item.seccionId)
     );
 
@@ -149,6 +153,7 @@ export class EditSeccionDialogComponent {
             cicloId: this.data.cicloId,
             seccionId,
             nivelId,
+            sedeId: this.data.sedeId,
             capacidad,
             activo: !!raw.activo,
         };

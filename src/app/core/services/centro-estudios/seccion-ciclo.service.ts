@@ -13,6 +13,7 @@ interface SeccionCicloApi extends Partial<SeccionCiclo> {
     CicloId?: number | string;
     SeccionId?: number | string;
     NivelId?: number | string;
+    SedeId?: number | string;
     Capacidad?: number | string | null;
     Activo?: boolean | string | number | null;
     FechaRegistro?: string | null;
@@ -90,8 +91,15 @@ export class SeccionCicloService extends ApiMainService {
         const cicloId = this.coerceNumber(raw.cicloId ?? raw.CicloId);
         const seccionId = this.coerceNumber(raw.seccionId ?? raw.SeccionId);
         const nivelId = this.coerceNumber(raw.nivelId ?? raw.NivelId);
+        const sedeId = this.coerceNumber(raw.sedeId ?? raw.SedeId);
 
-        if (id === null || cicloId === null || seccionId === null || nivelId === null) {
+        if (
+            id === null ||
+            cicloId === null ||
+            seccionId === null ||
+            nivelId === null ||
+            sedeId === null
+        ) {
             return null;
         }
 
@@ -100,6 +108,7 @@ export class SeccionCicloService extends ApiMainService {
             cicloId,
             seccionId,
             nivelId,
+            sedeId,
             capacidad: this.coerceOptionalNumber(raw.capacidad ?? raw.Capacidad) ?? 0,
             activo: this.coerceBoolean(raw.activo ?? raw.Activo, true),
             fechaRegistro: this.coerceOptionalString(raw.fechaRegistro ?? raw.FechaRegistro),
