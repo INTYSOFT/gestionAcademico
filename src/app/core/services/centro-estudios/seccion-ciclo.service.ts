@@ -43,6 +43,23 @@ export class SeccionCicloService extends ApiMainService {
             );
     }
 
+    listBySedeAndCiclo(sedeId: number, cicloId: number): Observable<SeccionCiclo[]> {
+        const url = `${this.resourcePath}/sede/${sedeId}/ciclo/${cicloId}`;
+
+        return this.http
+            .get<SeccionCicloApi[]>(this.buildUrl(url), this.createOptions())
+            .pipe(
+                map((response) => this.normalizeSeccionCiclos(response)),
+                catchError((error: HttpErrorResponse) => {
+                    if (error.status === 404) {
+                        return of([]);
+                    }
+
+                    return this.handleError(error);
+                })
+            );
+    }
+
     create(payload: CreateSeccionCicloPayload): Observable<SeccionCiclo> {
         return this.post<SeccionCicloApi>(this.resourcePath, payload).pipe(
             map((response) => this.normalizeSeccionCicloOrThrow(response))
