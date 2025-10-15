@@ -1,8 +1,8 @@
 <div class="ciclos-actions-cell__container">
     <button
         class="ciclos-actions-cell__apertura"
-        mat-stroked-button
-        color="accent"
+        mat-raised-button
+        [color]="aperturaColor"
         type="button"
         matTooltip="Gestionar apertura del ciclo"
         (click)="openApertura()">

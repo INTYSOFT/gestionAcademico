@@ -18,7 +18,16 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
-import { BehaviorSubject, Subject, debounceTime, takeUntil } from 'rxjs';
+import {
+    BehaviorSubject,
+    Subject,
+    catchError,
+    debounceTime,
+    forkJoin,
+    map,
+    of,
+    takeUntil,
+} from 'rxjs';
 import { Ciclo } from 'app/core/models/centro-estudios/ciclo.model';
 import { CiclosService } from 'app/core/services/centro-estudios/ciclos.service';
 import { blurActiveElement } from 'app/core/utils/focus.util';
@@ -31,6 +40,7 @@ import {
     AperturaCicloDialogComponent,
     AperturaCicloDialogResult,
 } from './apertura-ciclo-dialog/apertura-ciclo-dialog.component';
+import { AperturaCicloService } from 'app/core/services/centro-estudios/apertura-ciclo.service';
 
 @Component({
     selector: 'app-ciclos',
@@ -68,6 +78,7 @@ export class CiclosComponent implements OnInit, OnDestroy {
     protected readonly ciclos$ = new BehaviorSubject<Ciclo[]>([]);
     protected readonly filteredCiclos$ = new BehaviorSubject<Ciclo[]>([]);
     protected readonly yearOptions$ = new BehaviorSubject<number[]>([]);
+    private readonly aperturaStatusMap = new Map<number, boolean>();
 
     protected readonly columnDefs: ColDef<Ciclo>[] = [
         { headerName: 'Nombre', field: 'nombre', minWidth: 220, flex: 1 },
@@ -116,14 +127,16 @@ export class CiclosComponent implements OnInit, OnDestroy {
             cellRendererParams: {
                 onEdit: (ciclo: Ciclo) => this.openCicloDialog(ciclo),
                 onOpenApertura: (ciclo: Ciclo) => this.openAperturaDialog(ciclo),
+                getAperturaStatus: (cicloId: number) => this.getAperturaStatus(cicloId),
             },
 
-            width: 220,            
+            width: 220,
 
             sortable: false,
             filter: false,
             resizable: false,
             pinned: 'right',
+            colId: 'acciones',
         },
     ];
 
@@ -141,7 +154,8 @@ export class CiclosComponent implements OnInit, OnDestroy {
         private readonly fb: FormBuilder,
         private readonly dialog: MatDialog,
         private readonly snackBar: MatSnackBar,
-        private readonly ciclosService: CiclosService
+        private readonly ciclosService: CiclosService,
+        private readonly aperturaCicloService: AperturaCicloService
     ) {}
 
     ngOnInit(): void {
@@ -224,11 +238,20 @@ export class CiclosComponent implements OnInit, OnDestroy {
                 this.snackBar.open('La apertura del ciclo se guardó correctamente.', 'Cerrar', {
                     duration: 5000,
                 });
+                this.updateAperturaStatus(this.ciclos$.value);
             });
     }
 
     protected trackByYear(_index: number, year: number): number {
         return year;
+    }
+
+    protected getAperturaStatus(cicloId: number): boolean | null {
+        if (!this.aperturaStatusMap.has(cicloId)) {
+            return null;
+        }
+
+        return this.aperturaStatusMap.get(cicloId) ?? false;
     }
 
     private handleDialogResult(result: CicloFormDialogResult): void {
@@ -254,6 +277,7 @@ export class CiclosComponent implements OnInit, OnDestroy {
                 next: (ciclos) => {
                     this.ciclos$.next(ciclos);
                     this.updateYearOptions(ciclos);
+                    this.updateAperturaStatus(ciclos);
                     this.applyFilters();
                     this.isLoading$.next(false);
                 },
@@ -266,6 +290,38 @@ export class CiclosComponent implements OnInit, OnDestroy {
                     );
                     this.isLoading$.next(false);
                 },
+            });
+    }
+
+    private updateAperturaStatus(ciclos: Ciclo[]): void {
+        this.aperturaStatusMap.clear();
+
+        if (ciclos.length === 0) {
+            this.gridApi?.refreshCells({ force: true, columns: ['acciones'] });
+            return;
+        }
+
+        const requests = ciclos.map((ciclo) =>
+            this.aperturaCicloService.listByCiclo(ciclo.id).pipe(
+                map((aperturas) => ({
+                    cicloId: ciclo.id,
+                    hasActive: aperturas.some((apertura) => apertura.activo),
+                })),
+                catchError((error) => {
+                    console.error('Error al verificar la apertura del ciclo', error);
+                    return of({ cicloId: ciclo.id, hasActive: false });
+                })
+            )
+        );
+
+        forkJoin(requests)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((results) => {
+                for (const result of results) {
+                    this.aperturaStatusMap.set(result.cicloId, result.hasActive);
+                }
+
+                this.gridApi?.refreshCells({ force: true, columns: ['acciones'] });
             });
     }
 
