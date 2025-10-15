@@ -8,6 +8,7 @@ import { Ciclo } from 'app/core/models/centro-estudios/ciclo.model';
 
 export interface CiclosActionsCellParams extends ICellRendererParams<Ciclo> {
     onEdit?: (ciclo: Ciclo) => void;
+    onOpenApertura?: (ciclo: Ciclo) => void;
 }
 
 @Component({
@@ -37,5 +38,13 @@ export class CiclosActionsCellComponent implements ICellRendererAngularComp {
         }
 
         this.params.onEdit?.(this.params.data);
+    }
+
+    protected openApertura(): void {
+        if (!this.params?.data) {
+            return;
+        }
+
+        this.params.onOpenApertura?.(this.params.data);
     }
 }

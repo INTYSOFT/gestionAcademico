@@ -1,0 +1,62 @@
+<h2 mat-dialog-title>
+    Apertura de ciclo - {{ data.ciclo.nombre }}
+</h2>
+
+<mat-dialog-content class="apertura-ciclo-dialog__content">
+    <ng-container *ngIf="isLoading$ | async; else content">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </ng-container>
+
+    <ng-template #content>
+        <ng-container *ngIf="rows.length > 0; else empty">
+            <div class="apertura-ciclo-dialog__header">
+                <span class="apertura-ciclo-dialog__header-name">Sede</span>
+                <span class="apertura-ciclo-dialog__header-observation">Observación</span>
+            </div>
+
+            <div class="apertura-ciclo-dialog__list">
+                <div
+                    class="apertura-ciclo-dialog__row"
+                    *ngFor="let row of rows"
+                    [class.apertura-ciclo-dialog__row--inactive]="!isRowActive(row)"
+                    [formGroup]="row.form">
+                    <mat-checkbox formControlName="activo">
+                        {{ row.sedeNombre }}
+                    </mat-checkbox>
+
+                    <mat-form-field appearance="outline" class="apertura-ciclo-dialog__observation">
+                        <mat-label>Observación</mat-label>
+                        <textarea
+                            matInput
+                            rows="2"
+                            formControlName="observacion"
+                            placeholder="Ingresa una observación opcional"
+                        ></textarea>
+                        <mat-hint align="end">
+                            {{ (row.form.get('observacion')?.value || '').length }}/500
+                        </mat-hint>
+                    </mat-form-field>
+                </div>
+            </div>
+        </ng-container>
+
+        <ng-template #empty>
+            <p class="apertura-ciclo-dialog__empty">
+                No hay sedes registradas para mostrar.
+            </p>
+        </ng-template>
+    </ng-template>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cancel()">Cancelar</button>
+    <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="save()"
+        [disabled]="(isSaving$ | async) || (isLoading$ | async) || rows.length === 0"
+    >
+        Guardar
+    </button>
+</mat-dialog-actions>
