@@ -33,6 +33,7 @@ import { SeccionesService } from 'app/core/services/centro-estudios/secciones.se
 import { SedeService } from 'app/core/services/centro-estudios/sede.service';
 import { AperturaCicloService } from 'app/core/services/centro-estudios/apertura-ciclo.service';
 import { blurActiveElement } from 'app/core/utils/focus.util';
+import { DateTime } from 'luxon';
 import {
     BehaviorSubject,
     Observable,
@@ -436,13 +437,16 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
     }
 
     private filterAvailableCiclos(ciclos: Ciclo[], sedeId: number): Observable<Ciclo[]> {
-        const activos = ciclos.filter((ciclo) => ciclo.activo);
+        const referenceDate = DateTime.utc();
+        const activosEnRango = ciclos.filter((ciclo) =>
+            this.isCicloActiveAndInDateRange(ciclo, referenceDate)
+        );
 
-        if (!activos.length) {
+        if (!activosEnRango.length) {
             return of([]);
         }
 
-        const requests = activos.map((ciclo) =>
+        const requests = activosEnRango.map((ciclo) =>
             this.aperturaCicloService.listByCiclo(ciclo.id).pipe(
                 map((aperturas) => ({
                     ciclo,
@@ -464,6 +468,29 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
                     .map((result) => result.ciclo)
             )
         );
+    }
+
+    private isCicloActiveAndInDateRange(ciclo: Ciclo, referenceDate: DateTime): boolean {
+        if (!ciclo.activo) {
+            return false;
+        }
+
+        const { fechaInicio, fechaFin } = ciclo;
+
+        if (!fechaInicio || !fechaFin) {
+            return false;
+        }
+
+        const start = DateTime.fromISO(fechaInicio, { zone: 'utc' }).startOf('day');
+        const end = DateTime.fromISO(fechaFin, { zone: 'utc' }).endOf('day');
+
+        if (!start.isValid || !end.isValid || end < start) {
+            return false;
+        }
+
+        const normalizedReference = referenceDate.startOf('day');
+
+        return normalizedReference >= start && normalizedReference <= end;
     }
 
     private setSeccionCiclos(seccionCiclos: SeccionCiclo[]): void {
