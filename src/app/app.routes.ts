@@ -96,6 +96,11 @@ export const appRoutes: Route[] = [
                             import('app/modules/admin/mantenimiento/universidades/universidades.routes'),
                     },
                     {
+                        path: 'carreras',
+                        loadChildren: () =>
+                            import('app/modules/admin/mantenimiento/carreras/carreras.routes'),
+                    },
+                    {
                         path: 'cursos',
                         loadChildren: () =>
                             import('app/modules/admin/mantenimiento/cursos/cursos.routes'),

@@ -79,6 +79,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 link : '/mantenimiento/universidades'
             },
             {
+                id   : 'mantenimiento.carreras',
+                title: 'Carreras',
+                type : 'basic',
+                icon : 'heroicons_outline:identification',
+                link : '/mantenimiento/carreras'
+            },
+            {
                 id   : 'mantenimiento.colegios',
                 title: 'Colegios',
                 type : 'basic',
@@ -209,6 +216,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:building-office-2',
                 link : '/mantenimiento/universidades'
+            },
+            {
+                id   : 'mantenimiento.carreras',
+                title: 'Carreras',
+                type : 'basic',
+                icon : 'heroicons_outline:identification',
+                link : '/mantenimiento/carreras'
             },
             {
                 id   : 'mantenimiento.colegios',
