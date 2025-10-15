@@ -179,6 +179,14 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
 
     protected openAddSeccionDialog(): void {
         const cicloId = this.selectedCicloControl.value;
+        const sedeId = this.selectedSedeControl.value;
+
+        if (sedeId === null || sedeId === undefined) {
+            this.snackBar.open('Selecciona una sede válida para agregar una sección.', 'Cerrar', {
+                duration: 4000,
+            });
+            return;
+        }
 
         if (cicloId === null || cicloId === undefined) {
             this.snackBar.open('Selecciona un ciclo válido para agregar una sección.', 'Cerrar', {
@@ -205,6 +213,7 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
 
         const data: AddSeccionDialogData = {
             cicloId,
+            sedeId,
             niveles,
             secciones,
             existingSeccionCiclos: [...this.seccionCiclosData],
@@ -378,12 +387,20 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
 
     private loadSeccionCiclos(cicloId: number): void {
         this.isLoadingSeccionCiclos$.next(true);
+        const expectedSedeId = this.selectedSedeControl.value;
 
         this.seccionCicloService
             .listByCiclo(cicloId)
             .pipe(finalize(() => this.isLoadingSeccionCiclos$.next(false)))
             .subscribe({
                 next: (seccionCiclos) => {
+                    const currentCicloId = this.selectedCicloControl.value;
+                    const currentSedeId = this.selectedSedeControl.value;
+
+                    if (currentCicloId !== cicloId || currentSedeId !== expectedSedeId) {
+                        return;
+                    }
+
                     this.setSeccionCiclos(seccionCiclos);
                 },
                 error: (error) => {
@@ -405,7 +422,15 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
 
     private addOrUpdateSeccionCiclo(seccionCiclo: SeccionCiclo, prepend = false): void {
         const cicloId = this.selectedCicloControl.value;
-        if (cicloId === null || cicloId === undefined || seccionCiclo.cicloId !== cicloId) {
+        const sedeId = this.selectedSedeControl.value;
+        if (
+            cicloId === null ||
+            cicloId === undefined ||
+            seccionCiclo.cicloId !== cicloId ||
+            sedeId === null ||
+            sedeId === undefined ||
+            seccionCiclo.sedeId !== sedeId
+        ) {
             return;
         }
 
@@ -594,7 +619,15 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
     private openEditSeccionDialog(seccionCiclo: SeccionCicloViewModel): void {
         blurActiveElement();
 
+        const sedeId = this.selectedSedeControl.value;
         const cicloId = this.selectedCicloControl.value;
+
+        if (sedeId === null || sedeId === undefined) {
+            this.snackBar.open('Selecciona una sede válida para editar la sección.', 'Cerrar', {
+                duration: 4000,
+            });
+            return;
+        }
 
         if (cicloId === null || cicloId === undefined) {
             this.snackBar.open('Selecciona un ciclo válido para editar la sección.', 'Cerrar', {
@@ -623,6 +656,7 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
 
         const data: EditSeccionDialogData = {
             cicloId,
+            sedeId,
             seccionCiclo,
             niveles,
             secciones,
