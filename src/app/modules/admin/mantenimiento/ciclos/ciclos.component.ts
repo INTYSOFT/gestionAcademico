@@ -118,9 +118,7 @@ export class CiclosComponent implements OnInit, OnDestroy {
                 onOpenApertura: (ciclo: Ciclo) => this.openAperturaDialog(ciclo),
             },
 
-            width: 220,
-
-            width: 150,
+            width: 220,            
 
             sortable: false,
             filter: false,
