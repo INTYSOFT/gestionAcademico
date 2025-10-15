@@ -27,6 +27,10 @@ import {
     CicloFormDialogResult,
 } from './ciclo-form-dialog/ciclo-form-dialog.component';
 import { CiclosActionsCellComponent } from './actions-cell/ciclos-actions-cell.component';
+import {
+    AperturaCicloDialogComponent,
+    AperturaCicloDialogResult,
+} from './apertura-ciclo-dialog/apertura-ciclo-dialog.component';
 
 @Component({
     selector: 'app-ciclos',
@@ -111,8 +115,9 @@ export class CiclosComponent implements OnInit, OnDestroy {
             cellRenderer: CiclosActionsCellComponent,
             cellRendererParams: {
                 onEdit: (ciclo: Ciclo) => this.openCicloDialog(ciclo),
+                onOpenApertura: (ciclo: Ciclo) => this.openAperturaDialog(ciclo),
             },
-            width: 120,
+            width: 150,
             sortable: false,
             filter: false,
             resizable: false,
@@ -196,6 +201,28 @@ export class CiclosComponent implements OnInit, OnDestroy {
 
             this.handleDialogResult(result);
         });
+    }
+
+    protected openAperturaDialog(ciclo: Ciclo): void {
+        blurActiveElement();
+        const dialogRef = this.dialog.open(AperturaCicloDialogComponent, {
+            data: { ciclo },
+            width: '720px',
+            disableClose: true,
+        });
+
+        dialogRef
+            .afterClosed()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((result: AperturaCicloDialogResult | undefined) => {
+                if (!result?.updated) {
+                    return;
+                }
+
+                this.snackBar.open('La apertura del ciclo se guardó correctamente.', 'Cerrar', {
+                    duration: 5000,
+                });
+            });
     }
 
     protected trackByYear(_index: number, year: number): number {
