@@ -210,14 +210,10 @@ export class CicloFormDialogComponent implements OnInit, OnDestroy {
     }
 
     private patchForm(ciclo: Ciclo): void {
-        const fechaInicio = ciclo.fechaInicio ? new Date(ciclo.fechaInicio) : null;
-        const fechaApertura = ciclo.fechaAperturaInscripcion
-            ? new Date(ciclo.fechaAperturaInscripcion)
-            : null;
-        const fechaCierre = ciclo.fechaCierreInscripcion
-            ? new Date(ciclo.fechaCierreInscripcion)
-            : null;
-        const fechaFin = ciclo.fechaFin ? new Date(ciclo.fechaFin) : null;
+        const fechaInicio = this.parseDate(ciclo.fechaInicio);
+        const fechaApertura = this.parseDate(ciclo.fechaAperturaInscripcion);
+        const fechaCierre = this.parseDate(ciclo.fechaCierreInscripcion);
+        const fechaFin = this.parseDate(ciclo.fechaFin);
 
         this.form.patchValue({
             nombre: ciclo.nombre,
@@ -258,5 +254,16 @@ export class CicloFormDialogComponent implements OnInit, OnDestroy {
             capacidadTotal,
             activo: raw.activo,
         };
+    }
+
+    private parseDate(value: string | null | undefined): Date | null {
+        if (!value) {
+            return null;
+        }
+
+        const dateString = value.includes('T') ? value : `${value}T00:00:00`;
+        const parsedDate = new Date(dateString);
+
+        return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
     }
 }
