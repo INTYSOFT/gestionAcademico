@@ -10,3 +10,17 @@
     align-items: center;
     gap: 8px;
 }
+
+
+.ciclos-actions-cell__apertura {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: none;
+    white-space: nowrap;
+}
+
+.ciclos-actions-cell__apertura mat-icon {
+    font-size: 18px;
+}
+
