@@ -1,8 +1,20 @@
-<button
-    mat-icon-button
-    color="primary"
-    type="button"
-    matTooltip="Editar ciclo"
-    (click)="edit()">
-    <mat-icon>edit</mat-icon>
-</button>
+<div class="ciclos-actions-cell__container">
+    <button
+        mat-icon-button
+        color="primary"
+        type="button"
+        matTooltip="Editar ciclo"
+        (click)="edit()">
+        <mat-icon>edit</mat-icon>
+    </button>
+
+    <button
+        mat-icon-button
+        color="accent"
+        type="button"
+        matTooltip="Apertura del ciclo"
+        aria-label="Apertura del ciclo"
+        (click)="openApertura()">
+        <mat-icon>door_open</mat-icon>
+    </button>
+</div>
