@@ -113,28 +113,35 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:identification',
                 link : '/mantenimiento/carreras'
+            }
+        ]
+    },
+    {
+        id      : 'alumno',
+        title   : 'Alumno',
+        type    : 'collapsable',
+        icon    : 'heroicons_outline:user-group',
+        children: [
+            {
+                id   : 'alumno.alumnos',
+                title: 'Alumnos',
+                type : 'basic',
+                icon : 'heroicons_outline:user-group',
+                link : '/mantenimiento/alumnos'
             },
             {
-                id   : 'mantenimiento.colegios',
+                id   : 'alumno.colegios',
                 title: 'Colegios',
                 type : 'basic',
                 icon : 'heroicons_outline:building-library',
                 link : '/mantenimiento/colegios'
             },
-            //Apoderados
             {
-                id   : 'mantenimiento.apoderados',
+                id   : 'alumno.apoderados',
                 title: 'Apoderados',
                 type : 'basic',
                 icon : 'heroicons_outline:user-group',
                 link : '/mantenimiento/apoderados'
-            },
-            {
-                id   : 'mantenimiento.alumnos',
-                title: 'Alumnos',
-                type : 'basic',
-                icon : 'heroicons_outline:user-group',
-                link : '/mantenimiento/alumnos'
             }
         ]
     }
@@ -158,6 +165,12 @@ export const compactNavigation: FuseNavigationItem[] = [
         title: 'Mantenimiento',
         type : 'collapsable',
         icon : 'heroicons_outline:wrench-screwdriver'
+    },
+    {
+        id   : 'alumno',
+        title: 'Alumno',
+        type : 'collapsable',
+        icon : 'heroicons_outline:user-group'
     }
 ];
 export const futuristicNavigation: FuseNavigationItem[] = [
@@ -179,6 +192,12 @@ export const futuristicNavigation: FuseNavigationItem[] = [
         title: 'Mantenimiento',
         type : 'collapsable',
         icon : 'heroicons_outline:wrench-screwdriver'
+    },
+    {
+        id   : 'alumno',
+        title: 'Alumno',
+        type : 'collapsable',
+        icon : 'heroicons_outline:user-group'
     }
 ];
 export const horizontalNavigation: FuseNavigationItem[] = [
@@ -293,27 +312,35 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:identification',
                 link : '/mantenimiento/carreras'
+            }
+        ]
+    },
+    {
+        id      : 'alumno',
+        title   : 'Alumno',
+        type    : 'group',
+        icon    : 'heroicons_outline:user-group',
+        children: [
+            {
+                id   : 'alumno.alumnos',
+                title: 'Alumnos',
+                type : 'basic',
+                icon : 'heroicons_outline:user-group',
+                link : '/mantenimiento/alumnos'
             },
             {
-                id   : 'mantenimiento.colegios',
+                id   : 'alumno.colegios',
                 title: 'Colegios',
                 type : 'basic',
                 icon : 'heroicons_outline:building-library',
                 link : '/mantenimiento/colegios'
             },
             {
-                id   : 'mantenimiento.apoderados',
+                id   : 'alumno.apoderados',
                 title: 'Apoderados',
                 type : 'basic',
                 icon : 'heroicons_outline:user-group',
                 link : '/mantenimiento/apoderados'
-            },
-            {
-                id   : 'mantenimiento.alumnos',
-                title: 'Alumnos',
-                type : 'basic',
-                icon : 'heroicons_outline:user-group',
-                link : '/mantenimiento/alumnos'
             }
         ]
     }
