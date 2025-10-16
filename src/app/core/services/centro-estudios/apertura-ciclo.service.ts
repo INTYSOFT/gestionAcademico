@@ -41,6 +41,23 @@ export class AperturaCicloService extends ApiMainService {
             );
     }
 
+    listBySede(sedeId: number): Observable<AperturaCiclo[]> {
+        const url = `${this.resourcePath}/sede/${sedeId}`;
+
+        return this.http
+            .get<AperturaCicloApi[]>(this.buildUrl(url), this.createOptions())
+            .pipe(
+                map((response) => this.normalizeAperturaCiclos(response)),
+                catchError((error: HttpErrorResponse) => {
+                    if (error.status === 404) {
+                        return of([]);
+                    }
+
+                    return this.handleError(error);
+                })
+            );
+    }
+
     create(payload: CreateAperturaCicloPayload): Observable<AperturaCiclo> {
         const body: AperturaCicloApi = {
             sedeId: payload.sedeId,

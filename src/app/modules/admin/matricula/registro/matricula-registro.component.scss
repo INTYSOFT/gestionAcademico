@@ -1,0 +1,126 @@
+.matricula-registro {
+    padding: 16px;
+
+    .matricula-card {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .matricula-form {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .alumno-resumen {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        padding: 16px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(16, 185, 129, 0.08));
+
+        .resumen-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+
+            .titulo {
+                font-size: 12px;
+                text-transform: uppercase;
+                font-weight: 600;
+                color: #1e3a8a;
+                letter-spacing: 0.02em;
+            }
+
+            span:last-child {
+                font-size: 14px;
+                color: #111827;
+            }
+        }
+    }
+
+    .seccion-info {
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+
+            &:last-child {
+                border-bottom: none;
+            }
+
+            .titulo {
+                font-weight: 600;
+                color: #374151;
+            }
+        }
+    }
+
+    .conceptos-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+
+        .concepto-selector {
+            min-width: 280px;
+
+            &.disabled {
+                opacity: 0.6;
+            }
+        }
+    }
+
+    .mensaje-vacio {
+        padding: 24px;
+        border: 1px dashed #cbd5f5;
+        border-radius: 12px;
+        color: #4b5563;
+        text-align: center;
+        background-color: rgba(229, 231, 235, 0.4);
+    }
+
+    .tabla-conceptos {
+        overflow-x: auto;
+
+        table {
+            min-width: 720px;
+        }
+
+        input[type='number'] {
+            max-width: 120px;
+            text-align: right;
+        }
+    }
+
+    .acciones {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+
+        .totales {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 18px;
+            color: #111827;
+
+            strong {
+                font-size: 20px;
+                color: #0f766e;
+            }
+        }
+
+        .botones {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+    }
+}
