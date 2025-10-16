@@ -95,6 +95,7 @@ export class EditSeccionDialogComponent {
             seccionId: [seccionId, [Validators.required]],
             nivelId: [nivelId, [Validators.required]],
             capacidad: [data.seccionCiclo.capacidad ?? 0, [Validators.required, Validators.min(0)]],
+            precio: [data.seccionCiclo.precio ?? 0, [Validators.required, Validators.min(0)]],
             activo: [data.seccionCiclo.activo],
         });
 
@@ -133,6 +134,8 @@ export class EditSeccionDialogComponent {
         const nivelId = Number(raw.nivelId ?? 0);
         const capacidadValue = Number(raw.capacidad ?? 0);
         const capacidad = Number.isFinite(capacidadValue) ? capacidadValue : 0;
+        const precioValue = Number(raw.precio ?? 0);
+        const precio = Number.isFinite(precioValue) ? precioValue : 0;
 
         if (this.otherSeccionIds.has(seccionId)) {
             const seccionControl = this.form.get('seccionId');
@@ -155,6 +158,7 @@ export class EditSeccionDialogComponent {
             nivelId,
             sedeId: this.data.sedeId,
             capacidad,
+            precio,
             activo: !!raw.activo,
         };
 

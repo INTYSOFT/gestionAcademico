@@ -5,6 +5,7 @@ export interface SeccionCiclo {
     nivelId: number;
     sedeId: number;
     capacidad: number;
+    precio: number;
     activo: boolean;
     fechaRegistro: string | null;
     fechaActualizacion: string | null;
@@ -18,6 +19,7 @@ export interface CreateSeccionCicloPayload {
     nivelId: number;
     sedeId: number;
     capacidad: number;
+    precio: number;
     activo: boolean;
 }
 

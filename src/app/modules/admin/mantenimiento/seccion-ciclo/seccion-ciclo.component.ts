@@ -112,6 +112,12 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
     private readonly destroy$ = new Subject<void>();
     private catalogsLoadingCount = 0;
     private seccionCiclosData: SeccionCiclo[] = [];
+    private readonly currencyFormatter = new Intl.NumberFormat('es-PE', {
+        style: 'currency',
+        currency: 'PEN',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
 
     constructor(
         private readonly fb: FormBuilder,
@@ -602,6 +608,12 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
             { headerName: 'Sección', field: 'seccionNombre', minWidth: 200, flex: 1 },
             { headerName: 'Nivel', field: 'nivelNombre', minWidth: 160, flex: 1 },
             {
+                headerName: 'Precio',
+                field: 'precio',
+                minWidth: 160,
+                valueFormatter: (params) => this.formatCurrency(params.value),
+            },
+            {
                 headerName: 'Capacidad',
                 field: 'capacidad',
                 minWidth: 140,
@@ -692,6 +704,20 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
         container.append(editButton, deleteButton);
 
         return container;
+    }
+
+    private formatCurrency(value: unknown): string {
+        if (value === null || value === undefined) {
+            return '';
+        }
+
+        const numeric = typeof value === 'number' ? value : Number(value);
+
+        if (!Number.isFinite(numeric)) {
+            return '';
+        }
+
+        return this.currencyFormatter.format(numeric);
     }
 
     private openEditSeccionDialog(seccionCiclo: SeccionCicloViewModel): void {
