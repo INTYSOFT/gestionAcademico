@@ -1,4 +1,4 @@
-import { AsyncPipe, CurrencyPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, CurrencyPipe, DatePipe, DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -87,8 +87,9 @@ interface MatriculaFormGroup {
         AsyncPipe,
         CurrencyPipe,
         DatePipe,
+        DecimalPipe,
         NgFor,
-        NgIf,        
+        NgIf,
         ReactiveFormsModule,
         MatCardModule,
         MatFormFieldModule,
