@@ -83,11 +83,16 @@ export const appRoutes: Route[] = [
                 path: 'matricula',
                 children: [
                     {
+                        path: 'concepto',
+                        loadChildren: () =>
+                            import('app/modules/admin/matricula/concepto/concepto.routes'),
+                    },
+                    {
                         path: 'tipo-concepto',
                         loadChildren: () =>
                             import('app/modules/admin/matricula/tipo-concepto/tipo-concepto.routes'),
                     },
-                    { path: '', pathMatch: 'full', redirectTo: 'tipo-concepto' },
+                    { path: '', pathMatch: 'full', redirectTo: 'concepto' },
                 ],
             },
             {

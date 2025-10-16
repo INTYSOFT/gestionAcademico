@@ -16,6 +16,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
         icon    : 'heroicons_outline:clipboard-document-list',
         children: [
             {
+                id   : 'matricula.concepto',
+                title: 'Concepto',
+                type : 'basic',
+                icon : 'heroicons_outline:document-currency-dollar',
+                link : '/matricula/concepto'
+            },
+            {
                 id   : 'matricula.tipo-concepto',
                 title: 'Tipo de concepto',
                 type : 'basic',
@@ -188,6 +195,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
         type : 'group',
         icon : 'heroicons_outline:clipboard-document-list',
         children: [
+            {
+                id   : 'matricula.concepto',
+                title: 'Concepto',
+                type : 'basic',
+                icon : 'heroicons_outline:document-currency-dollar',
+                link : '/matricula/concepto'
+            },
             {
                 id   : 'matricula.tipo-concepto',
                 title: 'Tipo de concepto',
