@@ -1,0 +1,37 @@
+.concepto {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    &__header {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+
+        @media (min-width: 768px) {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+    }
+
+    &__filters {
+        display: grid;
+        gap: 1rem;
+
+        @media (min-width: 768px) {
+            grid-template-columns: minmax(220px, 360px) minmax(200px, 280px);
+            align-items: center;
+        }
+    }
+
+    &__search-field,
+    &__tipo-field {
+        width: 100%;
+    }
+
+    &__grid {
+        width: 100%;
+        min-height: 320px;
+    }
+}

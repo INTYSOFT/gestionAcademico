@@ -1,0 +1,89 @@
+<h2 mat-dialog-title>{{ data.concepto ? 'Editar concepto' : 'Nuevo concepto' }}</h2>
+
+<form class="concepto-form" [formGroup]="form" (ngSubmit)="save()">
+    <mat-dialog-content class="concepto-form__content">
+        <mat-progress-bar
+            *ngIf="isSaving$ | async"
+            mode="indeterminate"
+            color="primary"></mat-progress-bar>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombre" maxlength="150" />
+            <mat-error *ngIf="form.get('nombre')?.hasError('required')">
+                El nombre es obligatorio.
+            </mat-error>
+            <mat-error *ngIf="form.get('nombre')?.hasError('maxlength')">
+                Máximo 150 caracteres permitidos.
+            </mat-error>
+        </mat-form-field>
+
+        <div class="concepto-form__row">
+            <mat-form-field appearance="outline">
+                <mat-label>Precio</mat-label>
+                <input
+                    matInput
+                    type="number"
+                    formControlName="precio"
+                    min="0"
+                    step="0.01"
+                    inputmode="decimal" />
+                <mat-error *ngIf="form.get('precio')?.hasError('required')">
+                    El precio es obligatorio.
+                </mat-error>
+                <mat-error *ngIf="form.get('precio')?.hasError('pattern')">
+                    Ingrese un monto válido con hasta dos decimales.
+                </mat-error>
+                <mat-error *ngIf="form.get('precio')?.hasError('min')">
+                    El precio debe ser mayor o igual a 0.
+                </mat-error>
+                <mat-error *ngIf="form.get('precio')?.hasError('max')">
+                    El precio excede el límite permitido.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Impuesto (%)</mat-label>
+                <input
+                    matInput
+                    type="number"
+                    formControlName="impuesto"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    inputmode="decimal" />
+                <mat-hint>Opcional</mat-hint>
+                <mat-error *ngIf="form.get('impuesto')?.hasError('pattern')">
+                    Ingrese un valor válido con hasta dos decimales.
+                </mat-error>
+                <mat-error *ngIf="form.get('impuesto')?.hasError('min')">
+                    El impuesto no puede ser negativo.
+                </mat-error>
+                <mat-error *ngIf="form.get('impuesto')?.hasError('max')">
+                    El impuesto no puede ser mayor a 100.
+                </mat-error>
+            </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Tipo de concepto</mat-label>
+            <mat-select formControlName="conceptoTipoId">
+                <mat-option [value]="null">Sin asignar</mat-option>
+                <mat-option *ngFor="let tipo of conceptoTipos; trackBy: trackByConceptoTipo" [value]="tipo.id">
+                    {{ tipo.nombre }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-slide-toggle color="primary" formControlName="activo">
+            {{ form.get('activo')?.value ? 'Activo' : 'Inactivo' }}
+        </mat-slide-toggle>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="cancel()" [disabled]="isSaving$ | async">Cancelar</button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="isSaving$ | async">
+            Guardar
+        </button>
+    </mat-dialog-actions>
+</form>
