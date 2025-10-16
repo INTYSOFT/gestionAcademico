@@ -10,6 +10,21 @@ export const defaultNavigation: FuseNavigationItem[] = [
         link : '/example'
     },
     {
+        id      : 'matricula',
+        title   : 'Matricula',
+        type    : 'collapsable',
+        icon    : 'heroicons_outline:clipboard-document-list',
+        children: [
+            {
+                id   : 'matricula.tipo-concepto',
+                title: 'Tipo de concepto',
+                type : 'basic',
+                icon : 'heroicons_outline:tag',
+                link : '/matricula/tipo-concepto'
+            }
+        ]
+    },
+    {
         id      : 'mantenimiento',
         title   : 'Mantenimiento',
         type    : 'collapsable',
@@ -126,6 +141,12 @@ export const compactNavigation: FuseNavigationItem[] = [
         link : '/example'
     },
     {
+        id   : 'matricula',
+        title: 'Matricula',
+        type : 'collapsable',
+        icon : 'heroicons_outline:clipboard-document-list'
+    },
+    {
         id   : 'mantenimiento',
         title: 'Mantenimiento',
         type : 'collapsable',
@@ -141,6 +162,12 @@ export const futuristicNavigation: FuseNavigationItem[] = [
         link : '/example'
     },
     {
+        id   : 'matricula',
+        title: 'Matricula',
+        type : 'collapsable',
+        icon : 'heroicons_outline:clipboard-document-list'
+    },
+    {
         id   : 'mantenimiento',
         title: 'Mantenimiento',
         type : 'collapsable',
@@ -154,6 +181,21 @@ export const horizontalNavigation: FuseNavigationItem[] = [
         type : 'basic',
         icon : 'heroicons_outline:chart-pie',
         link : '/example'
+    },
+    {
+        id   : 'matricula',
+        title: 'Matricula',
+        type : 'group',
+        icon : 'heroicons_outline:clipboard-document-list',
+        children: [
+            {
+                id   : 'matricula.tipo-concepto',
+                title: 'Tipo de concepto',
+                type : 'basic',
+                icon : 'heroicons_outline:tag',
+                link : '/matricula/tipo-concepto'
+            }
+        ]
     },
     {
         id   : 'mantenimiento',
