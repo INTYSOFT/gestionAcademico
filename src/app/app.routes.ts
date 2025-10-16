@@ -84,6 +84,11 @@ export const appRoutes: Route[] = [
                 path: 'mantenimiento',
                 children: [
                     {
+                        path: 'niveles',
+                        loadChildren: () =>
+                            import('app/modules/admin/mantenimiento/niveles/niveles.routes'),
+                    },
+                    {
                         path: 'nivel-seccion',
                         loadChildren: () =>
                             import(

@@ -44,6 +44,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 link : '/mantenimiento/seccion-ciclo'
             },
             {
+                id   : 'mantenimiento.niveles',
+                title: 'Niveles',
+                type : 'basic',
+                icon : 'heroicons_outline:rectangle-group',
+                link : '/mantenimiento/niveles'
+            },
+            {
                 id   : 'mantenimiento.nivel-seccion',
                 title: 'Nivel Sección',
                 type : 'basic',
@@ -181,6 +188,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:squares-2x2',
                 link : '/mantenimiento/seccion-ciclo'
+            },
+            {
+                id   : 'mantenimiento.niveles',
+                title: 'Niveles',
+                type : 'basic',
+                icon : 'heroicons_outline:rectangle-group',
+                link : '/mantenimiento/niveles'
             },
             {
                 id   : 'mantenimiento.nivel-seccion',
