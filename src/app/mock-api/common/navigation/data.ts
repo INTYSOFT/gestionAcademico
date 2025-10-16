@@ -16,6 +16,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
         icon    : 'heroicons_outline:clipboard-document-list',
         children: [
             {
+                id   : 'matricula.registro',
+                title: 'Matrícula',
+                type : 'basic',
+                icon : 'heroicons_outline:clipboard-document-check',
+                link : '/matricula/registro'
+            },
+            {
                 id   : 'matricula.concepto',
                 title: 'Concepto',
                 type : 'basic',
@@ -214,6 +221,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
         type : 'group',
         icon : 'heroicons_outline:clipboard-document-list',
         children: [
+            {
+                id   : 'matricula.registro',
+                title: 'Matrícula',
+                type : 'basic',
+                icon : 'heroicons_outline:clipboard-document-check',
+                link : '/matricula/registro'
+            },
             {
                 id   : 'matricula.concepto',
                 title: 'Concepto',

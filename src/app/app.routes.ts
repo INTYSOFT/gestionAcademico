@@ -83,6 +83,13 @@ export const appRoutes: Route[] = [
                 path: 'matricula',
                 children: [
                     {
+                        path: 'registro',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/matricula/registro/matricula-registro.routes'
+                            ).then((m) => m.matriculaRegistroRoutes),
+                    },
+                    {
                         path: 'concepto',
                         loadChildren: () =>
                             import('app/modules/admin/matricula/concepto/concepto.routes'),
@@ -92,7 +99,7 @@ export const appRoutes: Route[] = [
                         loadChildren: () =>
                             import('app/modules/admin/matricula/tipo-concepto/tipo-concepto.routes'),
                     },
-                    { path: '', pathMatch: 'full', redirectTo: 'concepto' },
+                    { path: '', pathMatch: 'full', redirectTo: 'registro' },
                 ],
             },
             {

@@ -1,0 +1,263 @@
+<div class="matricula-registro">
+    <mat-card class="matricula-card">
+        <mat-card-header>
+            <mat-card-title>Registro de matrícula</mat-card-title>
+            <mat-card-subtitle>
+                Selecciona la sede, ciclo y sección para iniciar el proceso de matrícula.
+            </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+            <form [formGroup]="matriculaForm" class="matricula-form">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <mat-form-field appearance="outline">
+                    <mat-label>Sede</mat-label>
+                    <mat-select formControlName="sedeId">
+                        <mat-option *ngFor="let sede of sedes$ | async; trackBy: trackById" [value]="sede.id">
+                            {{ sede.nombre }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="matriculaForm.get('sedeId')?.hasError('required')">
+                        Selecciona una sede.
+                    </mat-error>
+                </mat-form-field>
+
+                <div class="sm:col-span-1 xl:col-span-2">
+                    <mat-form-field appearance="outline" class="w-full">
+                        <mat-label>Ciclo</mat-label>
+                        <mat-select formControlName="cicloId" [disabled]="!matriculaForm.get('sedeId')?.value">
+                            <mat-option *ngFor="let ciclo of ciclosDisponibles$ | async; trackBy: trackById" [value]="ciclo.id">
+                                {{ ciclo.nombre }}
+                            </mat-option>
+                        </mat-select>
+                        <mat-hint *ngIf="cicloSeleccionado">
+                            Apertura: {{ cicloSeleccionado?.fechaAperturaInscripcion | date:'mediumDate' }}
+                            · Cierre: {{ cicloSeleccionado?.fechaCierreInscripcion | date:'mediumDate' }}
+                        </mat-hint>
+                        <mat-error *ngIf="matriculaForm.get('cicloId')?.hasError('required')">
+                            Selecciona un ciclo.
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-progress-bar *ngIf="isLoadingCiclos$ | async" mode="indeterminate"></mat-progress-bar>
+                </div>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Sección</mat-label>
+                    <mat-select formControlName="seccionCicloId" [disabled]="!matriculaForm.get('cicloId')?.value">
+                        <mat-option *ngFor="let seccion of secciones$ | async; trackBy: trackById" [value]="seccion.id">
+                            {{ nombreSeccion(seccion) }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="matriculaForm.get('seccionCicloId')?.hasError('required')">
+                        Selecciona una sección.
+                    </mat-error>
+                </mat-form-field>
+                </div>
+
+                <mat-progress-bar *ngIf="isLoadingSecciones$ | async" mode="indeterminate"></mat-progress-bar>
+
+                <div class="mt-6">
+                <h3 class="text-lg font-semibold text-gray-800">Alumno</h3>
+                <div class="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end">
+                    <mat-form-field appearance="outline" class="flex-1">
+                        <mat-label>Buscar alumno</mat-label>
+                        <input
+                            matInput
+                            [matAutocomplete]="alumnoAuto"
+                            [matAutocompleteDisplayWith]="alumnoDisplayFn"
+                            [formControl]="alumnoSearchControl"
+                            placeholder="Ingresa DNI o nombres"
+                        />
+                        <button
+                            mat-icon-button
+                            matSuffix
+                            aria-label="Limpiar"
+                            *ngIf="alumnoSearchControl.value"
+                            (click)="alumnoSearchControl.setValue('')"
+                        >
+                            <mat-icon>close</mat-icon>
+                        </button>
+                    </mat-form-field>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button mat-stroked-button color="primary" type="button" (click)="crearAlumno()">
+                            <mat-icon>person_add</mat-icon>
+                            Registrar alumno
+                        </button>
+                        <button
+                            mat-stroked-button
+                            color="accent"
+                            type="button"
+                            (click)="gestionarApoderados()"
+                            [disabled]="!alumnoSeleccionado"
+                        >
+                            <mat-icon>supervisor_account</mat-icon>
+                            Gestionar apoderados
+                        </button>
+                    </div>
+                </div>
+
+                <mat-autocomplete #alumnoAuto="matAutocomplete" (optionSelected)="onAlumnoSeleccionado($event)">
+                    <mat-option
+                        *ngFor="let alumno of alumnosFiltrados$ | async; trackBy: trackById"
+                        [value]="alumno"
+                    >
+                        {{ mostrarAlumno(alumno) }}
+                    </mat-option>
+                </mat-autocomplete>
+
+                <div *ngIf="alumnoSeleccionado" class="alumno-resumen">
+                    <div class="resumen-item">
+                        <span class="titulo">Documento</span>
+                        <span>{{ alumnoSeleccionado?.dni }}</span>
+                    </div>
+                    <div class="resumen-item">
+                        <span class="titulo">Nombre completo</span>
+                        <span>{{ alumnoSeleccionado?.apellidos }} {{ alumnoSeleccionado?.nombres }}</span>
+                    </div>
+                    <div class="resumen-item" *ngIf="alumnoSeleccionado?.correo">
+                        <span class="titulo">Correo</span>
+                        <span>{{ alumnoSeleccionado?.correo }}</span>
+                    </div>
+                    <div class="resumen-item" *ngIf="alumnoSeleccionado?.celular">
+                        <span class="titulo">Celular</span>
+                        <span>{{ alumnoSeleccionado?.celular }}</span>
+                    </div>
+                </div>
+            </div>
+
+                <mat-divider class="my-6"></mat-divider>
+
+                <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <mat-card class="seccion-info" *ngIf="seccionSeleccionada">
+                    <mat-card-header>
+                        <mat-card-title>Detalle de la sección</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                        <div class="info-item">
+                            <span class="titulo">Sección</span>
+                            <span>{{ tituloSeccion() }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="titulo">Capacidad</span>
+                            <span>{{ seccionSeleccionada?.capacidad }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="titulo">Precio referencial</span>
+                            <span>S/ {{ (seccionSeleccionada?.precio ?? 0) | number:'1.2-2' }}</span>
+                        </div>
+                    </mat-card-content>
+                </mat-card>
+            </div>
+
+                <div class="conceptos-section mt-6">
+                <div class="conceptos-header">
+                    <h3 class="text-lg font-semibold text-gray-800">Conceptos</h3>
+                    <mat-form-field appearance="outline" class="concepto-selector" [class.disabled]="!seccionSeleccionada">
+                        <mat-label>Agregar concepto</mat-label>
+                        <mat-select
+                            [formControl]="conceptoSelectorControl"
+                            (selectionChange)="agregarConcepto($event.value)"
+                            [disabled]="!seccionSeleccionada"
+                        >
+                            <mat-option
+                                *ngFor="let concepto of conceptosDisponibles(); trackBy: trackById"
+                                [value]="concepto.id"
+                            >
+                                {{ concepto.nombre }} · {{ concepto.precio | currency:'PEN':'symbol':'1.2-2' }}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+
+                <ng-template #sinConceptos>
+                    <div class="mensaje-vacio">
+                        Selecciona una sección para precargar el concepto de matrícula y agregar otros conceptos.
+                    </div>
+                </ng-template>
+
+                <div *ngIf="conceptosFormArray.length > 0; else sinConceptos" class="tabla-conceptos">
+                    <table mat-table [dataSource]="conceptosFormArray.controls" class="w-full">
+                        <ng-container matColumnDef="concepto">
+                            <th mat-header-cell *matHeaderCellDef>Concepto</th>
+                            <td mat-cell *matCellDef="let row">
+                                {{ obtenerNombreConcepto(row.controls.conceptoId.value) }}
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="cantidad">
+                            <th mat-header-cell *matHeaderCellDef class="text-right">Cantidad</th>
+                            <td mat-cell *matCellDef="let row" class="text-right">
+                                <input type="number" min="1" matInput [formControl]="row.controls.cantidad" />
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="precio">
+                            <th mat-header-cell *matHeaderCellDef class="text-right">Precio unitario</th>
+                            <td mat-cell *matCellDef="let row" class="text-right">
+                                <input type="number" min="0" matInput [formControl]="row.controls.precioUnit" />
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="descuento">
+                            <th mat-header-cell *matHeaderCellDef class="text-right">Descuento</th>
+                            <td mat-cell *matCellDef="let row" class="text-right">
+                                <input type="number" min="0" matInput [formControl]="row.controls.descuento" />
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="subtotal">
+                            <th mat-header-cell *matHeaderCellDef class="text-right">Subtotal</th>
+                            <td mat-cell *matCellDef="let row" class="text-right">
+                                {{ subtotal(row) | currency:'PEN':'symbol':'1.2-2' }}
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="acciones">
+                            <th mat-header-cell *matHeaderCellDef></th>
+                            <td mat-cell *matCellDef="let row; let i = index" class="text-right">
+                                <button
+                                    mat-icon-button
+                                    color="warn"
+                                    aria-label="Eliminar concepto"
+                                    (click)="eliminarConcepto(i)"
+                                >
+                                    <mat-icon>delete</mat-icon>
+                                </button>
+                            </td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns" [formGroup]="row"></tr>
+                    </table>
+                </div>
+                </div>
+            </form>
+        </mat-card-content>
+        <mat-card-actions class="acciones">
+            <div class="totales">
+                <span>Total a pagar:</span>
+                <strong>{{ total$ | async | currency:'PEN':'symbol':'1.2-2' }}</strong>
+            </div>
+            <div class="botones">
+                <button mat-button type="button" (click)="nuevaMatricula()">
+                    <mat-icon>refresh</mat-icon>
+                    Nueva matrícula
+                </button>
+                <button
+                    mat-flat-button
+                    color="primary"
+                    type="button"
+                    (click)="registrarMatricula()"
+                    [disabled]="
+                        matriculaForm.invalid ||
+                        conceptosFormArray.length === 0 ||
+                        (isSaving$ | async)
+                    "
+                >
+                    <mat-icon>save</mat-icon>
+                    Registrar matrícula
+                </button>
+            </div>
+        </mat-card-actions>
+    </mat-card>
+</div>
