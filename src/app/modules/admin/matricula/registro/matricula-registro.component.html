@@ -63,7 +63,6 @@
                         <input
                             matInput
                             [matAutocomplete]="alumnoAuto"
-                            [matAutocompleteDisplayWith]="alumnoDisplayFn"
                             [formControl]="alumnoSearchControl"
                             placeholder="Ingresa DNI o nombres"
                         />
@@ -96,7 +95,11 @@
                     </div>
                 </div>
 
-                <mat-autocomplete #alumnoAuto="matAutocomplete" (optionSelected)="onAlumnoSeleccionado($event)">
+                <mat-autocomplete
+                    #alumnoAuto="matAutocomplete"
+                    [displayWith]="alumnoDisplayFn"
+                    (optionSelected)="onAlumnoSeleccionado($event)"
+                >
                     <mat-option
                         *ngFor="let alumno of alumnosFiltrados$ | async; trackBy: trackById"
                         [value]="alumno"
