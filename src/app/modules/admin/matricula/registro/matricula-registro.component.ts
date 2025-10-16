@@ -147,6 +147,8 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
     private selectedAlumno: Alumno | null = null;
 
     private readonly destroy$ = new Subject<void>();
+    private readonly conceptoMatriculaId = 1;
+    private pendingMatriculaConceptInsertion = false;
 
     constructor(
         private readonly fb: FormBuilder,
@@ -290,9 +292,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const existente = this.conceptosFormArray.controls.find(
-            (control) => control.controls.conceptoId.value === conceptoId
-        );
+        const existente = this.obtenerControlConcepto(conceptoId);
 
         if (existente) {
             this.snackBar.open('El concepto seleccionado ya fue agregado.', 'Cerrar', {
@@ -339,7 +339,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         }
 
         const conceptoId = control.controls.conceptoId.value;
-        if (conceptoId === 1 && this.selectedSeccion) {
+        if (conceptoId === this.conceptoMatriculaId && this.selectedSeccion) {
             this.snackBar.open('El concepto de matrícula no puede eliminarse.', 'Cerrar', {
                 duration: 4000,
             });
@@ -488,6 +488,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                     ? this.secciones$.value.find((item) => item.id === seccionId) ?? null
                     : null;
 
+                this.pendingMatriculaConceptInsertion = false;
                 this.conceptosFormArray.clear();
                 this.total$.next(0);
 
@@ -615,14 +616,40 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
     }
 
     private insertarConceptoMatriculaPorDefecto(): void {
-        const conceptoMatricula = this.conceptos$.value.find((item) => item.id === 1);
-
-        if (!conceptoMatricula) {
+        if (!this.selectedSeccion) {
+            this.pendingMatriculaConceptInsertion = false;
             return;
         }
 
+        const conceptoMatricula = this.conceptos$.value.find(
+            (item) => item.id === this.conceptoMatriculaId
+        );
+
+        if (!conceptoMatricula) {
+            this.pendingMatriculaConceptInsertion = true;
+            return;
+        }
+
+        this.pendingMatriculaConceptInsertion = false;
+
         const precioDesdeSeccion = this.obtenerPrecioDeSeccion();
         const precio = precioDesdeSeccion ?? conceptoMatricula.precio;
+
+        const existente = this.obtenerControlConcepto(this.conceptoMatriculaId);
+
+        if (existente) {
+            const cantidadActual = existente.controls.cantidad.value ?? 1;
+            if (cantidadActual !== 1) {
+                existente.controls.cantidad.setValue(1);
+            }
+
+            if (existente.controls.precioUnit.value !== precio) {
+                existente.controls.precioUnit.setValue(precio);
+            }
+
+            this.cdr.markForCheck();
+            return;
+        }
 
         const grupo = this.fb.group<ConceptoFormGroup>({
             conceptoId: this.fb.control<number | null>(conceptoMatricula.id, {
@@ -641,6 +668,16 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
 
         this.conceptosFormArray.push(grupo);
         this.cdr.markForCheck();
+    }
+
+    private obtenerControlConcepto(
+        conceptoId: number
+    ): FormGroup<ConceptoFormGroup> | null {
+        return (
+            this.conceptosFormArray.controls.find(
+                (control) => control.controls.conceptoId.value === conceptoId
+            ) ?? null
+        );
     }
 
     private obtenerPrecioDeSeccion(): number | null {
@@ -721,7 +758,17 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
             .listAll()
             .pipe(takeUntil(this.destroy$))
             .subscribe((conceptos) => {
-                this.conceptos$.next(conceptos.filter((concepto) => concepto.activo));
+                const activos = conceptos.filter((concepto) => concepto.activo);
+                this.conceptos$.next(activos);
+
+                if (
+                    this.selectedSeccion &&
+                    (this.pendingMatriculaConceptInsertion ||
+                        !this.obtenerControlConcepto(this.conceptoMatriculaId))
+                ) {
+                    this.insertarConceptoMatriculaPorDefecto();
+                }
+
                 this.cdr.markForCheck();
             });
     }
