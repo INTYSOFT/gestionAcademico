@@ -411,18 +411,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
     }
 
     protected nuevaMatricula(): void {
-        this.matriculaForm.reset();
-        this.alumnoSearchControl.setValue('');
-        this.conceptosFormArray.clear();
-        this.conceptoSelectorControl.setValue(null);
-        this.ciclosDisponibles$.next([]);
-        this.secciones$.next([]);
-        this.selectedSede = null;
-        this.selectedCiclo = null;
-        this.selectedSeccion = null;
-        this.selectedAlumno = null;
-        this.total$.next(0);
-        this.cdr.markForCheck();
+        this.limpiarFormularioParcial();
     }
 
     protected nombreCiclo(cicloId: number | null): string {
@@ -633,7 +622,8 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const precio = this.selectedSeccion?.precio ?? conceptoMatricula.precio;
+        const precioDesdeSeccion = this.obtenerPrecioDeSeccion();
+        const precio = precioDesdeSeccion ?? conceptoMatricula.precio;
 
         const grupo = this.fb.group<ConceptoFormGroup>({
             conceptoId: this.fb.control<number | null>(conceptoMatricula.id, {
@@ -652,6 +642,20 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
 
         this.conceptosFormArray.push(grupo);
         this.cdr.markForCheck();
+    }
+
+    private obtenerPrecioDeSeccion(): number | null {
+        if (!this.selectedSeccion) {
+            return null;
+        }
+
+        const precio = Number(this.selectedSeccion.precio);
+
+        if (!Number.isFinite(precio) || precio <= 0) {
+            return null;
+        }
+
+        return precio;
     }
 
     private seleccionarAlumno(alumno: Alumno): void {
