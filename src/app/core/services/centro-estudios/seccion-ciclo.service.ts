@@ -14,8 +14,7 @@ interface SeccionCicloApi extends Partial<SeccionCiclo> {
     SeccionId?: number | string;
     NivelId?: number | string;
     SedeId?: number | string;
-    Capacidad?: number | string | null;
-    precio?: number | string | null;
+    Capacidad?: number | string | null;    
     Precio?: number | string | null;
     Activo?: boolean | string | number | null;
     FechaRegistro?: string | null;
