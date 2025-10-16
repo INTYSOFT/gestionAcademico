@@ -80,6 +80,17 @@ export const appRoutes: Route[] = [
         children: [
             {path: 'example', loadChildren: () => import('app/modules/admin/example/example.routes')},
             {
+                path: 'matricula',
+                children: [
+                    {
+                        path: 'tipo-concepto',
+                        loadChildren: () =>
+                            import('app/modules/admin/matricula/tipo-concepto/tipo-concepto.routes'),
+                    },
+                    { path: '', pathMatch: 'full', redirectTo: 'tipo-concepto' },
+                ],
+            },
+            {
 
                 path: 'mantenimiento',
                 children: [

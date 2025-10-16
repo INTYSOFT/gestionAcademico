@@ -1,0 +1,20 @@
+.tipo-concepto-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-top: 0.5rem;
+
+    &__form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    &__field {
+        width: 100%;
+    }
+
+    &__progress {
+        margin-top: 0.5rem;
+    }
+}
