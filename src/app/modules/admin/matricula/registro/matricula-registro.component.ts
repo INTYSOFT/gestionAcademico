@@ -765,15 +765,12 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         const sedeId = this.matriculaForm.value.sedeId ?? null;
         const cicloId = this.matriculaForm.value.cicloId ?? null;
 
-        this.matriculaForm.reset(
-            {
-                sedeId,
-                cicloId,
-                seccionCicloId: null,
-                alumnoId: null,
-            },
-            { emitEvent: false }
-        );
+        this.matriculaForm.reset({
+            sedeId,
+            cicloId,
+            seccionCicloId: null,
+            alumnoId: null,
+        });
         this.conceptosFormArray.clear();
         this.alumnoSearchControl.setValue('');
         this.conceptoSelectorControl.setValue(null);
