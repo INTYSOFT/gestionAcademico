@@ -178,7 +178,7 @@
                         *ngIf="conceptosFormArray.length > 0; else sinConceptos"
                         class="tabla-conceptos">
                         <table mat-table
-                            [dataSource]="conceptosFormArray.controls"
+                            [dataSource]="conceptosDataSource$ | async"
                             class="w-full">
                             <ng-container matColumnDef="concepto">
                                 <th mat-header-cell
