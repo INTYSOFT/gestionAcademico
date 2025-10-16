@@ -47,6 +47,23 @@
                     La capacidad no puede ser negativa.
                 </mat-error>
             </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Precio</mat-label>
+                <input
+                    matInput
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    formControlName="precio"
+                    placeholder="Precio de la sección" />
+                <mat-error *ngIf="form.get('precio')?.hasError('required')">
+                    El precio es obligatorio.
+                </mat-error>
+                <mat-error *ngIf="form.get('precio')?.hasError('min')">
+                    El precio no puede ser negativo.
+                </mat-error>
+            </mat-form-field>
         </form>
     </ng-container>
 

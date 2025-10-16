@@ -79,6 +79,7 @@ export class AddSeccionDialogComponent {
             seccionId: [this.availableSecciones[0]?.id ?? null, [Validators.required]],
             nivelId: [this.niveles[0]?.id ?? null, [Validators.required]],
             capacidad: [0, [Validators.required, Validators.min(0)]],
+            precio: [0, [Validators.required, Validators.min(0)]],
         });
     }
 
@@ -102,6 +103,11 @@ export class AddSeccionDialogComponent {
             typeof capacidadControlValue === 'number'
                 ? capacidadControlValue
                 : Number(capacidadControlValue ?? 0);
+        const precioControlValue = this.form.get('precio')?.value;
+        const precio =
+            typeof precioControlValue === 'number'
+                ? precioControlValue
+                : Number(precioControlValue ?? 0);
 
         if (this.existingSeccionIds.has(seccionId)) {
             this.snackBar.open(
@@ -120,6 +126,7 @@ export class AddSeccionDialogComponent {
             nivelId,
             sedeId: this.data.sedeId,
             capacidad: Number.isNaN(capacidad) ? 0 : capacidad,
+            precio: Number.isNaN(precio) ? 0 : precio,
             activo: true,
         };
 
