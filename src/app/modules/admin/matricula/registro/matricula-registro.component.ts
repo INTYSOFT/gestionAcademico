@@ -157,18 +157,6 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
 
     private readonly destroy$ = new Subject<void>();
     private readonly conceptoMatriculaId = 1;
-    private readonly conceptoMatriculaFallback: Concepto = {
-        id: this.conceptoMatriculaId,
-        nombre: 'Matrícula',
-        precio: 0,
-        impuesto: null,
-        activo: true,
-        fechaRegistro: null,
-        fechaActualizacion: null,
-        usuaraioRegistroId: null,
-        usuaraioActualizacionId: null,
-        conceptoTipoId: null,
-    };
     private pendingMatriculaConceptInsertion = false;
 
     constructor(
@@ -222,13 +210,6 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
     protected obtenerNombreConcepto(conceptoId: number | null): string {
         if (!conceptoId) {
             return '';
-        }
-
-        if (conceptoId === this.conceptoMatriculaId) {
-            return (
-                this.conceptos$.value.find((concepto) => concepto.id === conceptoId)?.nombre ??
-                this.conceptoMatriculaFallback.nombre
-            );
         }
 
         return this.conceptos$.value.find((concepto) => concepto.id === conceptoId)?.nombre ?? '';
@@ -331,11 +312,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const concepto =
-            this.conceptos$.value.find((item) => item.id === conceptoId) ??
-            (conceptoId === this.conceptoMatriculaId
-                ? this.conceptoMatriculaFallback
-                : null);
+        const concepto = this.conceptos$.value.find((item) => item.id === conceptoId);
 
         if (!concepto) {
             this.snackBar.open('No se encontró la información del concepto.', 'Cerrar', {
@@ -345,8 +322,6 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const precioNumerico = Number(concepto.precio ?? 0);
-
         const grupo = this.fb.group<ConceptoFormGroup>({
             conceptoId: this.fb.control<number | null>(concepto.id, {
                 validators: [Validators.required],
@@ -354,9 +329,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
             cantidad: this.fb.nonNullable.control<number>(1, {
                 validators: [Validators.required, Validators.min(1)],
             }),
-            precioUnit: this.fb.nonNullable.control<number>(
-                Number.isFinite(precioNumerico) ? precioNumerico : 0,
-                {
+            precioUnit: this.fb.nonNullable.control<number>(concepto.precio, {
                 validators: [Validators.required, Validators.min(0)],
             }),
             descuento: this.fb.nonNullable.control<number>(0, {
@@ -465,6 +438,10 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
 
         const seccion = this.seccionesCatalogo$.value.get(seccionCiclo.seccionId);
         return seccion?.nombre ?? `Sección ${seccionCiclo.seccionId}`;
+    }
+
+    protected tituloSeccion(): string {
+        return this.selectedSeccion ? this.nombreSeccion(this.selectedSeccion) : '';
     }
 
     private handleFormChanges(): void {
@@ -676,7 +653,9 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const conceptoMatricula = this.obtenerConceptoMatricula();
+        const conceptoMatricula = this.conceptos$.value.find(
+            (item) => item.id === this.conceptoMatriculaId
+        );
 
         if (!conceptoMatricula) {
             this.pendingMatriculaConceptInsertion = true;
@@ -731,30 +710,6 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                 (control) => control.controls.conceptoId.value === conceptoId
             ) ?? null
         );
-    }
-
-    private obtenerConceptoMatricula(): Concepto | null {
-        const concepto = this.conceptos$.value.find(
-            (item) => item.id === this.conceptoMatriculaId
-        );
-
-        if (!concepto) {
-            return null;
-        }
-
-        const precioNumerico = Number(concepto.precio ?? 0);
-
-        return {
-            ...this.conceptoMatriculaFallback,
-            ...concepto,
-            nombre:
-                concepto.nombre?.trim().length
-                    ? concepto.nombre.trim()
-                    : this.conceptoMatriculaFallback.nombre,
-            precio: Number.isFinite(precioNumerico)
-                ? precioNumerico
-                : this.conceptoMatriculaFallback.precio,
-        };
     }
 
     private obtenerPrecioDeSeccion(): number | null {
@@ -835,36 +790,8 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
             .listAll()
             .pipe(takeUntil(this.destroy$))
             .subscribe((conceptos) => {
-                const activos = conceptos
-                    .filter((concepto) => concepto.activo)
-                    .map((concepto) => {
-                        if (concepto.id !== this.conceptoMatriculaId) {
-                            return concepto;
-                        }
-
-                        const precioNumerico = Number(concepto.precio ?? 0);
-
-                        return {
-                            ...this.conceptoMatriculaFallback,
-                            ...concepto,
-                            nombre:
-                                concepto.nombre?.trim().length
-                                    ? concepto.nombre.trim()
-                                    : this.conceptoMatriculaFallback.nombre,
-                            precio: Number.isFinite(precioNumerico)
-                                ? precioNumerico
-                                : this.conceptoMatriculaFallback.precio,
-                        };
-                    });
-
-                const incluyeConceptoMatricula = activos.some(
-                    (concepto) => concepto.id === this.conceptoMatriculaId
-                );
-                const listaActualizada = incluyeConceptoMatricula
-                    ? activos
-                    : [...activos, { ...this.conceptoMatriculaFallback }];
-
-                this.conceptos$.next(listaActualizada);
+                const activos = conceptos.filter((concepto) => concepto.activo);
+                this.conceptos$.next(activos);
 
                 if (
                     this.selectedSeccion &&
