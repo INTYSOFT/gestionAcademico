@@ -1,4 +1,4 @@
-import { AsyncPipe, CurrencyPipe, DatePipe, DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, CurrencyPipe, DatePipe, DecimalPipe, NgFor, NgIf } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -102,8 +102,7 @@ interface MatriculaFormGroup {
         MatAutocompleteModule,
         MatDialogModule,
         MatDividerModule,
-        MatProgressBarModule,
-        DecimalPipe,
+        MatProgressBarModule        
     ],
 })
 export class MatriculaRegistroComponent implements OnInit, OnDestroy {
