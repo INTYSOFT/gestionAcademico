@@ -24,7 +24,7 @@
                 <div class="sm:col-span-1 xl:col-span-2">
                     <mat-form-field appearance="outline" class="w-full">
                         <mat-label>Ciclo</mat-label>
-                        <mat-select formControlName="cicloId" [disabled]="!matriculaForm.get('sedeId')?.value">
+                        <mat-select formControlName="cicloId">
                             <mat-option *ngFor="let ciclo of ciclosDisponibles$ | async; trackBy: trackById" [value]="ciclo.id">
                                 {{ ciclo.nombre }}
                             </mat-option>
@@ -42,7 +42,7 @@
 
                 <mat-form-field appearance="outline">
                     <mat-label>Sección</mat-label>
-                    <mat-select formControlName="seccionCicloId" [disabled]="!matriculaForm.get('cicloId')?.value">
+                    <mat-select formControlName="seccionCicloId">
                         <mat-option *ngFor="let seccion of secciones$ | async; trackBy: trackById" [value]="seccion.id">
                             {{ nombreSeccion(seccion) }}
                         </mat-option>
@@ -155,12 +155,11 @@
                 <div class="conceptos-section mt-6">
                 <div class="conceptos-header">
                     <h3 class="text-lg font-semibold text-gray-800">Conceptos</h3>
-                    <mat-form-field appearance="outline" class="concepto-selector" [class.disabled]="!seccionSeleccionada">
+                    <mat-form-field appearance="outline" class="concepto-selector">
                         <mat-label>Agregar concepto</mat-label>
                         <mat-select
                             [formControl]="conceptoSelectorControl"
                             (selectionChange)="agregarConcepto($event.value)"
-                            [disabled]="!seccionSeleccionada"
                         >
                             <mat-option
                                 *ngFor="let concepto of conceptosDisponibles(); trackBy: trackById"

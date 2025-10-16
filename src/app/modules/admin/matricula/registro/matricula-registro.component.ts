@@ -8,6 +8,7 @@ import {
     ViewEncapsulation,
 } from '@angular/core';
 import {
+    AbstractControl,
     FormArray,
     FormBuilder,
     FormControl,
@@ -107,13 +108,20 @@ interface MatriculaFormGroup {
 export class MatriculaRegistroComponent implements OnInit, OnDestroy {
     protected readonly matriculaForm: FormGroup<MatriculaFormGroup> = this.fb.group({
         sedeId: this.fb.control<number | null>(null, { validators: [Validators.required] }),
-        cicloId: this.fb.control<number | null>(null, { validators: [Validators.required] }),
-        seccionCicloId: this.fb.control<number | null>(null, { validators: [Validators.required] }),
+        cicloId: this.fb.control<number | null>({ value: null, disabled: true }, {
+            validators: [Validators.required],
+        }),
+        seccionCicloId: this.fb.control<number | null>({ value: null, disabled: true }, {
+            validators: [Validators.required],
+        }),
         alumnoId: this.fb.control<number | null>(null, { validators: [Validators.required] }),
     });
 
     protected readonly alumnoSearchControl = this.fb.nonNullable.control<string>('');
-    protected readonly conceptoSelectorControl = this.fb.control<number | null>(null);
+    protected readonly conceptoSelectorControl = this.fb.control<number | null>({
+        value: null,
+        disabled: true,
+    });
     protected readonly conceptoItems = this.fb.array<FormGroup<ConceptoFormGroup>>([]);
     protected readonly alumnoDisplayFn = (alumno?: Alumno | null): string =>
         alumno ? this.mostrarAlumno(alumno) : '';
@@ -174,6 +182,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         this.handleFormChanges();
         this.handleAlumnoSearch();
         this.listenConceptChanges();
+        this.syncDependentControlStates();
     }
 
     ngOnDestroy(): void {
@@ -435,6 +444,9 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
     }
 
     private handleFormChanges(): void {
+        const cicloControl = this.matriculaForm.get('cicloId')!;
+        const seccionControl = this.matriculaForm.get('seccionCicloId')!;
+
         this.matriculaForm
             .get('sedeId')!
             .valueChanges.pipe(takeUntil(this.destroy$))
@@ -449,13 +461,21 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                     },
                     { emitEvent: false }
                 );
+                this.selectedCiclo = null;
+                this.selectedSeccion = null;
                 this.conceptosFormArray.clear();
                 this.secciones$.next([]);
                 this.ciclosDisponibles$.next([]);
                 this.total$.next(0);
+                this.toggleControl(seccionControl, false);
+                this.toggleControl(this.conceptoSelectorControl, false);
+                this.conceptoSelectorControl.setValue(null, { emitEvent: false });
 
                 if (sedeId) {
+                    this.toggleControl(cicloControl, true);
                     this.cargarCiclosDisponibles(sedeId);
+                } else {
+                    this.toggleControl(cicloControl, false);
                 }
 
                 this.cdr.markForCheck();
@@ -469,12 +489,18 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                     ? this.ciclosDisponibles$.value.find((ciclo) => ciclo.id === cicloId) ?? null
                     : null;
                 this.matriculaForm.patchValue({ seccionCicloId: null }, { emitEvent: false });
+                this.selectedSeccion = null;
                 this.secciones$.next([]);
                 this.conceptosFormArray.clear();
                 this.total$.next(0);
+                this.toggleControl(this.conceptoSelectorControl, false);
+                this.conceptoSelectorControl.setValue(null, { emitEvent: false });
 
                 if (cicloId && this.selectedSede) {
+                    this.toggleControl(seccionControl, true);
                     this.cargarSecciones(this.selectedSede.id, cicloId);
+                } else {
+                    this.toggleControl(seccionControl, false);
                 }
 
                 this.cdr.markForCheck();
@@ -491,6 +517,11 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                 this.pendingMatriculaConceptInsertion = false;
                 this.conceptosFormArray.clear();
                 this.total$.next(0);
+                const hasSeccionSeleccionada = !!this.selectedSeccion;
+                this.toggleControl(this.conceptoSelectorControl, hasSeccionSeleccionada);
+                if (!hasSeccionSeleccionada) {
+                    this.conceptoSelectorControl.setValue(null, { emitEvent: false });
+                }
 
                 if (this.selectedSeccion) {
                     this.insertarConceptoMatriculaPorDefecto();
@@ -811,25 +842,50 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         const sedeId = this.matriculaForm.value.sedeId ?? null;
         const cicloId = this.matriculaForm.value.cicloId ?? null;
 
-        this.matriculaForm.reset({
-            sedeId,
-            cicloId,
-            seccionCicloId: null,
-            alumnoId: null,
-        });
+        this.matriculaForm.patchValue(
+            {
+                sedeId,
+                cicloId,
+                seccionCicloId: null,
+                alumnoId: null,
+            },
+            { emitEvent: false }
+        );
         this.conceptosFormArray.clear();
         this.alumnoSearchControl.setValue('');
-        this.conceptoSelectorControl.setValue(null);
+        this.conceptoSelectorControl.setValue(null, { emitEvent: false });
         this.selectedAlumno = null;
         this.selectedSeccion = null;
         this.total$.next(0);
+        this.toggleControl(this.conceptoSelectorControl, false);
 
         if (this.selectedSede && this.selectedCiclo) {
             this.cargarSecciones(this.selectedSede.id, this.selectedCiclo.id);
+            this.toggleControl(this.matriculaForm.get('seccionCicloId')!, true);
         } else {
             this.secciones$.next([]);
+            this.toggleControl(this.matriculaForm.get('seccionCicloId')!, false);
         }
+        this.toggleControl(this.matriculaForm.get('cicloId')!, !!sedeId);
         this.cdr.markForCheck();
+    }
+
+    private toggleControl(control: AbstractControl, enabled: boolean): void {
+        if (enabled && control.disabled) {
+            control.enable({ emitEvent: false });
+        } else if (!enabled && control.enabled) {
+            control.disable({ emitEvent: false });
+        }
+    }
+
+    private syncDependentControlStates(): void {
+        const sedeId = this.matriculaForm.get('sedeId')!.value;
+        const cicloId = this.matriculaForm.get('cicloId')!.value;
+        const seccionId = this.matriculaForm.get('seccionCicloId')!.value;
+
+        this.toggleControl(this.matriculaForm.get('cicloId')!, !!sedeId);
+        this.toggleControl(this.matriculaForm.get('seccionCicloId')!, !!sedeId && !!cicloId);
+        this.toggleControl(this.conceptoSelectorControl, !!seccionId);
     }
 
     private imprimirComprobante(matriculaId: number): void {
