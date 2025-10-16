@@ -467,6 +467,26 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         return seccion?.nombre ?? `Sección ${seccionCiclo.seccionId}`;
     }
 
+    protected tituloSeccion(): string {
+        if (!this.selectedSeccion) {
+            return '';
+        }
+
+        const seccionNombre = this.nombreSeccion(this.selectedSeccion);
+        const cicloNombre = this.selectedCiclo?.nombre?.trim();
+        const sedeNombre = this.selectedSede?.nombre?.trim();
+
+        const partes = [seccionNombre, cicloNombre, sedeNombre]
+            .map((valor) => valor?.trim())
+            .filter((valor): valor is string => Boolean(valor));
+
+        if (partes.length === 0) {
+            return `Sección ${this.selectedSeccion.id}`;
+        }
+
+        return partes.join(' · ');
+    }
+
     private handleFormChanges(): void {
         const cicloControl = this.matriculaForm.get('cicloId')!;
         const seccionControl = this.matriculaForm.get('seccionCicloId')!;
