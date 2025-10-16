@@ -578,7 +578,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         this.alumnoSearchControl.valueChanges
             .pipe(startWith(this.alumnoSearchControl.value), takeUntil(this.destroy$))
             .subscribe((termino) => {
-                const filtro = termino?.trim().toLowerCase() ?? '';
+                const filtro = this.normalizarBusquedaAlumno(termino);
                 const alumnos = this.alumnos$.value;
 
                 if (!filtro) {
@@ -589,17 +589,9 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                     return;
                 }
 
-                const filtrados = alumnos.filter((alumno) => {
-                    const valores = [
-                        alumno.dni ?? '',
-                        alumno.apellidos ?? '',
-                        alumno.nombres ?? '',
-                    ]
-                        .map((valor) => valor.toLowerCase())
-                        .join(' ');
-
-                    return valores.includes(filtro);
-                });
+                const filtrados = alumnos.filter((alumno) =>
+                    this.normalizarAlumno(alumno).includes(filtro)
+                );
 
                 this.alumnosFiltrados$.next(filtrados);
 
@@ -797,6 +789,25 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
             emitEvent: false,
         });
         this.cdr.markForCheck();
+    }
+
+    private normalizarAlumno(alumno: Alumno): string {
+        return [alumno.dni, alumno.apellidos, alumno.nombres]
+            .map((valor) => (typeof valor === 'string' ? valor.trim().toLowerCase() : ''))
+            .filter((valor) => valor.length > 0)
+            .join(' ');
+    }
+
+    private normalizarBusquedaAlumno(termino: unknown): string {
+        if (typeof termino === 'string') {
+            return termino.trim().toLowerCase();
+        }
+
+        if (termino && typeof termino === 'object') {
+            return this.normalizarAlumno(termino as Alumno);
+        }
+
+        return '';
     }
 
     private recargarAlumnos(alumnoId?: number): void {
