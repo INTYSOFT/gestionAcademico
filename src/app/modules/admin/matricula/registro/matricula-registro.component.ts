@@ -46,6 +46,7 @@ import { Ciclo } from 'app/core/models/centro-estudios/ciclo.model';
 import { SeccionCiclo } from 'app/core/models/centro-estudios/seccion-ciclo.model';
 import { Alumno } from 'app/core/models/centro-estudios/alumno.model';
 import { Concepto } from 'app/core/models/centro-estudios/concepto.model';
+import { Carrera } from 'app/core/models/centro-estudios/carrera.model';
 import { SedeService } from 'app/core/services/centro-estudios/sede.service';
 import { CiclosService } from 'app/core/services/centro-estudios/ciclos.service';
 import { AperturaCicloService } from 'app/core/services/centro-estudios/apertura-ciclo.service';
@@ -53,6 +54,7 @@ import { SeccionCicloService } from 'app/core/services/centro-estudios/seccion-c
 import { AlumnosService } from 'app/core/services/centro-estudios/alumnos.service';
 import { ConceptosService } from 'app/core/services/centro-estudios/conceptos.service';
 import { MatriculasService } from 'app/core/services/centro-estudios/matriculas.service';
+import { CarrerasService } from 'app/core/services/centro-estudios/carreras.service';
 import {
     CreateMatriculaItemPayload,
     CreateMatriculaWithItemsPayload,
@@ -74,6 +76,7 @@ interface MatriculaFormGroup {
     cicloId: FormControl<number | null>;
     seccionCicloId: FormControl<number | null>;
     alumnoId: FormControl<number | null>;
+    carreraId: FormControl<number | null>;
 }
 
 @Component({
@@ -115,6 +118,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
             validators: [Validators.required],
         }),
         alumnoId: this.fb.control<number | null>(null, { validators: [Validators.required] }),
+        carreraId: this.fb.control<number | null>(null, { validators: [Validators.required] }),
     });
 
     protected readonly alumnoSearchControl = this.fb.nonNullable.control<string>('');
@@ -134,6 +138,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
     protected readonly alumnosFiltrados$ = new BehaviorSubject<Alumno[]>([]);
     protected readonly conceptos$ = new BehaviorSubject<Concepto[]>([]);
     protected readonly seccionesCatalogo$ = new BehaviorSubject<Map<number, Seccion>>(new Map());
+    protected readonly carreras$ = new BehaviorSubject<Carrera[]>([]);
 
     protected readonly total$ = new BehaviorSubject<number>(0);
     protected readonly isSaving$ = new BehaviorSubject<boolean>(false);
@@ -153,6 +158,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
     private selectedCiclo: Ciclo | null = null;
     private selectedSeccion: SeccionCiclo | null = null;
     private selectedAlumno: Alumno | null = null;
+    private selectedCarrera: Carrera | null = null;
 
     private readonly destroy$ = new Subject<void>();
     private readonly conceptoMatriculaId = 1;
@@ -180,6 +186,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         private readonly alumnosService: AlumnosService,
         private readonly conceptosService: ConceptosService,
         private readonly matriculasService: MatriculasService,
+        private readonly carrerasService: CarrerasService,
         private readonly dialog: MatDialog,
         private readonly snackBar: MatSnackBar,
         private readonly cdr: ChangeDetectorRef
@@ -247,6 +254,10 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
 
     protected get sedeSeleccionada(): Sede | null {
         return this.selectedSede;
+    }
+
+    protected get carreraSeleccionada(): Carrera | null {
+        return this.selectedCarrera;
     }
 
     protected onAlumnoSeleccionado(event: MatAutocompleteSelectedEvent): void {
@@ -416,6 +427,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         const payload: CreateMatriculaWithItemsPayload = {
             alumnoId,
             seccionCicloId,
+            carreraId: this.matriculaForm.value.carreraId!,
             items: this.conceptosFormArray.controls.map((control) =>
                 this.mapToItemPayload(control)
             ),
@@ -489,6 +501,13 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
     private handleFormChanges(): void {
         const cicloControl = this.matriculaForm.get('cicloId')!;
         const seccionControl = this.matriculaForm.get('seccionCicloId')!;
+        const carreraControl = this.matriculaForm.get('carreraId')!;
+
+        carreraControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((carreraId) => {
+            this.updateCarreraSeleccionada(carreraId);
+            this.cdr.markForCheck();
+        });
+        this.updateCarreraSeleccionada(carreraControl.value);
 
         this.matriculaForm
             .get('sedeId')!
@@ -513,6 +532,9 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                 this.toggleControl(seccionControl, false);
                 this.toggleControl(this.conceptoSelectorControl, false);
                 this.conceptoSelectorControl.setValue(null, { emitEvent: false });
+
+                const carreraId = this.matriculaForm.value.carreraId ?? null;
+                this.updateCarreraSeleccionada(carreraId);
 
                 if (sedeId) {
                     this.toggleControl(cicloControl, true);
@@ -859,6 +881,17 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                 this.cdr.markForCheck();
             });
 
+        this.carrerasService
+            .list()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((carreras) => {
+                this.carreras$.next(
+                    carreras.filter((carrera) => carrera.activo !== false)
+                );
+                this.updateCarreraSeleccionada(this.matriculaForm.value.carreraId ?? null);
+                this.cdr.markForCheck();
+            });
+
         this.recargarAlumnos();
 
         this.conceptosService
@@ -952,9 +985,11 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                 cicloId,
                 seccionCicloId: null,
                 alumnoId: null,
+                carreraId: this.matriculaForm.value.carreraId ?? null,
             },
             { emitEvent: false }
         );
+        this.updateCarreraSeleccionada(this.matriculaForm.value.carreraId ?? null);
         this.conceptosFormArray.clear();
         this.alumnoSearchControl.setValue('');
         this.conceptoSelectorControl.setValue(null, { emitEvent: false });
@@ -980,6 +1015,23 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         } else if (!enabled && control.enabled) {
             control.disable({ emitEvent: false });
         }
+    }
+
+    private updateCarreraSeleccionada(carreraId: number | null): void {
+        const parsedId =
+            typeof carreraId === 'number'
+                ? carreraId
+                : carreraId !== null
+                ? Number(carreraId)
+                : Number.NaN;
+
+        if (!Number.isFinite(parsedId)) {
+            this.selectedCarrera = null;
+            return;
+        }
+
+        this.selectedCarrera =
+            this.carreras$.value.find((carrera) => carrera.id === parsedId) ?? null;
     }
 
     private syncDependentControlStates(): void {
@@ -1016,6 +1068,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         const ciclo = this.selectedCiclo.nombre;
         const seccion = this.nombreSeccion(this.selectedSeccion);
         const alumno = this.mostrarAlumno(this.selectedAlumno);
+        const carrera = this.selectedCarrera?.nombre ?? '';
 
         const ventana = window.open('', '_blank', 'width=900,height=650');
         if (!ventana) {
@@ -1068,6 +1121,11 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                         <span><strong>Sede:</strong> ${sede}</span>
                         <span><strong>Ciclo:</strong> ${ciclo}</span>
                         <span><strong>Sección:</strong> ${seccion}</span>
+                        ${
+                            carrera
+                                ? `<span><strong>Carrera:</strong> ${carrera}</span>`
+                                : ''
+                        }
                         <span><strong>Alumno:</strong> ${alumno}</span>
                     </div>
                     <table>
