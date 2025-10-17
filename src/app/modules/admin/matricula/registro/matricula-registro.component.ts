@@ -137,6 +137,9 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
     protected readonly alumnos$ = new BehaviorSubject<Alumno[]>([]);
     protected readonly alumnosFiltrados$ = new BehaviorSubject<Alumno[]>([]);
     protected readonly conceptos$ = new BehaviorSubject<Concepto[]>([]);
+    protected readonly conceptosDataSource$ = new BehaviorSubject<
+        FormGroup<ConceptoFormGroup>[]
+    >([]);
     protected readonly seccionesCatalogo$ = new BehaviorSubject<Map<number, Seccion>>(new Map());
     protected readonly carreras$ = new BehaviorSubject<Carrera[]>([]);
 
@@ -202,6 +205,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         this.handleAlumnoSearch();
         this.listenConceptChanges();
         this.syncDependentControlStates();
+        this.emitConceptosDataSource();
     }
 
     ngOnDestroy(): void {
@@ -376,6 +380,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
 
         this.conceptosFormArray.push(grupo);
         this.conceptoSelectorControl.setValue(null);
+        this.emitConceptosDataSource();
         this.cdr.markForCheck();
     }
 
@@ -394,6 +399,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         }
 
         this.conceptosFormArray.removeAt(index);
+        this.emitConceptosDataSource();
         this.cdr.markForCheck();
     }
 
@@ -526,6 +532,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                 this.selectedCiclo = null;
                 this.selectedSeccion = null;
                 this.conceptosFormArray.clear();
+                this.emitConceptosDataSource();
                 this.secciones$.next([]);
                 this.ciclosDisponibles$.next([]);
                 this.total$.next(0);
@@ -557,6 +564,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                 this.selectedSeccion = null;
                 this.secciones$.next([]);
                 this.conceptosFormArray.clear();
+                this.emitConceptosDataSource();
                 this.total$.next(0);
                 this.toggleControl(this.conceptoSelectorControl, false);
                 this.conceptoSelectorControl.setValue(null, { emitEvent: false });
@@ -581,6 +589,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
 
                 this.pendingMatriculaConceptInsertion = false;
                 this.conceptosFormArray.clear();
+                this.emitConceptosDataSource();
                 this.total$.next(0);
                 const hasSeccionSeleccionada = !!this.selectedSeccion;
                 this.toggleControl(this.conceptoSelectorControl, hasSeccionSeleccionada);
@@ -640,6 +649,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                 }, 0);
 
                 this.total$.next(total);
+                this.emitConceptosDataSource();
                 this.cdr.markForCheck();
             });
     }
@@ -753,6 +763,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         });
 
         this.conceptosFormArray.push(grupo);
+        this.emitConceptosDataSource();
         this.cdr.markForCheck();
     }
 
@@ -991,6 +1002,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         );
         this.updateCarreraSeleccionada(this.matriculaForm.value.carreraId ?? null);
         this.conceptosFormArray.clear();
+        this.emitConceptosDataSource();
         this.alumnoSearchControl.setValue('');
         this.conceptoSelectorControl.setValue(null, { emitEvent: false });
         this.selectedAlumno = null;
@@ -1015,6 +1027,10 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         } else if (!enabled && control.enabled) {
             control.disable({ emitEvent: false });
         }
+    }
+
+    private emitConceptosDataSource(): void {
+        this.conceptosDataSource$.next([...this.conceptosFormArray.controls]);
     }
 
     private updateCarreraSeleccionada(carreraId: number | null): void {
