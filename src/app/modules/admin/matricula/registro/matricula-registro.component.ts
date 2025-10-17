@@ -428,11 +428,35 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
             return;
         }
 
+        const sedeId = this.matriculaForm.value.sedeId;
+        const cicloId = this.matriculaForm.value.cicloId;
         const alumnoId = this.matriculaForm.value.alumnoId!;
         const seccionCicloId = this.matriculaForm.value.seccionCicloId!;
+        const seccionId = this.selectedSeccion?.seccionId ?? null;
+
+        if (
+            sedeId === null ||
+            sedeId === undefined ||
+            cicloId === null ||
+            cicloId === undefined ||
+            seccionId === null
+        ) {
+            this.snackBar.open(
+                'Debe seleccionar la sede, el ciclo y la sección antes de registrar.',
+                'Cerrar',
+                {
+                    duration: 4000,
+                }
+            );
+            return;
+        }
+
         const payload: CreateMatriculaWithItemsPayload = {
             alumnoId,
             seccionCicloId,
+            sedeId,
+            cicloId,
+            seccionId,
             carreraId: this.matriculaForm.value.carreraId!,
             items: this.conceptosFormArray.controls.map((control) =>
                 this.mapToItemPayload(control)

@@ -14,6 +14,9 @@ interface MatriculaApi extends Partial<Matricula> {
     Id?: number | string;
     AlumnoId?: number | string;
     SeccionCicloId?: number | string;
+    SedeId?: number | string;
+    CicloId?: number | string;
+    SeccionId?: number | string;
     CarnetUrl?: string | null;
     Activo?: boolean | string | number | null;
     FechaRegistro?: string | null;
@@ -43,24 +46,15 @@ export class MatriculasService extends ApiMainService {
     private readonly itemsResourcePath = 'api/MatriculaItems';
 
     create(payload: CreateMatriculaPayload): Observable<Matricula> {
-        return this.post<MatriculaApi>(this.resourcePath, payload).pipe(
+        const body = this.mapToApiPayload(payload);
+
+        return this.post<MatriculaApi>(this.resourcePath, body).pipe(
             map((response) => this.normalizeMatriculaOrThrow(response))
         );
     }
 
     createWithItems(payload: CreateMatriculaWithItemsPayload): Observable<MatriculaWithItems> {
-        const body: MatriculaApi = {
-            alumnoId: payload.alumnoId,
-            AlumnoId: payload.alumnoId,
-            seccionCicloId: payload.seccionCicloId,
-            SeccionCicloId: payload.seccionCicloId,
-            carnetUrl: payload.carnetUrl ?? null,
-            CarnetUrl: payload.carnetUrl ?? null,
-            activo: payload.activo ?? true,
-            Activo: payload.activo ?? true,
-            carreraId: payload.carreraId ?? null,
-            CarreraId: payload.carreraId ?? null,
-        };
+        const body = this.mapToApiPayload(payload);
 
         return this.post<MatriculaApi>(this.resourcePath, body).pipe(
             map((response) => this.normalizeMatriculaOrThrow(response)),
@@ -114,8 +108,18 @@ export class MatriculasService extends ApiMainService {
         const seccionCicloId = this.coerceNumber(
             raw.seccionCicloId ?? raw.SeccionCicloId
         );
+        const sedeId = this.coerceNumber(raw.sedeId ?? raw.SedeId);
+        const cicloId = this.coerceNumber(raw.cicloId ?? raw.CicloId);
+        const seccionId = this.coerceNumber(raw.seccionId ?? raw.SeccionId);
 
-        if (id === null || alumnoId === null || seccionCicloId === null) {
+        if (
+            id === null ||
+            alumnoId === null ||
+            seccionCicloId === null ||
+            sedeId === null ||
+            cicloId === null ||
+            seccionId === null
+        ) {
             return null;
         }
 
@@ -123,6 +127,9 @@ export class MatriculasService extends ApiMainService {
             id,
             alumnoId,
             seccionCicloId,
+            sedeId,
+            cicloId,
+            seccionId,
             carnetUrl: this.coerceOptionalString(raw.carnetUrl ?? raw.CarnetUrl),
             activo: this.coerceBoolean(raw.activo ?? raw.Activo, true),
             fechaRegistro: this.coerceOptionalString(raw.fechaRegistro ?? raw.FechaRegistro),
@@ -205,6 +212,27 @@ export class MatriculasService extends ApiMainService {
         }
 
         return item;
+    }
+
+    private mapToApiPayload(payload: CreateMatriculaPayload): MatriculaApi {
+        return {
+            alumnoId: payload.alumnoId,
+            AlumnoId: payload.alumnoId,
+            seccionCicloId: payload.seccionCicloId,
+            SeccionCicloId: payload.seccionCicloId,
+            sedeId: payload.sedeId,
+            SedeId: payload.sedeId,
+            cicloId: payload.cicloId,
+            CicloId: payload.cicloId,
+            seccionId: payload.seccionId,
+            SeccionId: payload.seccionId,
+            carnetUrl: payload.carnetUrl ?? null,
+            CarnetUrl: payload.carnetUrl ?? null,
+            activo: payload.activo ?? true,
+            Activo: payload.activo ?? true,
+            carreraId: payload.carreraId ?? null,
+            CarreraId: payload.carreraId ?? null,
+        };
     }
 
     private coerceNumber(value: unknown): number | null {

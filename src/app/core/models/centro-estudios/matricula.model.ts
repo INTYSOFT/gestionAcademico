@@ -2,6 +2,9 @@ export interface Matricula {
     id: number;
     alumnoId: number;
     seccionCicloId: number;
+    sedeId: number;
+    cicloId: number;
+    seccionId: number;
     carnetUrl: string | null;
     activo: boolean;
     fechaRegistro: string | null;
@@ -28,6 +31,9 @@ export interface MatriculaItem {
 export interface CreateMatriculaPayload {
     alumnoId: number;
     seccionCicloId: number;
+    sedeId: number;
+    cicloId: number;
+    seccionId: number;
     carnetUrl?: string | null;
     activo?: boolean;
     carreraId?: number | null;
