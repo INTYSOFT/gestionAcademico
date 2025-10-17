@@ -4,6 +4,30 @@
 
 <form [formGroup]="form" (ngSubmit)="save()" class="alumno-form">
     <mat-dialog-content>
+        <div class="alumno-form__status">
+            <mat-progress-bar
+                *ngIf="isLoadingColegios$ | async"
+                mode="indeterminate"
+            ></mat-progress-bar>
+
+            <div
+                class="alumno-form__error"
+                *ngIf="colegiosLoadError$ | async"
+            >
+                <span>
+                    No se pudieron cargar los colegios. Intente nuevamente.
+                </span>
+                <button
+                    mat-stroked-button
+                    color="primary"
+                    type="button"
+                    (click)="recargarColegios()"
+                >
+                    Reintentar
+                </button>
+            </div>
+        </div>
+
         <div class="alumno-form__grid">
             <mat-form-field appearance="outline">
                 <mat-label>DNI</mat-label>
@@ -66,14 +90,30 @@
 
             <mat-form-field appearance="outline">
                 <mat-label>Colegio de procedencia</mat-label>
-                <mat-select formControlName="colegioId">
+                <mat-select
+                    formControlName="colegioId"
+                    [disabled]="isLoadingColegios$ | async"
+                >
                     <mat-option value="" disabled>Seleccione</mat-option>
-                    <mat-option
-                        *ngFor="let colegio of colegios$ | async; trackBy: trackById"
-                        [value]="colegio.id"
-                    >
-                        {{ colegio.nombre }}
-                    </mat-option>
+                    <ng-container *ngIf="colegios$ | async as colegios">
+                        <mat-option
+                            *ngFor="let colegio of colegios; trackBy: trackById"
+                            [value]="colegio.id"
+                        >
+                            {{ colegio.nombre }}
+                        </mat-option>
+                        <mat-hint
+                            *ngIf="
+                                !(isLoadingColegios$ | async) &&
+                                !(
+                                    colegiosLoadError$ | async
+                                ) &&
+                                colegios.length === 0
+                            "
+                        >
+                            No hay colegios activos disponibles.
+                        </mat-hint>
+                    </ng-container>
                 </mat-select>
                 <mat-error *ngIf="form.controls.colegioId.hasError('required')">
                     Seleccione un colegio.

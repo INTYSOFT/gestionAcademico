@@ -8,7 +8,7 @@ import {
     ViewEncapsulation,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -76,6 +76,7 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
 
     constructor(
         @Inject(MAT_DIALOG_DATA) protected readonly data: Alumno,
+        private readonly dialogRef: MatDialogRef<AlumnoApoderadosDialogComponent>,
         private readonly dialog: MatDialog,
         private readonly snackBar: MatSnackBar,
         private readonly alumnoApoderadoService: AlumnoApoderadoService,
@@ -178,6 +179,10 @@ export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
 
     protected isUpdating(relacion: AlumnoApoderado): boolean {
         return relacion.id != null && this.updatingIds.has(relacion.id);
+    }
+
+    protected close(): void {
+        this.dialogRef.close();
     }
 
     private loadParentescos(): void {
