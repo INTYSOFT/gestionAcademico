@@ -1,0 +1,39 @@
+<div class="flex min-w-0 flex-auto flex-col">
+    <div class="flex-auto p-6 sm:p-10">
+        <section class="tipo-evaluacion">
+            <header class="tipo-evaluacion__header">
+                <mat-form-field appearance="outline" class="tipo-evaluacion__search-field">
+                    <mat-label>Buscar tipos de evaluación</mat-label>
+                    <input
+                        matInput
+                        type="search"
+                        [formControl]="searchControl"
+                        placeholder="Nombre, descripción o estado" />
+                </mat-form-field>
+                <button
+                    mat-raised-button
+                    color="primary"
+                    type="button"
+                    (click)="createTipoEvaluacion()">
+                    <mat-icon>add</mat-icon>
+                    Nuevo tipo de evaluación
+                </button>
+            </header>
+
+            <mat-progress-bar
+                *ngIf="isLoading$ | async"
+                mode="indeterminate"
+                color="primary"></mat-progress-bar>
+
+            <ag-grid-angular
+                class="ag-theme-material tipo-evaluacion__grid"
+                [theme]="'legacy'"
+                [rowData]="filteredTiposEvaluacion$ | async"
+                [columnDefs]="columnDefs"
+                [defaultColDef]="defaultColDef"
+                [animateRows]="true"
+                [domLayout]="'autoHeight'"
+                (gridReady)="onGridReady($event)"></ag-grid-angular>
+        </section>
+    </div>
+</div>

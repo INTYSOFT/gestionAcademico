@@ -1,0 +1,30 @@
+.tipo-evaluacion {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    &__header {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+
+        @media (min-width: 768px) {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+    }
+
+    &__search-field {
+        width: 100%;
+
+        @media (min-width: 768px) {
+            max-width: 420px;
+        }
+    }
+
+    &__grid {
+        width: 100%;
+        min-height: 300px;
+    }
+}

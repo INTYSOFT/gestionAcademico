@@ -10,6 +10,21 @@ export const defaultNavigation: FuseNavigationItem[] = [
         link : '/example'
     },
     {
+        id      : 'evaluacion',
+        title   : 'Evaluación',
+        type    : 'collapsable',
+        icon    : 'heroicons_outline:clipboard-document',
+        children: [
+            {
+                id   : 'evaluacion.tipo-evaluacion',
+                title: 'Tipo evaluación',
+                type : 'basic',
+                icon : 'heroicons_outline:check-circle',
+                link : '/evaluacion/tipo-evaluacion'
+            }
+        ]
+    },
+    {
         id      : 'matricula',
         title   : 'Matricula',
         type    : 'collapsable',
@@ -162,6 +177,12 @@ export const compactNavigation: FuseNavigationItem[] = [
         link : '/example'
     },
     {
+        id   : 'evaluacion',
+        title: 'Evaluación',
+        type : 'collapsable',
+        icon : 'heroicons_outline:clipboard-document'
+    },
+    {
         id   : 'matricula',
         title: 'Matricula',
         type : 'collapsable',
@@ -187,6 +208,12 @@ export const futuristicNavigation: FuseNavigationItem[] = [
         type : 'basic',
         icon : 'heroicons_outline:chart-pie',
         link : '/example'
+    },
+    {
+        id   : 'evaluacion',
+        title: 'Evaluación',
+        type : 'collapsable',
+        icon : 'heroicons_outline:clipboard-document'
     },
     {
         id   : 'matricula',
@@ -241,6 +268,21 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:tag',
                 link : '/matricula/tipo-concepto'
+            }
+        ]
+    },
+    {
+        id   : 'evaluacion',
+        title: 'Evaluación',
+        type : 'group',
+        icon : 'heroicons_outline:clipboard-document',
+        children: [
+            {
+                id   : 'evaluacion.tipo-evaluacion',
+                title: 'Tipo evaluación',
+                type : 'basic',
+                icon : 'heroicons_outline:check-circle',
+                link : '/evaluacion/tipo-evaluacion'
             }
         ]
     },
