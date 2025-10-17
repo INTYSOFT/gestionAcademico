@@ -123,9 +123,6 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         disabled: true,
     });
     protected readonly conceptoItems = this.fb.array<FormGroup<ConceptoFormGroup>>([]);
-    protected readonly conceptosDataSource$ = new BehaviorSubject<
-        readonly FormGroup<ConceptoFormGroup>[]
-    >([]);
     protected readonly alumnoDisplayFn = (alumno?: Alumno | null): string =>
         alumno ? this.mostrarAlumno(alumno) : '';
 
@@ -367,7 +364,6 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         });
 
         this.conceptosFormArray.push(grupo);
-        this.actualizarConceptosDataSource();
         this.conceptoSelectorControl.setValue(null);
         this.cdr.markForCheck();
     }
@@ -387,7 +383,6 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         }
 
         this.conceptosFormArray.removeAt(index);
-        this.actualizarConceptosDataSource();
         this.cdr.markForCheck();
     }
 
@@ -512,7 +507,6 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                 this.selectedCiclo = null;
                 this.selectedSeccion = null;
                 this.conceptosFormArray.clear();
-                this.actualizarConceptosDataSource();
                 this.secciones$.next([]);
                 this.ciclosDisponibles$.next([]);
                 this.total$.next(0);
@@ -541,7 +535,6 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                 this.selectedSeccion = null;
                 this.secciones$.next([]);
                 this.conceptosFormArray.clear();
-                this.actualizarConceptosDataSource();
                 this.total$.next(0);
                 this.toggleControl(this.conceptoSelectorControl, false);
                 this.conceptoSelectorControl.setValue(null, { emitEvent: false });
@@ -566,7 +559,6 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
 
                 this.pendingMatriculaConceptInsertion = false;
                 this.conceptosFormArray.clear();
-                this.actualizarConceptosDataSource();
                 this.total$.next(0);
                 const hasSeccionSeleccionada = !!this.selectedSeccion;
                 this.toggleControl(this.conceptoSelectorControl, hasSeccionSeleccionada);
@@ -626,13 +618,8 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                 }, 0);
 
                 this.total$.next(total);
-                this.actualizarConceptosDataSource();
                 this.cdr.markForCheck();
             });
-    }
-
-    private actualizarConceptosDataSource(): void {
-        this.conceptosDataSource$.next([...this.conceptosFormArray.controls]);
     }
 
     private mapToItemPayload(
@@ -744,7 +731,6 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         });
 
         this.conceptosFormArray.push(grupo);
-        this.actualizarConceptosDataSource();
         this.cdr.markForCheck();
     }
 
@@ -970,7 +956,6 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
             { emitEvent: false }
         );
         this.conceptosFormArray.clear();
-        this.actualizarConceptosDataSource();
         this.alumnoSearchControl.setValue('');
         this.conceptoSelectorControl.setValue(null, { emitEvent: false });
         this.selectedAlumno = null;
