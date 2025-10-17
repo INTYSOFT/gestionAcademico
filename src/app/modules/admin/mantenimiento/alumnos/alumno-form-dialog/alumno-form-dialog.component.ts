@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import {
     AbstractControl,
+    AsyncValidatorFn,
     FormBuilder,
     FormGroup,
     ReactiveFormsModule,
@@ -103,8 +104,48 @@ export class AlumnoFormDialogComponent implements OnInit, OnDestroy {
         return null;
     };
 
+    private readonly dniUniqueValidator: AsyncValidatorFn = (
+        control: AbstractControl
+    ): Observable<ValidationErrors | null> => {
+        const dni = this.normalizeIdentifier(control.value);
+
+        if (!dni) {
+            return of(null);
+        }
+
+        const currentAlumnoId = this.data.alumno?.id ?? null;
+
+        return this.alumnosService.findByDni(dni).pipe(
+            map((alumnos) =>
+                alumnos.some((alumno) => alumno.id !== currentAlumnoId)
+                    ? { dniTaken: true }
+                    : null
+            ),
+            catchError(() => {
+                this.snackBar.open(
+                    'No se pudo validar el DNI. Intente nuevamente.',
+                    'Cerrar',
+                    {
+                        duration: 4000,
+                    }
+                );
+
+                return of({ dniLookupFailed: true });
+            })
+        );
+    };
+
     protected readonly form: FormGroup = this.fb.group({
-        dni: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(12), Validators.pattern(/^\d+$/)]],
+        dni: this.fb.control('', {
+            validators: [
+                Validators.required,
+                Validators.minLength(8),
+                Validators.maxLength(12),
+                Validators.pattern(/^\d+$/),
+            ],
+            asyncValidators: [this.dniUniqueValidator],
+            updateOn: 'blur',
+        }),
         apellidos: ['', [Validators.required, Validators.maxLength(150)]],
         nombres: ['', [Validators.required, Validators.maxLength(150)]],
         fechaNacimiento: [null, [this.validatePastDate]],

@@ -7,7 +7,7 @@ import {
     CreateAlumnoPayload,
     UpdateAlumnoPayload,
 } from 'app/core/models/centro-estudios/alumno.model';
-import { Observable, catchError, map, switchMap, throwError } from 'rxjs';
+import { Observable, catchError, map, of, switchMap, throwError } from 'rxjs';
 import { CENTRO_ESTUDIOS_API } from './centro-estudios-api.constants';
 
 interface AlumnoApi extends Partial<Alumno> {
@@ -70,6 +70,21 @@ export class AlumnosService {
                     throwError(() => this.errorService.createError(error))
                 )
             );
+    }
+
+    findByDni(dni: string): Observable<Alumno[]> {
+        const sanitizedDni = this.normalizeIdentifier(dni);
+
+        if (!sanitizedDni) {
+            return of([]);
+        }
+
+        const url = `${this.buildUrl(CENTRO_ESTUDIOS_API.alumnos)}/dni/${encodeURIComponent(sanitizedDni)}`;
+
+        return this.http.get<AlumnoApi[]>(url).pipe(
+            map((response) => this.normalizeAlumnos(response)),
+            catchError((error) => throwError(() => this.errorService.createError(error)))
+        );
     }
 
     updatePartial(id: number, payload: UpdateAlumnoPayload): Observable<Alumno> {

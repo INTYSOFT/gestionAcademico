@@ -44,6 +44,12 @@
                 <mat-error *ngIf="form.controls.dni.hasError('pattern')">
                     Solo se permiten números.
                 </mat-error>
+                <mat-error *ngIf="form.controls.dni.hasError('dniTaken')">
+                    Ya existe un alumno registrado con este DNI.
+                </mat-error>
+                <mat-error *ngIf="form.controls.dni.hasError('dniLookupFailed')">
+                    No se pudo validar el DNI. Intente nuevamente.
+                </mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
