@@ -21,7 +21,7 @@ interface NivelApi extends Partial<Nivel> {
 
 @Injectable({ providedIn: 'root' })
 export class NivelesService extends ApiMainService {
-    private readonly resourcePath = 'api/Nivels1';
+    private readonly resourcePath = 'api/Nivels';
 
     listAll(): Observable<Nivel[]> {
         return this.http
