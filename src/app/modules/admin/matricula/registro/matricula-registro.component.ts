@@ -270,7 +270,17 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
             return;
         }
 
-        this.seleccionarAlumno(alumno);
+        const cicloId = this.matriculaForm.get('cicloId')!.value;
+
+        if (cicloId === null) {
+            this.snackBar.open('Seleccione un ciclo antes de elegir un alumno.', 'Cerrar', {
+                duration: 4000,
+            });
+            this.restablecerBusquedaAlumno();
+            return;
+        }
+
+        this.validarMatriculaAlumno(alumno, cicloId);
     }
 
     protected crearAlumno(): void {
@@ -845,6 +855,54 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
         this.alumnoSearchControl.setValue(this.mostrarAlumno(alumno), {
             emitEvent: false,
         });
+        this.cdr.markForCheck();
+    }
+
+    private validarMatriculaAlumno(alumno: Alumno, cicloId: number): void {
+        this.matriculasService
+            .getMatriculasByAlumnoYCiclo(alumno.id, cicloId)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+                next: (matriculas) => {
+                    if (matriculas.length > 0) {
+                        this.snackBar.open(
+                            'El alumno ya se encuentra matriculado en el ciclo seleccionado.',
+                            'Cerrar',
+                            {
+                                duration: 5000,
+                            }
+                        );
+                        this.restablecerBusquedaAlumno();
+                        return;
+                    }
+
+                    this.seleccionarAlumno(alumno);
+                },
+                error: (error) => {
+                    const message =
+                        error instanceof Error && error.message
+                            ? error.message
+                            : 'No se pudo verificar la matrícula del alumno. Intente nuevamente.';
+
+                    this.snackBar.open(message, 'Cerrar', {
+                        duration: 5000,
+                    });
+                    this.restablecerBusquedaAlumno();
+                },
+            });
+    }
+
+    private restablecerBusquedaAlumno(): void {
+        const alumnoActual = this.selectedAlumno
+            ? this.mostrarAlumno(this.selectedAlumno)
+            : '';
+
+        this.alumnoSearchControl.setValue(alumnoActual, {
+            emitEvent: false,
+        });
+        if (!this.selectedAlumno) {
+            this.matriculaForm.get('alumnoId')!.setValue(null);
+        }
         this.cdr.markForCheck();
     }
 

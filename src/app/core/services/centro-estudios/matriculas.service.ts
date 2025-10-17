@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Observable, catchError, forkJoin, map, of, retry, switchMap } from 'rxjs';
 import { ApiMainService } from '../api/api-main.service';
 import {
     CreateMatriculaItemPayload,
@@ -44,6 +45,30 @@ interface MatriculaItemApi extends Partial<MatriculaItem> {
 export class MatriculasService extends ApiMainService {
     private readonly resourcePath = 'api/Matriculas';
     private readonly itemsResourcePath = 'api/MatriculaItems';
+
+    getMatriculasByAlumnoYCiclo(alumnoId: number, cicloId: number): Observable<Matricula[]> {
+        const endpoint = `${this.resourcePath}/GetMatriculasByAlumnoCiclo/${alumnoId}/${cicloId}`;
+
+        return this.http
+            .get<MatriculaApi[]>(this.buildUrl(endpoint), this.createOptions())
+            .pipe(
+                retry(this.config.retryAttempts),
+                map((response) =>
+                    Array.isArray(response)
+                        ? response
+                              .map((item) => this.normalizeMatricula(item))
+                              .filter((item): item is Matricula => item !== null)
+                        : []
+                ),
+                catchError((error: HttpErrorResponse) => {
+                    if (error.status === 404) {
+                        return of([]);
+                    }
+
+                    return this.handleError(error);
+                })
+            );
+    }
 
     create(payload: CreateMatriculaPayload): Observable<Matricula> {
         const body = this.mapToApiPayload(payload);
