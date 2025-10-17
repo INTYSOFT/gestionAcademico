@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of, switchMap } from 'rxjs';
 import {
     Colegio,
     CreateColegioPayload,
@@ -37,14 +37,28 @@ export class ColegiosService extends ApiMainService {
         );
     }
 
+    getColegioById(id: number): Observable<Colegio> {
+        return this.get<ColegioApi>(`${this.resourcePath}/${id}`).pipe(
+            map((response) => this.normalizeColegioOrThrow(response))
+        );
+    }
+
     updateColegio(id: number, payload: UpdateColegioPayload): Observable<Colegio> {
         const body: UpdateColegioPayload = {
             ...payload,
             id,
         };
 
-        return this.patch<ColegioApi>(`${this.resourcePath}/${id}`, body).pipe(
-            map((response) => this.normalizeColegioOrThrow(response))
+        return this.patch<ColegioApi | null>(`${this.resourcePath}/${id}`, body).pipe(
+            switchMap((response) => {
+                const colegio = this.normalizeColegio(response ?? undefined);
+
+                if (colegio) {
+                    return of(colegio);
+                }
+
+                return this.getColegioById(id);
+            })
         );
     }
 
