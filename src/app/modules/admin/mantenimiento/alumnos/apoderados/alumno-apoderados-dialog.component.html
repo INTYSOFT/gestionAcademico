@@ -1,6 +1,14 @@
-<h2 mat-dialog-title>
-    Apoderados de {{ data.nombres }} {{ data.apellidos }}
-</h2>
+<div mat-dialog-title class="apoderados__header">
+    <h2>Apoderados de {{ data.nombres }} {{ data.apellidos }}</h2>
+    <button
+        mat-icon-button
+        type="button"
+        aria-label="Cerrar"
+        (click)="close()"
+    >
+        <mat-icon>close</mat-icon>
+    </button>
+</div>
 
 <mat-dialog-content class="apoderados">
     <div class="apoderados__toolbar">
@@ -105,3 +113,9 @@
         No se encontraron apoderados vinculados.
     </p>
 </mat-dialog-content>
+
+<mat-dialog-actions align="end" class="apoderados__actions">
+    <button mat-stroked-button type="button" (click)="close()">
+        Cerrar
+    </button>
+</mat-dialog-actions>

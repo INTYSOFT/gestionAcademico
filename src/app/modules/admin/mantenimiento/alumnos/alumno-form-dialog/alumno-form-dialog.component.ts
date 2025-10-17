@@ -21,16 +21,22 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import {
     BehaviorSubject,
     Observable,
     Subject,
     finalize,
     map,
+    catchError,
+    of,
+    shareReplay,
+    startWith,
+    tap,
     switchMap,
     takeUntil,
 } from 'rxjs';
@@ -73,6 +79,7 @@ export type AlumnoFormDialogResult =
         MatDatepickerModule,
         MatNativeDateModule,
         MatProgressSpinnerModule,
+        MatProgressBarModule,
     ],
     providers: [DatePipe],
 })
@@ -110,6 +117,8 @@ export class AlumnoFormDialogComponent implements OnInit, OnDestroy {
     });
 
     protected readonly isSaving$ = new BehaviorSubject<boolean>(false);
+    protected readonly isLoadingColegios$ = new BehaviorSubject<boolean>(false);
+    protected readonly colegiosLoadError$ = new BehaviorSubject<boolean>(false);
     protected colegios$!: Observable<Colegio[]>;
 
     private readonly destroy$ = new Subject<void>();
@@ -120,13 +129,12 @@ export class AlumnoFormDialogComponent implements OnInit, OnDestroy {
         private readonly fb: FormBuilder,
         private readonly alumnosService: AlumnosService,
         private readonly colegiosService: ColegiosService,
+        private readonly snackBar: MatSnackBar,
         private readonly datePipe: DatePipe
     ) {}
 
     ngOnInit(): void {
-        this.colegios$ = this.colegiosService
-            .list()
-            .pipe(map((colegios) => colegios.filter((colegio) => colegio.activo)));            
+        this.colegios$ = this.buildColegiosStream();
 
         if (this.data.alumno) {
             this.patchForm(this.data.alumno);
@@ -175,6 +183,10 @@ export class AlumnoFormDialogComponent implements OnInit, OnDestroy {
         return item.id;
     }
 
+    protected recargarColegios(): void {
+        this.colegios$ = this.buildColegiosStream();
+    }
+
     private patchForm(alumno: Alumno): void {
         const fechaNacimiento = alumno.fechaNacimiento
             ? new Date(alumno.fechaNacimiento)
@@ -212,5 +224,30 @@ export class AlumnoFormDialogComponent implements OnInit, OnDestroy {
             observacion: raw.observacion ?? null,
             activo: raw.activo ?? true,
         };
+    }
+
+    private buildColegiosStream(): Observable<Colegio[]> {
+        this.isLoadingColegios$.next(true);
+        this.colegiosLoadError$.next(false);
+
+        return this.colegiosService.list().pipe(
+            map((colegios) => colegios.filter((colegio) => colegio.activo)),
+            tap(() => this.colegiosLoadError$.next(false)),
+            catchError(() => {
+                this.colegiosLoadError$.next(true);
+                this.snackBar.open(
+                    'No se pudieron cargar los colegios. Intente nuevamente.',
+                    'Cerrar',
+                    {
+                        duration: 4000,
+                    }
+                );
+
+                return of<Colegio[]>([]);
+            }),
+            finalize(() => this.isLoadingColegios$.next(false)),
+            startWith([] as Colegio[]),
+            shareReplay({ bufferSize: 1, refCount: true })
+        );
     }
 }
