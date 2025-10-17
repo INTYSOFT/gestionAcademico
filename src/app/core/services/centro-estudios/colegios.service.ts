@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, map, of, switchMap } from 'rxjs';
+import { Observable, catchError, map, of, switchMap, throwError } from 'rxjs';
 import {
     Colegio,
     CreateColegioPayload,
@@ -22,6 +22,7 @@ type ColegioApi = Partial<Colegio> & {
 @Injectable({ providedIn: 'root' })
 export class ColegiosService extends ApiMainService {
     private readonly resourcePath = 'api/Colegios';
+    private readonly unexpectedFormatErrorMessage = 'La respuesta del servidor no tiene el formato esperado.';
 
     list(): Observable<Colegio[]> {
         return this.getColegios();
@@ -43,7 +44,7 @@ export class ColegiosService extends ApiMainService {
         );
     }
 
-    updateColegio(id: number, payload: UpdateColegioPayload): Observable<Colegio> {
+    updateColegio(id: number, payload: UpdateColegioPayload): Observable<Colegio | null> {
         const body: UpdateColegioPayload = {
             ...payload,
             id,
@@ -58,8 +59,33 @@ export class ColegiosService extends ApiMainService {
                 }
 
                 return this.getColegioById(id);
+            }),
+            catchError((error) => {
+                const message = this.resolveErrorMessage(error);
+
+                if (message === this.unexpectedFormatErrorMessage) {
+                    return of(null);
+                }
+
+                return throwError(() => error);
             })
         );
+    }
+
+    private resolveErrorMessage(error: unknown): string | null {
+        if (error instanceof Error) {
+            return error.message ?? null;
+        }
+
+        if (typeof error === 'object' && error !== null && 'message' in error) {
+            const potentialMessage = (error as { message?: unknown }).message;
+
+            if (typeof potentialMessage === 'string') {
+                return potentialMessage;
+            }
+        }
+
+        return null;
     }
 
     private fetchColegios(): Observable<Colegio[]> {
@@ -115,7 +141,7 @@ export class ColegiosService extends ApiMainService {
         const colegio = this.normalizeColegio(raw);
 
         if (!colegio) {
-            throw new Error('La respuesta del servidor no tiene el formato esperado.');
+            throw new Error(this.unexpectedFormatErrorMessage);
         }
 
         return colegio;
