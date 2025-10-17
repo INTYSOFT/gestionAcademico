@@ -74,6 +74,21 @@
                                     Selecciona una sección.
                                 </mat-error>
                             </mat-form-field>
+
+                            <mat-form-field appearance="outline">
+                                <mat-label>Carrera</mat-label>
+                                <mat-select formControlName="carreraId">
+                                    <mat-option
+                                        *ngFor="let carrera of carreras$ | async; trackBy: trackById"
+                                        [value]="carrera.id">
+                                        {{ carrera.nombre }}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error
+                                    *ngIf="matriculaForm.get('carreraId')?.hasError('required')">
+                                    Selecciona una carrera.
+                                </mat-error>
+                            </mat-form-field>
                         </div>
 
                         <mat-progress-bar *ngIf="isLoadingSecciones$ | async"
