@@ -213,17 +213,51 @@ export class AlumnoFormDialogComponent implements OnInit, OnDestroy {
             : null;
 
         return {
-            dni: raw.dni!,
-            apellidos: raw.apellidos!,
-            nombres: raw.nombres!,
+            dni: this.normalizeIdentifier(raw.dni),
+            apellidos: this.normalizeName(raw.apellidos),
+            nombres: this.normalizeName(raw.nombres),
             fechaNacimiento: fecha,
-            celular: raw.celular ?? null,
-            correo: raw.correo ?? null,
+            celular: this.normalizeOptionalText(raw.celular),
+            correo: this.normalizeOptionalText(raw.correo),
             colegioId: raw.colegioId!,
-            direccion: raw.direccion ?? null,
-            observacion: raw.observacion ?? null,
+            direccion: this.normalizeOptionalText(raw.direccion),
+            observacion: this.normalizeOptionalText(raw.observacion),
             activo: raw.activo ?? true,
         };
+    }
+
+    private normalizeIdentifier(value: string | null | undefined): string {
+        if (!value) {
+            return '';
+        }
+
+        return String(value)
+            .normalize('NFC')
+            .trim()
+            .replace(/\s+/g, '');
+    }
+
+    private normalizeName(value: string | null | undefined): string {
+        return this.normalizeText(value) ?? '';
+    }
+
+    private normalizeOptionalText(
+        value: string | null | undefined
+    ): string | null {
+        return this.normalizeText(value);
+    }
+
+    private normalizeText(value: string | null | undefined): string | null {
+        if (value === null || value === undefined) {
+            return null;
+        }
+
+        const normalized = String(value)
+            .normalize('NFC')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        return normalized.length > 0 ? normalized : null;
     }
 
     private buildColegiosStream(): Observable<Colegio[]> {
