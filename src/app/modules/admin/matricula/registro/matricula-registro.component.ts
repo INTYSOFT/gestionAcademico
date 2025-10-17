@@ -62,7 +62,10 @@ import {
 import { blurActiveElement } from 'app/core/utils/focus.util';
 import { SeccionesService } from 'app/core/services/centro-estudios/secciones.service';
 import { Seccion } from 'app/core/models/centro-estudios/seccion.model';
-import type { AlumnoFormDialogResult } from '../../mantenimiento/alumnos/alumno-form-dialog/alumno-form-dialog.component';
+import type {
+    AlumnoFormDialogData,
+    AlumnoFormDialogResult,
+} from '../../mantenimiento/alumnos/alumno-form-dialog/alumno-form-dialog.component';
 
 interface ConceptoFormGroup {
     conceptoId: FormControl<number | null>;
@@ -293,6 +296,7 @@ export class MatriculaRegistroComponent implements OnInit, OnDestroy {
                 .open(AlumnoFormDialogComponent, {
                     width: '520px',
                     disableClose: true,
+                    data: {} as AlumnoFormDialogData,
                 })
                 .afterClosed()
                 .pipe(takeUntil(this.destroy$))
