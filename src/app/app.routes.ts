@@ -83,6 +83,13 @@ export const appRoutes: Route[] = [
                 path: 'evaluacion',
                 children: [
                     {
+                        path: 'programar',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/evaluacion/programar/evaluacion-programar.routes'
+                            ).then((m) => m.evaluacionProgramarRoutes),
+                    },
+                    {
                         path: 'tipo-evaluacion',
                         loadChildren: () =>
                             import(

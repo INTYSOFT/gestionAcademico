@@ -1,0 +1,143 @@
+<h2 mat-dialog-title>{{ dialogTitle }}</h2>
+
+<form [formGroup]="form" class="evaluacion-dialog" (ngSubmit)="save()">
+    <mat-dialog-content>
+        <div class="evaluacion-dialog__grid">
+            <mat-form-field appearance="outline">
+                <mat-label>Nombre</mat-label>
+                <input matInput formControlName="nombre" maxlength="150" autocomplete="off" />
+                <mat-hint align="end">{{ form.controls['nombre'].value?.length || 0 }}/150</mat-hint>
+                <mat-error *ngIf="form.controls['nombre'].hasError('required')">
+                    El nombre es obligatorio.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Tipo de evaluación</mat-label>
+                <mat-select formControlName="tipoEvaluacionId">
+                    <mat-option *ngFor="let tipo of tipoEvaluaciones$ | async" [value]="tipo.id">
+                        {{ tipo.nombre }}
+                    </mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.controls['tipoEvaluacionId'].hasError('required')">
+                    Selecciona un tipo de evaluación.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Sede</mat-label>
+                <mat-select formControlName="sedeId">
+                    <mat-option *ngFor="let sede of sedes$ | async" [value]="sede.id">
+                        {{ sede.nombre }}
+                    </mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.controls['sedeId'].hasError('required')">
+                    Selecciona una sede.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Ciclo</mat-label>
+                <mat-select formControlName="cicloId" [disabled]="isLoadingCiclos$ | async">
+                    <mat-option *ngFor="let ciclo of filteredCiclos$ | async" [value]="ciclo.id">
+                        {{ ciclo.nombre }}
+                    </mat-option>
+                </mat-select>
+                <div class="evaluacion-dialog__loading" *ngIf="isLoadingCiclos$ | async">
+                    <mat-progress-spinner diameter="20" mode="indeterminate"></mat-progress-spinner>
+                    <span>Cargando ciclos...</span>
+                </div>
+                <mat-error *ngIf="form.controls['cicloId'].hasError('required')">
+                    Selecciona un ciclo válido.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Fecha de inicio</mat-label>
+                <input matInput [matDatepicker]="fechaInicioPicker" formControlName="fechaInicio" />
+                <mat-datepicker-toggle matSuffix [for]="fechaInicioPicker"></mat-datepicker-toggle>
+                <mat-datepicker #fechaInicioPicker></mat-datepicker>
+                <mat-error *ngIf="form.controls['fechaInicio'].hasError('required')">
+                    Selecciona una fecha de inicio.
+                </mat-error>
+                <mat-error *ngIf="form.controls['fechaInicio'].hasError('fechaDuplicada')">
+                    Ya existe una evaluación programada con esta fecha.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Hora de inicio</mat-label>
+                <input matInput type="time" formControlName="horaInicio" />
+                <mat-error *ngIf="form.controls['horaInicio'].hasError('required')">
+                    Ingresa la hora de inicio.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Hora de fin</mat-label>
+                <input matInput type="time" formControlName="horaFin" />
+                <mat-error *ngIf="form.controls['horaFin'].hasError('required')">
+                    Ingresa la hora de fin.
+                </mat-error>
+                <mat-error *ngIf="form.hasError('horarioInvalido')">
+                    La hora de fin debe ser mayor a la hora de inicio.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Carrera (opcional)</mat-label>
+                <mat-select formControlName="carreraId">
+                    <mat-option [value]="null">Sin carrera</mat-option>
+                    <mat-option *ngFor="let carrera of carreras$ | async" [value]="carrera.id">
+                        {{ carrera.nombre }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <div class="evaluacion-dialog__toggle">
+                <mat-slide-toggle formControlName="activo">Activo</mat-slide-toggle>
+            </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="evaluacion-dialog__sections">
+            <div class="evaluacion-dialog__sections-header">
+                <h3>Secciones</h3>
+                <div class="evaluacion-dialog__sections-loader" *ngIf="isLoadingSecciones$ | async">
+                    <mat-progress-spinner diameter="20" mode="indeterminate"></mat-progress-spinner>
+                    <span>Cargando secciones disponibles…</span>
+                </div>
+            </div>
+
+            <mat-form-field appearance="outline" class="evaluacion-dialog__sections-select">
+                <mat-label>Secciones disponibles</mat-label>
+                <mat-select formControlName="seccionCicloIds" multiple [disabled]="isLoadingSecciones$ | async">
+                    <mat-option *ngFor="let option of seccionOptions$ | async" [value]="option.seccionCicloId">
+                        {{ option.label }}
+                        <span class="evaluacion-dialog__section-status" *ngIf="!option.activo">
+                            (inactiva)
+                        </span>
+                    </mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.controls['seccionCicloIds'].hasError('required')">
+                    Selecciona al menos una sección.
+                </mat-error>
+            </mat-form-field>
+        </div>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="cancel()">Cancelar</button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="isSaving$ | async">
+            <mat-progress-spinner
+                *ngIf="isSaving$ | async"
+                diameter="20"
+                mode="indeterminate"
+            ></mat-progress-spinner>
+            <span *ngIf="!(isSaving$ | async)">
+                {{ data.mode === 'create' ? 'Registrar' : 'Guardar cambios' }}
+            </span>
+        </button>
+    </mat-dialog-actions>
+</form>
