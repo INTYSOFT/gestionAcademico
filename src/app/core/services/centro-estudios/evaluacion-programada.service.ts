@@ -69,7 +69,7 @@ export class EvaluacionProgramadaService extends ApiMainService {
     }
 
     create(payload: CreateEvaluacionProgramadaPayload): Observable<EvaluacionProgramada> {
-        const body: EvaluacionProgramadaApi = this.buildRequestBody(payload);
+        const body = this.buildCreateRequestBody(payload);
 
         return this.post<EvaluacionProgramadaApi>(this.resourcePath, body).pipe(
             map((response) => this.normalizeEvaluacionOrThrow(response))
@@ -77,11 +77,7 @@ export class EvaluacionProgramadaService extends ApiMainService {
     }
 
     update(id: number, payload: UpdateEvaluacionProgramadaPayload): Observable<EvaluacionProgramada> {
-        const body: EvaluacionProgramadaApi = {
-            id,
-            Id: id,
-            ...this.buildRequestBody(payload),
-        };
+        const body = this.buildUpdateRequestBody(id, payload);
 
         return this.patch<unknown>(`${this.resourcePath}/${id}`, body).pipe(
             switchMap(() => this.getById(id))
@@ -94,7 +90,41 @@ export class EvaluacionProgramadaService extends ApiMainService {
             .pipe(catchError((error) => this.handleError(error)));
     }
 
-    private buildRequestBody(
+    private buildCreateRequestBody(
+        payload: CreateEvaluacionProgramadaPayload | UpdateEvaluacionProgramadaPayload
+    ): { evaluacionProgramadum: EvaluacionProgramadaApi; EvaluacionProgramadum: EvaluacionProgramadaApi } {
+        const entity = this.buildRequestEntity(payload);
+
+        return {
+            evaluacionProgramadum: entity,
+            EvaluacionProgramadum: { ...entity },
+        };
+    }
+
+    private buildUpdateRequestBody(
+        id: number,
+        payload: CreateEvaluacionProgramadaPayload | UpdateEvaluacionProgramadaPayload
+    ): {
+        id: number;
+        Id: number;
+        evaluacionProgramadum: EvaluacionProgramadaApi;
+        EvaluacionProgramadum: EvaluacionProgramadaApi;
+    } {
+        const entity = {
+            id,
+            Id: id,
+            ...this.buildRequestEntity(payload),
+        };
+
+        return {
+            id,
+            Id: id,
+            evaluacionProgramadum: entity,
+            EvaluacionProgramadum: { ...entity },
+        };
+    }
+
+    private buildRequestEntity(
         payload: CreateEvaluacionProgramadaPayload | UpdateEvaluacionProgramadaPayload
     ): EvaluacionProgramadaApi {
         const body: EvaluacionProgramadaApi = {};
