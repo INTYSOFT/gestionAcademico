@@ -16,6 +16,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
         icon    : 'heroicons_outline:clipboard-document',
         children: [
             {
+                id   : 'evaluacion.programar',
+                title: 'Programar',
+                type : 'basic',
+                icon : 'heroicons_outline:calendar-days',
+                link : '/evaluacion/programar'
+            },
+            {
                 id   : 'evaluacion.tipo-evaluacion',
                 title: 'Tipo evaluación',
                 type : 'basic',
@@ -277,6 +284,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
         type : 'group',
         icon : 'heroicons_outline:clipboard-document',
         children: [
+            {
+                id   : 'evaluacion.programar',
+                title: 'Programar',
+                type : 'basic',
+                icon : 'heroicons_outline:calendar-days',
+                link : '/evaluacion/programar'
+            },
             {
                 id   : 'evaluacion.tipo-evaluacion',
                 title: 'Tipo evaluación',

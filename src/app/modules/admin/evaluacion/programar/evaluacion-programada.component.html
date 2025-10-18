@@ -1,0 +1,150 @@
+<section class="evaluacion-programada">
+    <header class="evaluacion-programada__header">
+        <div>
+            <h1 class="evaluacion-programada__title">Evaluación programada</h1>
+            <p class="evaluacion-programada__subtitle">
+                Revisa las programaciones existentes y gestiona nuevas fechas de evaluación.
+            </p>
+        </div>
+        <button mat-raised-button color="primary" (click)="crearProgramacion()">
+            <mat-icon fontIcon="heroicons_outline:plus"></mat-icon>
+            Programar evaluación
+        </button>
+    </header>
+
+    <div class="evaluacion-programada__content">
+        <aside class="evaluacion-programada__sidebar">
+            <div class="evaluacion-programada__sidebar-header">
+                <h2>Fechas programadas</h2>
+            </div>
+            <mat-progress-bar
+                *ngIf="isLoadingFechas$ | async"
+                mode="indeterminate"
+                class="evaluacion-programada__progress"
+            ></mat-progress-bar>
+            <mat-nav-list>
+                <ng-container *ngIf="(fechas$ | async) as fechas">
+                    <button
+                        mat-list-item
+                        *ngFor="let fecha of fechas; trackBy: trackByFecha"
+                        (click)="seleccionarFecha(fecha)"
+                        [ngClass]="{ 'is-selected': isFechaSeleccionada(fecha, selectedFecha$ | async) }"
+                    >
+                        <span matListItemTitle>{{ fecha | date : 'EEEE d MMMM yyyy' : undefined : 'es-PE' }}</span>
+                    </button>
+                    <p class="evaluacion-programada__empty" *ngIf="!fechas.length && !(isLoadingFechas$ | async)">
+                        No existen fechas programadas registradas.
+                    </p>
+                </ng-container>
+            </mat-nav-list>
+        </aside>
+
+        <section class="evaluacion-programada__details">
+            <mat-progress-bar
+                *ngIf="isLoadingProgramaciones$ | async"
+                mode="indeterminate"
+                class="evaluacion-programada__progress"
+            ></mat-progress-bar>
+
+            <ng-container *ngIf="(programaciones$ | async) as programaciones">
+                <p
+                    class="evaluacion-programada__empty"
+                    *ngIf="!programaciones.length && !(isLoadingProgramaciones$ | async)"
+                >
+                    No se encontraron programaciones para la fecha seleccionada.
+                </p>
+
+                <mat-card
+                    *ngFor="let programacion of programaciones; trackBy: trackByProgramacion"
+                    class="evaluacion-programada__card"
+                >
+                    <mat-card-header>
+                        <mat-card-title>{{ programacion.nombre }}</mat-card-title>
+                        <mat-card-subtitle>
+                            {{ programacion.fechaInicio | date : 'EEEE d MMMM yyyy' : undefined : 'es-PE' }}
+                        </mat-card-subtitle>
+                        <button
+                            mat-icon-button
+                            matTooltip="Editar programación"
+                            (click)="editarProgramacion(programacion)"
+                        >
+                            <mat-icon fontIcon="heroicons_outline:pencil-square"></mat-icon>
+                        </button>
+                    </mat-card-header>
+                    <mat-card-content>
+                        <div class="evaluacion-programada__meta">
+                            <div>
+                                <span class="evaluacion-programada__meta-label">Sede</span>
+                                <span class="evaluacion-programada__meta-value">
+                                    {{ programacion.sedeNombre || ('Sede #' + programacion.sedeId) }}
+                                </span>
+                            </div>
+                            <div>
+                                <span class="evaluacion-programada__meta-label">Ciclo</span>
+                                <span class="evaluacion-programada__meta-value">
+                                    {{ programacion.cicloNombre || (programacion.cicloId ? ('Ciclo #' + programacion.cicloId) : 'No asignado') }}
+                                </span>
+                            </div>
+                            <div>
+                                <span class="evaluacion-programada__meta-label">Tipo de evaluación</span>
+                                <span class="evaluacion-programada__meta-value">
+                                    {{ programacion.tipoEvaluacionNombre || ('Tipo #' + programacion.tipoEvaluacionId) }}
+                                </span>
+                            </div>
+                            <div>
+                                <span class="evaluacion-programada__meta-label">Horario</span>
+                                <span class="evaluacion-programada__meta-value">
+                                    {{ programacion.horaInicio | slice : 0 : 5 }} – {{ programacion.horaFin | slice : 0 : 5 }}
+                                </span>
+                            </div>
+                            <div>
+                                <span class="evaluacion-programada__meta-label">Estado</span>
+                                <span class="evaluacion-programada__meta-value">
+                                    {{ programacion.activo ? 'Activo' : 'Inactivo' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <mat-tree
+                            [dataSource]="programacion.treeDataSource"
+                            [treeControl]="programacion.treeControl"
+                            class="evaluacion-programada__tree"
+                        >
+                            <mat-tree-node
+                                *matTreeNodeDef="let node"
+                                matTreeNodePadding
+                                class="evaluacion-programada__tree-node"
+                            >
+                                <button mat-icon-button disabled></button>
+                                <span>{{ node.label }}</span>
+                            </mat-tree-node>
+
+                            <mat-nested-tree-node
+                                *matTreeNodeDef="let node; when: hasChild"
+                                class="evaluacion-programada__tree-node"
+                            >
+                                <div class="evaluacion-programada__tree-node-header" matTreeNodePadding>
+                                    <button
+                                        mat-icon-button
+                                        matTreeNodeToggle
+                                        [attr.aria-label]="'expandir ' + node.label"
+                                    >
+                                        <mat-icon
+                                            [fontIcon]="programacion.treeControl.isExpanded(node)
+                                                ? 'heroicons_outline:chevron-down'
+                                                : 'heroicons_outline:chevron-right'"
+                                        ></mat-icon>
+                                    </button>
+                                    <span>{{ node.label }}</span>
+                                </div>
+                                <div [class.evaluacion-programada__tree-children]="true">
+                                    <ng-container matTreeNodeOutlet></ng-container>
+                                </div>
+                            </mat-nested-tree-node>
+                        </mat-tree>
+                    </mat-card-content>
+                </mat-card>
+            </ng-container>
+        </section>
+    </div>
+</section>
