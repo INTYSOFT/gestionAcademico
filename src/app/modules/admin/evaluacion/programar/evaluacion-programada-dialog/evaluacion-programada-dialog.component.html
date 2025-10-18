@@ -38,7 +38,7 @@
 
             <mat-form-field appearance="outline">
                 <mat-label>Ciclo</mat-label>
-                <mat-select formControlName="cicloId" [disabled]="isLoadingCiclos$ | async">
+                <mat-select formControlName="cicloId">
                     <mat-option *ngFor="let ciclo of filteredCiclos$ | async" [value]="ciclo.id">
                         {{ ciclo.nombre }}
                     </mat-option>
@@ -112,7 +112,7 @@
 
             <mat-form-field appearance="outline" class="evaluacion-dialog__sections-select">
                 <mat-label>Secciones disponibles</mat-label>
-                <mat-select formControlName="seccionCicloIds" multiple [disabled]="isLoadingSecciones$ | async">
+                <mat-select formControlName="seccionCicloIds" multiple>
                     <mat-option *ngFor="let option of seccionOptions$ | async" [value]="option.seccionCicloId">
                         {{ option.label }}
                         <span class="evaluacion-dialog__section-status" *ngIf="!option.activo">
