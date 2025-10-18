@@ -2,10 +2,11 @@ import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
+    DestroyRef,
     Inject,
-    OnDestroy,
     OnInit,
     ViewEncapsulation,
+    inject,
 } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -21,16 +22,18 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import {
     BehaviorSubject,
+    EMPTY,
     Observable,
     Subject,
     catchError,
+    exhaustMap,
     finalize,
     forkJoin,
     map,
     of,
     switchMap,
-    takeUntil,
 } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DateTime } from 'luxon';
 import {
     CreateEvaluacionProgramadaPayload,
@@ -104,7 +107,7 @@ interface SeccionOption {
         MatSnackBarModule,
     ],
 })
-export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
+export class EvaluacionProgramadaDialogComponent implements OnInit {
     protected readonly form: FormGroup;
 
     protected readonly sedes$ = new BehaviorSubject<Sede[]>([]);
@@ -122,7 +125,8 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
     protected readonly dialogTitle =
         this.data.mode === 'create' ? 'Registrar evaluación programada' : 'Editar evaluación programada';
 
-    private readonly destroy$ = new Subject<void>();
+    private readonly destroyRef = inject(DestroyRef);
+    private readonly submit$ = new Subject<void>();
     private readonly existingFechasSet = new Set(this.data.existingFechas);
     private ciclosCache: Ciclo[] = [];
     private initialSeccionRecords: EvaluacionProgramadaSeccion[] = [...this.data.secciones];
@@ -176,6 +180,8 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
         });
 
         this.form.setValidators(this.horarioValidator.bind(this));
+
+        this.handleSubmitStream();
     }
 
     ngOnInit(): void {
@@ -184,65 +190,8 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
         this.handleCicloChanges();
     }
 
-    ngOnDestroy(): void {
-        this.destroy$.next();
-        this.destroy$.complete();
-    }
-
-    protected save(): void {
-        if (this.form.invalid) {
-            this.form.markAllAsTouched();
-            return;
-        }
-
-        const payload = this.buildEvaluacionPayload();
-
-        if (!payload) {
-            return;
-        }
-
-        this.isSaving$.next(true);
-
-        const selectedSeccionIds = this.form.controls['seccionCicloIds'].value ?? [];
-
-        const save$ = this.data.mode === 'create'
-            ? this.evaluacionProgramadasService.create(payload).pipe(
-                  switchMap((evaluacion) =>
-                      this.syncSecciones(evaluacion.id, selectedSeccionIds).pipe(
-                          map((secciones) => ({ evaluacion, secciones }))
-                      )
-                  )
-              )
-            : this.evaluacionProgramadasService
-                  .update(this.data.evaluacion!.id, payload as UpdateEvaluacionProgramadaPayload)
-                  .pipe(
-                      switchMap((evaluacion) =>
-                          this.syncSecciones(evaluacion.id, selectedSeccionIds).pipe(
-                              map((secciones) => ({ evaluacion, secciones }))
-                          )
-                      )
-                  );
-
-        save$
-            .pipe(
-                finalize(() => this.isSaving$.next(false)),
-                takeUntil(this.destroy$)
-            )
-            .subscribe({
-                next: ({ evaluacion, secciones }) => {
-                    const action = this.data.mode === 'create' ? 'created' : 'updated';
-                    this.dialogRef.close({ action, evaluacion, secciones });
-                },
-                error: (error) => {
-                    this.dialogRef.disableClose = false;
-                    this.isSaving$.next(false);
-                    this.snackBar.open(
-                        error.message ?? 'No fue posible guardar la evaluación programada.',
-                        'Cerrar',
-                        { duration: 5000 }
-                    );
-                },
-            });
+    protected submitForm(): void {
+        this.submit$.next();
     }
 
     protected cancel(): void {
@@ -261,7 +210,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
         })
             .pipe(
                 finalize(() => this.isLoadingCatalogs$.next(false)),
-                takeUntil(this.destroy$)
+                takeUntilDestroyed(this.destroyRef)
             )
             .subscribe({
                 next: ({ sedes, ciclos, tipos, carreras, secciones }) => {
@@ -288,7 +237,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
     private handleSedeChanges(): void {
         this.form.controls['sedeId'].valueChanges
             .pipe(
-                takeUntil(this.destroy$),
+                takeUntilDestroyed(this.destroyRef),
                 switchMap((sedeId) => {
                     this.form.controls['cicloId'].setValue(null);
                     this.form.controls['seccionCicloIds'].setValue([]);
@@ -337,7 +286,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
     private handleCicloChanges(): void {
         this.form.controls['cicloId'].valueChanges
             .pipe(
-                takeUntil(this.destroy$),
+                takeUntilDestroyed(this.destroyRef),
                 switchMap((cicloId) => {
                     const sedeId = this.form.controls['sedeId'].value;
                     this.form.controls['seccionCicloIds'].setValue([]);
@@ -667,6 +616,79 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
                 this.initialSeccionRecords = Array.from(unique.values());
                 return this.initialSeccionRecords;
             })
+        );
+    }
+
+    private handleSubmitStream(): void {
+        this.submit$
+            .pipe(
+                exhaustMap(() => {
+                    if (this.form.invalid) {
+                        this.form.markAllAsTouched();
+                        return EMPTY;
+                    }
+
+                    const payload = this.buildEvaluacionPayload();
+
+                    if (!payload) {
+                        this.snackBar.open(
+                            'Completa los datos obligatorios antes de guardar.',
+                            'Cerrar',
+                            { duration: 4000 }
+                        );
+                        return EMPTY;
+                    }
+
+                    const { seccionCicloIds } = this.form.getRawValue() as {
+                        seccionCicloIds: number[];
+                    };
+                    const selectedSeccionIds = seccionCicloIds ?? [];
+
+                    this.isSaving$.next(true);
+                    this.dialogRef.disableClose = true;
+
+                    return this.persistEvaluacion(payload, selectedSeccionIds).pipe(
+                        finalize(() => {
+                            this.isSaving$.next(false);
+                            this.dialogRef.disableClose = false;
+                        }),
+                        catchError((error) => {
+                            this.snackBar.open(
+                                error.message ??
+                                    'No fue posible guardar la evaluación programada.',
+                                'Cerrar',
+                                { duration: 5000 }
+                            );
+                            return EMPTY;
+                        })
+                    );
+                }),
+                takeUntilDestroyed(this.destroyRef)
+            )
+            .subscribe(({ evaluacion, secciones }) => {
+                const action = this.data.mode === 'create' ? 'created' : 'updated';
+                this.dialogRef.close({ action, evaluacion, secciones });
+            });
+    }
+
+    private persistEvaluacion(
+        payload: CreateEvaluacionProgramadaPayload,
+        selectedSeccionIds: number[]
+    ): Observable<{ evaluacion: EvaluacionProgramada; secciones: EvaluacionProgramadaSeccion[] }> {
+        const save$ =
+            this.data.mode === 'create'
+                ? this.evaluacionProgramadasService.create(payload)
+                : this.evaluacionProgramadasService.update(
+                      this.data.evaluacion!.id,
+                      payload as UpdateEvaluacionProgramadaPayload
+                  );
+
+        return save$.pipe(
+            switchMap((evaluacion) =>
+                this.syncSecciones(evaluacion.id, selectedSeccionIds).pipe(
+                    map((secciones) => ({ evaluacion, secciones }))
+                )
+            )
         );
     }
 }
