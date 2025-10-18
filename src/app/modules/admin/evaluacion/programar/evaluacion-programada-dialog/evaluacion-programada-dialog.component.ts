@@ -162,7 +162,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
             cicloId: this.fb.control<number | null>({ value: null, disabled: true }, {
                 validators: [Validators.required],
             }),
-            fechaInicio: this.fb.control<Date | string | null>(null, {
+            fechaInicio: this.fb.control<DateTime | Date | string | null>(null, {
                 validators: [Validators.required, this.fechaDuplicadaValidator.bind(this)],
             }),
             horaInicio: this.fb.control('', {
@@ -421,9 +421,9 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
         });
     }
 
-    private parseDate(value: string): Date | null {
+    private parseDate(value: string): DateTime | null {
         const date = DateTime.fromISO(value);
-        return date.isValid ? date.toJSDate() : null;
+        return date.isValid ? date : null;
     }
 
     private parseHora(value: string): string {
@@ -440,7 +440,11 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
         const tipoEvaluacionId = this.form.controls['tipoEvaluacionId'].value;
         const sedeId = this.form.controls['sedeId'].value;
         const cicloId = this.form.controls['cicloId'].value;
-        const fechaInicioDate = this.form.controls['fechaInicio'].value;
+        const fechaInicioDate = this.form.controls['fechaInicio'].value as
+            | DateTime
+            | Date
+            | string
+            | null;
         const horaInicio = this.form.controls['horaInicio'].value;
         const horaFin = this.form.controls['horaFin'].value;
         const carreraId = this.form.controls['carreraId'].value;
@@ -479,7 +483,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
         };
     }
 
-    private formatDate(value: Date | string | null): string | null {
+    private formatDate(value: DateTime | Date | string | null): string | null {
         const dateTime = this.toDateTime(value);
         return dateTime ? dateTime.toISODate() : null;
     }
@@ -490,7 +494,9 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
         return parsed.isValid ? parsed.toFormat('HH:mm:ss') : normalized;
     }
 
-    private fechaDuplicadaValidator(control: { value: Date | string | null }): { fechaDuplicada: boolean } | null {
+    private fechaDuplicadaValidator(control: {
+        value: DateTime | Date | string | null;
+    }): { fechaDuplicada: boolean } | null {
         if (!control.value) {
             return null;
         }
@@ -532,9 +538,13 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
         return parsed.isValid ? parsed.hour * 60 + parsed.minute : null;
     }
 
-    private toDateTime(value: Date | string | null): DateTime | null {
+    private toDateTime(value: DateTime | Date | string | null): DateTime | null {
         if (!value) {
             return null;
+        }
+
+        if (DateTime.isDateTime(value)) {
+            return value;
         }
 
         if (value instanceof Date) {
