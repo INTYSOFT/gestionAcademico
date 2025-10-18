@@ -89,13 +89,7 @@ export const appRoutes: Route[] = [
                                 'app/modules/admin/evaluacion/tipo-evaluacion/tipo-evaluacion.routes'
                             ),
                     },
-                    {
-                        path: 'programar',
-                        loadChildren: () =>
-                            import(
-                                'app/modules/admin/evaluacion/programar/evaluacion-programada.routes'
-                            ),
-                    },
+              
                     { path: '', pathMatch: 'full', redirectTo: 'programar' },
                 ],
             },
