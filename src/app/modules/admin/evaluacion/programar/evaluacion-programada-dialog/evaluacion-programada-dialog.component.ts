@@ -158,7 +158,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
             cicloId: this.fb.control<number | null>(null, {
                 validators: [Validators.required],
             }),
-            fechaInicio: this.fb.control<Date | null>(null, {
+            fechaInicio: this.fb.control<Date | string | null>(null, {
                 validators: [Validators.required, this.fechaDuplicadaValidator.bind(this)],
             }),
             horaInicio: this.fb.control('', {
@@ -489,6 +489,9 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
         }
 
         const fechaInicio = this.formatDate(fechaInicioDate);
+        if (!fechaInicio) {
+            return null;
+        }
         const horaInicioNormalized = this.formatTime(horaInicio);
         const horaFinNormalized = this.formatTime(horaFin);
 
@@ -505,8 +508,9 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
         };
     }
 
-    private formatDate(date: Date): string {
-        return DateTime.fromJSDate(date).toISODate();
+    private formatDate(value: Date | string | null): string | null {
+        const dateTime = this.toDateTime(value);
+        return dateTime ? dateTime.toISODate() : null;
     }
 
     private formatTime(value: string): string {
@@ -515,12 +519,16 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
         return parsed.isValid ? parsed.toFormat('HH:mm:ss') : normalized;
     }
 
-    private fechaDuplicadaValidator(control: { value: Date | null }): { fechaDuplicada: boolean } | null {
+    private fechaDuplicadaValidator(control: { value: Date | string | null }): { fechaDuplicada: boolean } | null {
         if (!control.value) {
             return null;
         }
 
         const fecha = this.formatDate(control.value);
+
+        if (!fecha) {
+            return null;
+        }
 
         if (this.data.mode === 'edit' && this.data.evaluacion?.fechaInicio === fecha) {
             return null;
@@ -551,6 +559,29 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
         const normalized = value.length === 5 ? value : value.slice(0, 5);
         const parsed = DateTime.fromFormat(normalized, 'HH:mm');
         return parsed.isValid ? parsed.hour * 60 + parsed.minute : null;
+    }
+
+    private toDateTime(value: Date | string | null): DateTime | null {
+        if (!value) {
+            return null;
+        }
+
+        if (value instanceof Date) {
+            return DateTime.fromJSDate(value);
+        }
+
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+
+            if (!trimmed) {
+                return null;
+            }
+
+            const parsed = DateTime.fromISO(trimmed, { setZone: true });
+            return parsed.isValid ? parsed : null;
+        }
+
+        return null;
     }
 
     private syncSecciones(
