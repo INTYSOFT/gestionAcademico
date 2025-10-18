@@ -104,7 +104,7 @@ describe('EvaluacionProgramadaDialogComponent', () => {
         form.controls['cicloId'].setValue(100);
         tick();
 
-        form.controls['fechaInicio'].setValue(DateTime.fromISO('2024-06-10').toJSDate());
+        form.controls['fechaInicio'].setValue(DateTime.fromISO('2024-06-10'));
         form.controls['horaInicio'].setValue('08:00');
         form.controls['horaFin'].setValue('09:30');
         form.controls['seccionCicloIds'].setValue([1000]);
