@@ -177,7 +177,22 @@ export class EvaluacionProgramadaFormDialogComponent {
             return;
         }
 
-        const payload = this.construirPayload();
+        const fechaControl = this.form.controls.fechaInicio;
+        const fechaInicioIso = this.formatFechaControl(fechaControl.value);
+        if (!fechaInicioIso) {
+            this.mostrarError('La fecha de inicio seleccionada no es válida.');
+            const currentErrors = fechaControl.errors ?? {};
+            fechaControl.setErrors({ ...currentErrors, fechaInvalida: true });
+            fechaControl.markAsTouched();
+            return;
+        }
+
+        if (fechaControl.hasError('fechaInvalida')) {
+            const { fechaInvalida: _ignored, ...rest } = fechaControl.errors ?? {};
+            fechaControl.setErrors(Object.keys(rest).length ? rest : null);
+        }
+
+        const payload = this.construirPayload(fechaInicioIso);
         const opcionesSeleccionadas = this.obtenerOpcionesSeleccionadas();
 
         this.isSaving$.next(true);
@@ -257,6 +272,19 @@ export class EvaluacionProgramadaFormDialogComponent {
             .pipe(
                 skip(1),
                 tap(() => this.form.controls.seccionCicloIds.setValue([])),
+                takeUntilDestroyed(this.destroyRef)
+            )
+            .subscribe();
+
+        this.form.controls.fechaInicio.valueChanges
+            .pipe(
+                tap(() => {
+                    const control = this.form.controls.fechaInicio;
+                    if (control.hasError('fechaInvalida')) {
+                        const { fechaInvalida: _ignored, ...rest } = control.errors ?? {};
+                        control.setErrors(Object.keys(rest).length ? rest : null);
+                    }
+                }),
                 takeUntilDestroyed(this.destroyRef)
             )
             .subscribe();
@@ -476,13 +504,13 @@ export class EvaluacionProgramadaFormDialogComponent {
         });
     }
 
-    private construirPayload(): CreateEvaluacionProgramadaPayload {
+    private construirPayload(fechaInicioIso: string): CreateEvaluacionProgramadaPayload {
         const raw = this.form.getRawValue();
 
         return {
             nombre: raw.nombre.trim(),
             tipoEvaluacionId: raw.tipoEvaluacionId!,
-            fechaInicio: this.formatFechaControl(raw.fechaInicio)!,
+            fechaInicio: fechaInicioIso,
             horaInicio: this.normalizarHora(raw.horaInicio),
             horaFin: this.normalizarHora(raw.horaFin),
             sedeId: raw.sedeId!,
@@ -587,12 +615,45 @@ export class EvaluacionProgramadaFormDialogComponent {
         return forkJoin(operaciones);
     }
 
-    private formatFechaControl(value: Date | null): string | null {
+    private formatFechaControl(value: Date | string | null): string | null {
         if (!value) {
             return null;
         }
 
-        return DateTime.fromJSDate(value).toISODate();
+        if (value instanceof Date) {
+            return DateTime.fromJSDate(value).toISODate();
+        }
+
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            if (!trimmed) {
+                return null;
+            }
+
+            let parsed = DateTime.fromISO(trimmed);
+            if (parsed.isValid) {
+                return parsed.toISODate();
+            }
+
+            parsed = DateTime.fromFormat(trimmed, 'd/M/yyyy');
+            if (parsed.isValid) {
+                return parsed.toISODate();
+            }
+
+            parsed = DateTime.fromFormat(trimmed, 'd/M/yy');
+            if (parsed.isValid) {
+                return parsed.toISODate();
+            }
+
+            parsed = DateTime.fromFormat(trimmed, "d 'de' MMMM 'de' yyyy", { locale: 'es' });
+            if (parsed.isValid) {
+                return parsed.toISODate();
+            }
+
+            return null;
+        }
+
+        return null;
     }
 
     private parseFecha(value: string | null | undefined): Date | null {
