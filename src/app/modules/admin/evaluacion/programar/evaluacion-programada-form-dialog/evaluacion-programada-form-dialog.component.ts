@@ -110,7 +110,7 @@ export class EvaluacionProgramadaFormDialogComponent {
         tipoEvaluacionId: this.fb.control<number | null>(null, {
             validators: [Validators.required],
         }),
-        fechaInicio: this.fb.control<Date | null>(null, {
+        fechaInicio: this.fb.control<Date | DateTime | null>(null, {
             validators: [Validators.required, this.fechaUnicaValidator()],
         }),
         horaInicio: this.fb.control('', {
@@ -325,8 +325,14 @@ export class EvaluacionProgramadaFormDialogComponent {
     }
 
     private fechaUnicaValidator() {
-        const fechas = new Set(this.data.existingFechas);
-        const fechaActual = this.data.evaluacion?.fechaInicio ?? null;
+        const fechas = new Set(
+            this.data.existingFechas
+                .map((fecha) => this.formatFechaControl(fecha))
+                .filter((fecha): fecha is string => !!fecha)
+        );
+        const fechaActual = this.formatFechaControl(
+            this.data.evaluacion?.fechaInicio ?? null
+        );
 
         return (control: AbstractControl) => {
             const value = control.value;
@@ -615,9 +621,13 @@ export class EvaluacionProgramadaFormDialogComponent {
         return forkJoin(operaciones);
     }
 
-    private formatFechaControl(value: Date | string | null): string | null {
+    private formatFechaControl(value: Date | DateTime | string | null): string | null {
         if (!value) {
             return null;
+        }
+
+        if (this.isLuxonDateTime(value)) {
+            return value.isValid ? value.toISODate() : null;
         }
 
         if (value instanceof Date) {
@@ -656,13 +666,13 @@ export class EvaluacionProgramadaFormDialogComponent {
         return null;
     }
 
-    private parseFecha(value: string | null | undefined): Date | null {
+    private parseFecha(value: string | null | undefined): DateTime | null {
         if (!value) {
             return null;
         }
 
         const dt = DateTime.fromISO(value);
-        return dt.isValid ? dt.toJSDate() : null;
+        return dt.isValid ? dt : null;
     }
 
     private parseHora(value: string | null | undefined): string | null {
@@ -704,6 +714,10 @@ export class EvaluacionProgramadaFormDialogComponent {
         }
 
         return horas + minutos / 60;
+    }
+
+    private isLuxonDateTime(value: unknown): value is DateTime {
+        return DateTime.isDateTime(value);
     }
 
 }
