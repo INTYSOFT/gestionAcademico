@@ -155,7 +155,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
             sedeId: this.fb.control<number | null>(null, {
                 validators: [Validators.required],
             }),
-            cicloId: this.fb.control<number | null>(null, {
+            cicloId: this.fb.control<number | null>({ value: null, disabled: true }, {
                 validators: [Validators.required],
             }),
             fechaInicio: this.fb.control<Date | string | null>(null, {
@@ -169,7 +169,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
             }),
             carreraId: this.fb.control<number | null>(null),
             activo: this.fb.control(true, { nonNullable: true }),
-            seccionCicloIds: this.fb.control<number[]>([], {
+            seccionCicloIds: this.fb.control<number[]>({ value: [], disabled: true }, {
                 validators: [Validators.required],
                 nonNullable: true,
             }),
@@ -293,11 +293,14 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
                     this.form.controls['cicloId'].setValue(null);
                     this.form.controls['seccionCicloIds'].setValue([]);
                     this.filteredCiclos$.next([]);
+                    this.setControlEnabled('seccionCicloIds', false);
 
                     if (sedeId === null || sedeId === undefined) {
+                        this.setControlEnabled('cicloId', false);
                         return of<AperturaCiclo[]>([]);
                     }
 
+                    this.setControlEnabled('cicloId', false);
                     this.isLoadingCiclos$.next(true);
                     return this.aperturaCicloService
                         .listBySede(sedeId)
@@ -315,7 +318,9 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
                 })
             )
             .subscribe((aperturas) => {
-                this.filteredCiclos$.next(this.filterCiclos(aperturas));
+                const ciclos = this.filterCiclos(aperturas);
+                this.filteredCiclos$.next(ciclos);
+                this.setControlEnabled('cicloId', ciclos.length > 0);
 
                 if (this.data.mode === 'edit' && this.data.evaluacion) {
                     const cicloId = this.data.evaluacion.cicloId;
@@ -337,6 +342,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
                     const sedeId = this.form.controls['sedeId'].value;
                     this.form.controls['seccionCicloIds'].setValue([]);
                     this.seccionOptions$.next([]);
+                    this.setControlEnabled('seccionCicloIds', false);
 
                     if (
                         cicloId === null ||
@@ -366,12 +372,28 @@ export class EvaluacionProgramadaDialogComponent implements OnInit, OnDestroy {
             .subscribe((seccionCiclos) => {
                 const options = this.buildSeccionOptions(seccionCiclos);
                 this.seccionOptions$.next(options);
+                this.setControlEnabled('seccionCicloIds', options.length > 0);
 
                 if (this.data.mode === 'edit' && this.initialSeccionRecords.length) {
                     const initialIds = this.initialSeccionRecords.map((item) => item.seccionCicloId);
                     this.form.controls['seccionCicloIds'].setValue(initialIds);
                 }
             });
+    }
+
+    private setControlEnabled(control: 'cicloId' | 'seccionCicloIds', enabled: boolean): void {
+        const formControl = this.form.controls[control];
+        if (!formControl) {
+            return;
+        }
+
+        if (enabled && formControl.disabled) {
+            formControl.enable({ emitEvent: false });
+        }
+
+        if (!enabled && formControl.enabled) {
+            formControl.disable({ emitEvent: false });
+        }
     }
 
     private buildSeccionOptions(seccionCiclos: SeccionCiclo[]): SeccionOption[] {
