@@ -1,0 +1,78 @@
+.evaluacion-dialog {
+    display: flex;
+    flex-direction: column;
+    min-width: 640px;
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.6rem;
+        margin-bottom: 1.6rem;
+    }
+
+    &__toggle {
+        display: flex;
+        align-items: center;
+        padding-top: 1.2rem;
+    }
+
+    &__loading,
+    &__sections-loader {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+        font-size: 1.2rem;
+        color: rgba(0, 0, 0, 0.54);
+        margin-top: 0.4rem;
+    }
+
+    &__sections {
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+        margin-top: 1.6rem;
+    }
+
+    &__sections-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.2rem;
+
+        h3 {
+            margin: 0;
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+    }
+
+    &__sections-select {
+        width: 100%;
+    }
+
+    &__section-status {
+        font-size: 1.2rem;
+        color: rgba(0, 0, 0, 0.54);
+        margin-left: 0.8rem;
+    }
+}
+
+mat-dialog-actions {
+    padding: 1.6rem 0 0;
+    display: flex;
+    gap: 1rem;
+
+    button[mat-flat-button] {
+        min-width: 160px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.8rem;
+    }
+}
+
+@media (max-width: 720px) {
+    .evaluacion-dialog {
+        min-width: 100%;
+    }
+}
