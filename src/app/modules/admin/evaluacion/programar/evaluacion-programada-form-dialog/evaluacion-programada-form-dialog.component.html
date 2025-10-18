@@ -1,0 +1,150 @@
+<h1 mat-dialog-title>
+    {{ data.evaluacion ? 'Editar evaluación programada' : 'Nueva evaluación programada' }}
+</h1>
+
+<div mat-dialog-content class="evaluacion-programada-form">
+    <form [formGroup]="form" class="evaluacion-programada-form__form">
+        <mat-form-field appearance="outline" class="evaluacion-programada-form__field">
+            <mat-label>Nombre de la evaluación</mat-label>
+            <input matInput formControlName="nombre" placeholder="Ej. Examen parcial" />
+            <mat-error *ngIf="form.controls.nombre.hasError('required')">
+                Ingresa el nombre de la evaluación.
+            </mat-error>
+            <mat-error *ngIf="form.controls.nombre.hasError('maxlength')">
+                El nombre no puede superar los 150 caracteres.
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="evaluacion-programada-form__field">
+            <mat-label>Tipo de evaluación</mat-label>
+            <mat-select formControlName="tipoEvaluacionId">
+                <mat-option [value]="null">Selecciona un tipo</mat-option>
+                <mat-option
+                    *ngFor="let tipo of tiposEvaluacion"
+                    [value]="tipo.id"
+                >
+                    {{ tipo.nombre }}
+                </mat-option>
+            </mat-select>
+            <mat-error *ngIf="form.controls.tipoEvaluacionId.hasError('required')">
+                Selecciona el tipo de evaluación.
+            </mat-error>
+        </mat-form-field>
+
+        <div class="evaluacion-programada-form__row">
+            <mat-form-field appearance="outline" class="evaluacion-programada-form__field">
+                <mat-label>Fecha de inicio</mat-label>
+                <input
+                    matInput
+                    [matDatepicker]="fechaInicioPicker"
+                    formControlName="fechaInicio"
+                    placeholder="Selecciona una fecha"
+                />
+                <mat-datepicker-toggle matSuffix [for]="fechaInicioPicker"></mat-datepicker-toggle>
+                <mat-datepicker #fechaInicioPicker></mat-datepicker>
+                <mat-hint>Formato: día/mes/año</mat-hint>
+                <mat-error *ngIf="form.controls.fechaInicio.hasError('required')">
+                    Selecciona la fecha de inicio.
+                </mat-error>
+                <mat-error *ngIf="form.controls.fechaInicio.hasError('fechaDuplicada')">
+                    Ya existe una evaluación programada en la fecha seleccionada.
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="evaluacion-programada-form__field evaluacion-programada-form__field--time">
+                <mat-label>Hora de inicio</mat-label>
+                <input matInput type="time" formControlName="horaInicio" />
+                <mat-error *ngIf="form.controls.horaInicio.hasError('required')">
+                    Ingresa la hora de inicio.
+                </mat-error>
+                <mat-error *ngIf="form.controls.horaInicio.hasError('pattern')">
+                    La hora debe tener el formato 24h (HH:mm).
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="evaluacion-programada-form__field evaluacion-programada-form__field--time">
+                <mat-label>Hora de fin</mat-label>
+                <input matInput type="time" formControlName="horaFin" />
+                <mat-error *ngIf="form.controls.horaFin.hasError('required')">
+                    Ingresa la hora de fin.
+                </mat-error>
+                <mat-error *ngIf="form.controls.horaFin.hasError('pattern')">
+                    La hora debe tener el formato 24h (HH:mm).
+                </mat-error>
+            </mat-form-field>
+        </div>
+        <mat-error *ngIf="form.hasError('rangoHorarioInvalido')" class="evaluacion-programada-form__form-error">
+            La hora de fin debe ser posterior a la hora de inicio.
+        </mat-error>
+
+        <mat-form-field appearance="outline" class="evaluacion-programada-form__field">
+            <mat-label>Sede</mat-label>
+            <mat-select formControlName="sedeId">
+                <mat-option [value]="null">Selecciona una sede</mat-option>
+                <mat-option *ngFor="let sede of sedes" [value]="sede.id">
+                    {{ sede.nombre }}
+                </mat-option>
+            </mat-select>
+            <mat-error *ngIf="form.controls.sedeId.hasError('required')">
+                Selecciona la sede.
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="evaluacion-programada-form__field">
+            <mat-label>Ciclo</mat-label>
+            <mat-select formControlName="cicloId">
+                <mat-option [value]="null">Selecciona un ciclo</mat-option>
+                <mat-option *ngFor="let ciclo of (ciclosDisponibles$ | async)" [value]="ciclo.id">
+                    {{ ciclo.nombre }}
+                </mat-option>
+            </mat-select>
+            <mat-hint *ngIf="!(ciclosDisponibles$ | async)?.length">
+                No hay ciclos aperturados disponibles para la sede seleccionada.
+            </mat-hint>
+            <mat-error *ngIf="form.controls.cicloId.hasError('required')">
+                Selecciona el ciclo.
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="evaluacion-programada-form__field">
+            <mat-label>Secciones</mat-label>
+            <mat-select formControlName="seccionCicloIds" multiple>
+                <mat-option *ngFor="let opcion of (seccionesDisponibles$ | async)" [value]="opcion.seccionCicloId">
+                    {{ opcion.label }}
+                    <span *ngIf="!opcion.activo" class="evaluacion-programada-form__chip">
+                        Inactiva
+                    </span>
+                </mat-option>
+            </mat-select>
+            <mat-hint>Selecciona una o varias secciones asociadas al ciclo.</mat-hint>
+            <mat-error *ngIf="form.controls.seccionCicloIds.hasError('required')">
+                Selecciona al menos una sección.
+            </mat-error>
+        </mat-form-field>
+
+        <mat-slide-toggle formControlName="activo" color="primary">
+            Evaluación activa
+        </mat-slide-toggle>
+    </form>
+
+    <mat-progress-bar
+        *ngIf="isSaving$ | async"
+        mode="indeterminate"
+        class="evaluacion-programada-form__progress"
+    ></mat-progress-bar>
+</div>
+
+<div mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cancelar()" [disabled]="isSaving$ | async">
+        Cancelar
+    </button>
+    <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="guardar()"
+        [disabled]="isSaving$ | async"
+    >
+        Guardar
+    </button>
+</div>

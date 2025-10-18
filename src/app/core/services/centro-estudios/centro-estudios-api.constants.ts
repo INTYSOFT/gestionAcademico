@@ -5,4 +5,6 @@ export const CENTRO_ESTUDIOS_API = {
     colegios: '/api/Colegios',
     parentescos: '/api/Parentescoes',
     tipoEvaluaciones: '/api/TipoEvaluacions',
+    evaluacionProgramadas: '/api/EvaluacionProgramadums',
+    evaluacionProgramadaSecciones: '/api/EvaluacionProgramadaSeccions',
 } as const;
