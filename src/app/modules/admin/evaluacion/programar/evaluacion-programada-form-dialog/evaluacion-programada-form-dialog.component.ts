@@ -41,7 +41,10 @@ import {
     CreateEvaluacionProgramadaPayload,
     EvaluacionProgramada,
 } from 'app/core/models/centro-estudios/evaluacion-programada.model';
-import { EvaluacionProgramadaSeccion } from 'app/core/models/centro-estudios/evaluacion-programada-seccion.model';
+import {
+    CreateEvaluacionProgramadaSeccionPayload,
+    EvaluacionProgramadaSeccion,
+} from 'app/core/models/centro-estudios/evaluacion-programada-seccion.model';
 import { Ciclo } from 'app/core/models/centro-estudios/ciclo.model';
 import { Sede } from 'app/core/models/centro-estudios/sede.model';
 import { Seccion } from 'app/core/models/centro-estudios/seccion.model';
@@ -528,13 +531,18 @@ export class EvaluacionProgramadaFormDialogComponent {
 
     private obtenerOpcionesSeleccionadas(): SeccionCicloOption[] {
         const seleccionados = this.form.controls.seccionCicloIds.value ?? [];
+        const vistos = new Set<number>();
+
         return seleccionados
             .map((id) => this.seccionCicloOptions.get(id))
-            .filter((opcion): opcion is SeccionCicloOption => !!opcion)
-            .map((opcion) => ({
-                ...opcion,
-                activo: true,
-            }));
+            .filter((opcion): opcion is SeccionCicloOption => !!opcion && !vistos.has(opcion.seccionCicloId))
+            .map((opcion) => {
+                vistos.add(opcion.seccionCicloId);
+                return {
+                    ...opcion,
+                    activo: true,
+                };
+            });
     }
 
     private crearEvaluacion(
@@ -586,12 +594,24 @@ export class EvaluacionProgramadaFormDialogComponent {
             return of(null);
         }
 
-        const payloads = opciones.map((opcion) => ({
-            evaluacionProgramadaId: evaluacionId,
-            seccionCicloId: opcion.seccionCicloId,
-            seccionId: opcion.seccionId,
-            activo: opcion.activo ?? true,
-        }));
+        const payloads = opciones.reduce<CreateEvaluacionProgramadaSeccionPayload[]>((acc, opcion) => {
+            if (acc.some((payload) => payload.seccionCicloId === opcion.seccionCicloId)) {
+                return acc;
+            }
+
+            acc.push({
+                evaluacionProgramadaId: evaluacionId,
+                seccionCicloId: opcion.seccionCicloId,
+                seccionId: opcion.seccionId,
+                activo: opcion.activo ?? true,
+            });
+
+            return acc;
+        }, []);
+
+        if (!payloads.length) {
+            return of(null);
+        }
 
         return this.evaluacionProgramadaSeccionService.createMany(payloads);
     }

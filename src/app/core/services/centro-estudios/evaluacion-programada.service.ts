@@ -26,6 +26,11 @@ interface EvaluacionProgramadaApi extends Partial<EvaluacionProgramada> {
     UsuaraioActualizacionId?: number | string | null;
 }
 
+interface EvaluacionProgramadaRequestBody {
+    camel: EvaluacionProgramadaApi;
+    pascal: EvaluacionProgramadaApi;
+}
+
 @Injectable({ providedIn: 'root' })
 export class EvaluacionProgramadaService extends ApiMainService {
     private readonly resourcePath = CENTRO_ESTUDIOS_API.evaluacionProgramadas;
@@ -96,8 +101,8 @@ export class EvaluacionProgramadaService extends ApiMainService {
         const entity = this.buildRequestEntity(payload);
 
         return {
-            evaluacionProgramadum: entity,
-            EvaluacionProgramadum: { ...entity },
+            evaluacionProgramadum: entity.camel,
+            EvaluacionProgramadum: entity.pascal,
         };
     }
 
@@ -110,72 +115,80 @@ export class EvaluacionProgramadaService extends ApiMainService {
         evaluacionProgramadum: EvaluacionProgramadaApi;
         EvaluacionProgramadum: EvaluacionProgramadaApi;
     } {
-        const entity = {
+        const entity = this.buildRequestEntity(payload);
+
+        const camel: EvaluacionProgramadaApi = {
+            ...entity.camel,
             id,
             Id: id,
-            ...this.buildRequestEntity(payload),
+        };
+
+        const pascal: EvaluacionProgramadaApi = {
+            ...entity.pascal,
+            Id: id,
         };
 
         return {
             id,
             Id: id,
-            evaluacionProgramadum: entity,
-            EvaluacionProgramadum: { ...entity },
+            evaluacionProgramadum: camel,
+            EvaluacionProgramadum: pascal,
         };
     }
 
     private buildRequestEntity(
         payload: CreateEvaluacionProgramadaPayload | UpdateEvaluacionProgramadaPayload
-    ): EvaluacionProgramadaApi {
-        const body: EvaluacionProgramadaApi = {};
+    ): EvaluacionProgramadaRequestBody {
+        const camel: EvaluacionProgramadaApi = {};
+        const pascal: EvaluacionProgramadaApi = {};
 
         if (payload.sedeId !== undefined) {
-            body.sedeId = payload.sedeId;
-            body.SedeId = payload.sedeId;
+            camel.sedeId = payload.sedeId;
+            pascal.SedeId = payload.sedeId;
         }
 
         if (payload.cicloId !== undefined) {
-            body.cicloId = payload.cicloId;
-            body.CicloId = payload.cicloId;
+            camel.cicloId = payload.cicloId;
+            pascal.CicloId = payload.cicloId;
         }
 
         if (payload.tipoEvaluacionId !== undefined) {
-            body.tipoEvaluacionId = payload.tipoEvaluacionId;
-            body.TipoEvaluacionId = payload.tipoEvaluacionId;
+            camel.tipoEvaluacionId = payload.tipoEvaluacionId;
+            pascal.TipoEvaluacionId = payload.tipoEvaluacionId;
         }
 
         if (payload.nombre !== undefined) {
             const nombre = payload.nombre.trim();
-            body.nombre = nombre;
-            body.Nombre = nombre;
+            camel.nombre = nombre;
+            pascal.Nombre = nombre;
         }
 
         if (payload.fechaInicio !== undefined) {
-            body.fechaInicio = payload.fechaInicio;
-            body.FechaInicio = payload.fechaInicio;
+            camel.fechaInicio = payload.fechaInicio;
+            pascal.FechaInicio = payload.fechaInicio;
         }
 
         if (payload.horaInicio !== undefined) {
-            body.horaInicio = payload.horaInicio;
-            body.HoraInicio = payload.horaInicio;
+            camel.horaInicio = payload.horaInicio;
+            pascal.HoraInicio = payload.horaInicio;
         }
 
         if (payload.horaFin !== undefined) {
-            body.horaFin = payload.horaFin;
-            body.HoraFin = payload.horaFin;
+            camel.horaFin = payload.horaFin;
+            pascal.HoraFin = payload.horaFin;
         }
 
         if (payload.carreraId !== undefined) {
-            body.carreraId = payload.carreraId;
-            body.CarreraId = payload.carreraId;
+            camel.carreraId = payload.carreraId;
+            pascal.CarreraId = payload.carreraId;
         }
 
         if (payload.activo !== undefined) {
-            body.activo = payload.activo;
-            body.Activo = payload.activo;
+            camel.activo = payload.activo;
+            pascal.Activo = payload.activo;
         }
 
-        return body;
+        return { camel, pascal };
     }
 
     private normalizeEvaluaciones(
