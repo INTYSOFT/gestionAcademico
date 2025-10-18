@@ -530,7 +530,11 @@ export class EvaluacionProgramadaFormDialogComponent {
         const seleccionados = this.form.controls.seccionCicloIds.value ?? [];
         return seleccionados
             .map((id) => this.seccionCicloOptions.get(id))
-            .filter((opcion): opcion is SeccionCicloOption => !!opcion);
+            .filter((opcion): opcion is SeccionCicloOption => !!opcion)
+            .map((opcion) => ({
+                ...opcion,
+                activo: true,
+            }));
     }
 
     private crearEvaluacion(
@@ -586,7 +590,7 @@ export class EvaluacionProgramadaFormDialogComponent {
             evaluacionProgramadaId: evaluacionId,
             seccionCicloId: opcion.seccionCicloId,
             seccionId: opcion.seccionId,
-            activo: opcion.activo,
+            activo: opcion.activo ?? true,
         }));
 
         return this.evaluacionProgramadaSeccionService.createMany(payloads);
@@ -597,12 +601,25 @@ export class EvaluacionProgramadaFormDialogComponent {
         opciones: SeccionCicloOption[]
     ): Observable<unknown> {
         const existentes = this.data.evaluacionSecciones;
-        const seleccionados = new Set(opciones.map((opcion) => opcion.seccionCicloId));
+        const existentesMap = new Map(
+            existentes.map((item) => [item.seccionCicloId, item])
+        );
+        const seleccionadosIds = new Set(opciones.map((opcion) => opcion.seccionCicloId));
 
         const aCrear = opciones.filter(
-            (opcion) => !existentes.some((item) => item.seccionCicloId === opcion.seccionCicloId)
+            (opcion) => !existentesMap.has(opcion.seccionCicloId)
         );
-        const aEliminar = existentes.filter((item) => !seleccionados.has(item.seccionCicloId));
+
+        const aActivar = opciones
+            .map((opcion) => existentesMap.get(opcion.seccionCicloId))
+            .filter(
+                (existente): existente is EvaluacionProgramadaSeccion =>
+                    !!existente && !existente.activo
+            );
+
+        const aDesactivar = existentes.filter(
+            (item) => item.activo && !seleccionadosIds.has(item.seccionCicloId)
+        );
 
         const operaciones: Observable<unknown>[] = [];
 
@@ -610,8 +627,16 @@ export class EvaluacionProgramadaFormDialogComponent {
             operaciones.push(this.guardarSecciones(evaluacionId, aCrear));
         }
 
-        aEliminar.forEach((item) => {
-            operaciones.push(this.evaluacionProgramadaSeccionService.delete(item.id));
+        aActivar.forEach((item) => {
+            operaciones.push(
+                this.evaluacionProgramadaSeccionService.update(item.id, { activo: true })
+            );
+        });
+
+        aDesactivar.forEach((item) => {
+            operaciones.push(
+                this.evaluacionProgramadaSeccionService.update(item.id, { activo: false })
+            );
         });
 
         if (!operaciones.length) {
