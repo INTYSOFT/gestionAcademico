@@ -298,7 +298,7 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
         evaluaciones: EvaluacionProgramada[],
         seccionesMap: Map<number, EvaluacionProgramadaSeccion[]>
     ): void {
-        const nodes: EvaluacionTreeNode[] = evaluaciones.map((evaluacion) => {
+        const nodes: EvaluacionTreeNode[] = evaluaciones.map((evaluacion): EvaluacionTreeNode => {
             const sede = this.getSedeNombre(evaluacion.sedeId);
             const ciclo = this.getCicloNombre(evaluacion.cicloId);
             const tipo = this.getTipoEvaluacionNombre(evaluacion.tipoEvaluacionId);
@@ -307,8 +307,8 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
             const horario = `${this.formatHora(evaluacion.horaInicio)} – ${this.formatHora(evaluacion.horaFin)}`;
             const secciones = seccionesMap.get(evaluacion.id) ?? [];
 
-            const children = secciones.length
-                ? secciones.map((seccion) => {
+            const children: EvaluacionTreeNode[] = secciones.length
+                ? secciones.map<EvaluacionTreeNode>((seccion) => {
                       const seccionNombre = this.getSeccionNombre(seccion.seccionId);
                       const estado = seccion.activo ? 'Activo' : 'Inactivo';
                       return {
@@ -319,7 +319,7 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
                               `Estado: ${estado}`,
                           ],
                           status: seccion.activo ? 'default' : 'info',
-                      } satisfies EvaluacionTreeNode;
+                      };
                   })
                 : [
                       {
@@ -327,7 +327,7 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
                           title: 'No hay secciones registradas',
                           subtitleLines: [],
                           status: 'info',
-                      },
+                      } satisfies EvaluacionTreeNode,
                   ];
 
             const subtitleLines = [
@@ -347,7 +347,7 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
                 status: 'default',
                 evaluacionId: evaluacion.id,
                 children,
-            } satisfies EvaluacionTreeNode;
+            };
         });
 
         this.treeControl.dataNodes = nodes;
