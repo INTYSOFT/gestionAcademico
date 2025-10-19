@@ -23,7 +23,7 @@
 
     &__title {
         margin: 0;
-        font-size: clamp(1.8rem, 1.2vw + 1.3rem, 2.2rem);
+        font-size: clamp(1.5rem, 1vw + 1.05rem, 1.9rem);
         font-weight: 600;
         line-height: 1.2;
     }
@@ -31,7 +31,7 @@
     &__subtitle {
         margin: 0;
         color: rgba(0, 0, 0, 0.6);
-        font-size: clamp(1.2rem, 0.8vw + 1rem, 1.5rem);
+        font-size: clamp(1rem, 0.7vw + 0.85rem, 1.3rem);
         line-height: 1.4;
     }
 
@@ -88,7 +88,7 @@
 
     &__title {
         margin: 0;
-        font-size: clamp(1.4rem, 1vw + 1.1rem, 1.9rem);
+        font-size: clamp(1.2rem, 0.8vw + 1rem, 1.6rem);
         font-weight: 600;
         line-height: 1.35;
     }
@@ -167,12 +167,12 @@
 
         &__title {
             font-weight: 600;
-            font-size: clamp(1.3rem, 0.8vw + 1.05rem, 1.6rem);
+            font-size: clamp(1.1rem, 0.7vw + 0.95rem, 1.4rem);
             line-height: 1.35;
         }
 
         &__subtitle {
-            font-size: clamp(1.1rem, 0.6vw + 0.95rem, 1.3rem);
+            font-size: clamp(0.95rem, 0.5vw + 0.85rem, 1.15rem);
             color: rgba(0, 0, 0, 0.65);
             line-height: 1.5;
         }
@@ -190,7 +190,7 @@
         }
 
         &__metadata-label {
-            font-size: clamp(1rem, 0.5vw + 0.9rem, 1.2rem);
+            font-size: clamp(0.9rem, 0.45vw + 0.8rem, 1.05rem);
             font-weight: 600;
             color: rgba(0, 0, 0, 0.54);
             text-transform: uppercase;
@@ -198,7 +198,7 @@
         }
 
         &__metadata-value {
-            font-size: clamp(1.1rem, 0.6vw + 1rem, 1.4rem);
+            font-size: clamp(1rem, 0.5vw + 0.9rem, 1.25rem);
             color: rgba(0, 0, 0, 0.87);
             font-weight: 500;
         }
