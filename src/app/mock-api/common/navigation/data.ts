@@ -23,6 +23,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 link : '/evaluacion/programar'
             },
             {
+                id   : 'evaluacion.puntuacion',
+                title: 'Puntuación',
+                type : 'basic',
+                icon : 'heroicons_outline:calculator',
+                link : '/evaluacion/puntuacion'
+            },
+            {
                 id   : 'evaluacion.tipo-evaluacion',
                 title: 'Tipo evaluación',
                 type : 'basic',
@@ -290,6 +297,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:calendar-days',
                 link : '/evaluacion/programar'
+            },
+            {
+                id   : 'evaluacion.puntuacion',
+                title: 'Puntuación',
+                type : 'basic',
+                icon : 'heroicons_outline:calculator',
+                link : '/evaluacion/puntuacion'
             },
             {
                 id   : 'evaluacion.tipo-evaluacion',

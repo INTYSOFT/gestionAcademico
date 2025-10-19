@@ -90,6 +90,13 @@ export const appRoutes: Route[] = [
                             ).then((m) => m.evaluacionProgramarRoutes),
                     },
                     {
+                        path: 'puntuacion',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/evaluacion/puntuacion/evaluacion-puntuacion.routes'
+                            ).then((m) => m.evaluacionPuntuacionRoutes),
+                    },
+                    {
                         path: 'tipo-evaluacion',
                         loadChildren: () =>
                             import(
