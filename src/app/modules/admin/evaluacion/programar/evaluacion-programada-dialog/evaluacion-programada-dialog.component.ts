@@ -162,6 +162,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
             cicloId: this.fb.control<number | null>({ value: null, disabled: true }, {
                 validators: [Validators.required],
             }),
+            estadoId: this.fb.control<number | null>(null,),
             fechaInicio: this.fb.control<DateTime | Date | string | null>(null, {
                 validators: [Validators.required, this.fechaDuplicadaValidator.bind(this)],
             }),
@@ -449,6 +450,12 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
         const tipoEvaluacionId = this.form.controls['tipoEvaluacionId'].value;
         const sedeId = this.form.controls['sedeId'].value;
         const cicloId = this.form.controls['cicloId'].value;
+        //estadoId, si es null o undefined, se envía como 1
+        let estadoId = this.form.controls['estadoId'].value;
+        if (estadoId === null || estadoId === undefined) {
+            estadoId = 1;
+        }
+
         const fechaInicioDate = this.form.controls['fechaInicio'].value as
             | DateTime
             | Date
@@ -484,6 +491,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
             tipoEvaluacionId,
             sedeId,
             cicloId: cicloId ?? null,
+            estadoId: estadoId ?? 1,
             fechaInicio,
             horaInicio: horaInicioNormalized,
             horaFin: horaFinNormalized,

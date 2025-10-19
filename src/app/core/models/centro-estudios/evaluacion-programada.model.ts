@@ -2,6 +2,7 @@ export interface EvaluacionProgramada {
     id: number;
     sedeId: number;
     cicloId: number | null;
+    estadoId: number | null;
     tipoEvaluacionId: number;
     nombre: string;
     fechaInicio: string;
@@ -18,6 +19,7 @@ export interface EvaluacionProgramada {
 export interface CreateEvaluacionProgramadaPayload {
     sedeId: number;
     cicloId: number | null;
+    estadoId: number | null;
     tipoEvaluacionId: number;
     nombre: string;
     fechaInicio: string;

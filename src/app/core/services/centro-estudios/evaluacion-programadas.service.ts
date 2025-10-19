@@ -13,6 +13,7 @@ interface EvaluacionProgramadaApi extends Partial<EvaluacionProgramada> {
     Id?: number | string;
     SedeId?: number | string;
     CicloId?: number | string | null;
+    EstadoId?: number | string | null;
     TipoEvaluacionId?: number | string;
     Nombre?: string | null;
     FechaInicio?: string | null;
@@ -212,6 +213,7 @@ export class EvaluacionProgramadasService extends ApiMainService {
             id,
             sedeId,
             cicloId: this.coerceOptionalNumber(raw.cicloId ?? raw.CicloId),
+            estadoId: this.coerceOptionalNumber(raw.estadoId ?? raw.EstadoId),
             tipoEvaluacionId,
             nombre,
             fechaInicio,
