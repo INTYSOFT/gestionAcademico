@@ -67,6 +67,31 @@ interface EvaluacionTreeNode {
     children?: EvaluacionTreeNode[];
 }
 
+function validateDateRange(control: AbstractControl): ValidationErrors | null {
+    const value = control.value as { start: Date | null; end: Date | null } | null;
+    if (!value) {
+        return null;
+    }
+
+    const { start, end } = value;
+    if (!start || !end) {
+        return null;
+    }
+
+    const startDate = DateTime.fromJSDate(start).startOf('day');
+    const endDate = DateTime.fromJSDate(end).startOf('day');
+
+    if (!startDate.isValid || !endDate.isValid) {
+        return { invalidDateRange: true };
+    }
+
+    if (endDate < startDate) {
+        return { invalidDateRange: true };
+    }
+
+    return null;
+}
+
 @Component({
     selector: 'app-evaluacion-programar',
     standalone: true,
@@ -101,7 +126,7 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
             end: this.fb.control<Date | null>(null, { validators: [Validators.required] }),
         },
         {
-            validators: this.validateDateRange,
+            validators: validateDateRange,
         }
     );
     protected readonly isLoadingEvaluaciones$ = new BehaviorSubject<boolean>(false);
@@ -527,28 +552,4 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
         this.loadEvaluacionesPorFechaRango(desde, hasta);
     }
 
-    private validateDateRange = (control: AbstractControl): ValidationErrors | null => {
-        const value = control.value as { start: Date | null; end: Date | null } | null;
-        if (!value) {
-            return null;
-        }
-
-        const { start, end } = value;
-        if (!start || !end) {
-            return null;
-        }
-
-        const startDate = DateTime.fromJSDate(start).startOf('day');
-        const endDate = DateTime.fromJSDate(end).startOf('day');
-
-        if (!startDate.isValid || !endDate.isValid) {
-            return { invalidDateRange: true };
-        }
-
-        if (endDate < startDate) {
-            return { invalidDateRange: true };
-        }
-
-        return null;
-    };
 }
