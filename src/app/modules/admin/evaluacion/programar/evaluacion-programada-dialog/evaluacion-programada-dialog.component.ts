@@ -421,9 +421,18 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
         });
     }
 
-    private parseDate(value: string): DateTime | null {
+    private parseDate(value: string): Date | null {
+        if (!value) {
+            return null;
+        }
+
         const date = DateTime.fromISO(value);
-        return date.isValid ? date : null;
+
+        if (!date.isValid) {
+            return null;
+        }
+
+        return date.toJSDate();
     }
 
     private parseHora(value: string): string {
