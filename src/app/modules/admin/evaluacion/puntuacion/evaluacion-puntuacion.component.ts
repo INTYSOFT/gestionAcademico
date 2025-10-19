@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe, DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -57,7 +57,6 @@ interface EvaluacionSeccionTabView {
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         AsyncPipe,
-        DatePipe,
         DecimalPipe,
         NgClass,
         NgFor,
@@ -83,16 +82,6 @@ export class EvaluacionPuntuacionComponent implements OnInit {
         validators: [Validators.required],
     });
 
-    protected readonly evaluaciones$ = this.evaluacionesSubject.asObservable();
-    protected readonly selectedEvaluacion$ = this.selectedEvaluacionSubject.asObservable();
-    protected readonly seccionTabs$ = this.seccionTabsSubject.asObservable();
-    protected readonly tipoEvaluacion$ = this.tipoEvaluacionSubject.asObservable();
-
-    protected readonly isLoadingEvaluaciones$ = this.isLoadingEvaluacionesSubject.asObservable();
-    protected readonly isLoadingSecciones$ = this.isLoadingSeccionesSubject.asObservable();
-    protected readonly isLoadingDetalles$ = this.isLoadingDetallesSubject.asObservable();
-    protected readonly isLoadingTipoEvaluacion$ = this.isLoadingTipoEvaluacionSubject.asObservable();
-
     protected readonly trackByEvaluacion = (_: number, evaluacion: EvaluacionProgramada) =>
         evaluacion.id;
     protected readonly trackByTab = (_: number, tab: EvaluacionSeccionTabView) => tab.key;
@@ -115,6 +104,16 @@ export class EvaluacionPuntuacionComponent implements OnInit {
     private readonly isLoadingTipoEvaluacionSubject = new BehaviorSubject<boolean>(false);
 
     private readonly seccionesCatalogSubject = new BehaviorSubject<Seccion[]>([]);
+
+    protected readonly evaluaciones$ = this.evaluacionesSubject.asObservable();
+    protected readonly selectedEvaluacion$ = this.selectedEvaluacionSubject.asObservable();
+    protected readonly seccionTabs$ = this.seccionTabsSubject.asObservable();
+    protected readonly tipoEvaluacion$ = this.tipoEvaluacionSubject.asObservable();
+
+    protected readonly isLoadingEvaluaciones$ = this.isLoadingEvaluacionesSubject.asObservable();
+    protected readonly isLoadingSecciones$ = this.isLoadingSeccionesSubject.asObservable();
+    protected readonly isLoadingDetalles$ = this.isLoadingDetallesSubject.asObservable();
+    protected readonly isLoadingTipoEvaluacion$ = this.isLoadingTipoEvaluacionSubject.asObservable();
 
     private readonly destroyRef = inject(DestroyRef);
 
