@@ -100,9 +100,17 @@
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <div class="tree-node__subtitle" *ngFor="let line of node.subtitleLines">
-                                                    {{ line }}
+                                                <div class="tree-node__metadata" *ngIf="node.details?.length; else subtitleLines">
+                                                    <div class="tree-node__metadata-item" *ngFor="let detail of node.details">
+                                                        <span class="tree-node__metadata-label">{{ detail.label }}</span>
+                                                        <span class="tree-node__metadata-value">{{ detail.value }}</span>
+                                                    </div>
                                                 </div>
+                                                <ng-template #subtitleLines>
+                                                    <div class="tree-node__subtitle" *ngFor="let line of node.subtitleLines">
+                                                        {{ line }}
+                                                    </div>
+                                                </ng-template>
                                             </div>
                                         </div>
                                         <div class="tree-node__children">
