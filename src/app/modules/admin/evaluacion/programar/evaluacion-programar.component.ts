@@ -58,6 +58,11 @@ import type {
     EvaluacionProgramadaDialogResult,
 } from './evaluacion-programada-dialog/evaluacion-programada-dialog.component';
 
+interface EvaluacionTreeNodeDetail {
+    label: string;
+    value: string;
+}
+
 interface EvaluacionTreeNode {
     id: string;
     title: string;
@@ -65,6 +70,7 @@ interface EvaluacionTreeNode {
     status: 'default' | 'info';
     evaluacionId?: number;
     children?: EvaluacionTreeNode[];
+    details?: EvaluacionTreeNodeDetail[];
 }
 
 function validateDateRange(control: AbstractControl): ValidationErrors | null {
@@ -379,23 +385,24 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
                       } satisfies EvaluacionTreeNode,
                   ];
 
-            const subtitleLines = [
-                `Fecha: ${fecha}`,
-                `Tipo: ${tipo}`,
-                `Horario: ${horario}`,
-                `Sede: ${sede}`,
-                `Ciclo: ${ciclo}`,
-                carrera ? `Carrera: ${carrera}` : null,
-                `Estado: ${evaluacion.activo ? 'Activo' : 'Inactivo'}`,
-            ].filter((line): line is string => !!line);
+            const details: EvaluacionTreeNodeDetail[] = [
+                { label: 'Fecha', value: fecha },
+                { label: 'Tipo', value: tipo },
+                { label: 'Horario', value: horario },
+                { label: 'Sede', value: sede },
+                { label: 'Ciclo', value: ciclo },
+                carrera ? { label: 'Carrera', value: carrera } : null,
+                { label: 'Estado', value: evaluacion.activo ? 'Activo' : 'Inactivo' },
+            ].filter((detail): detail is EvaluacionTreeNodeDetail => !!detail && detail.value.trim().length > 0);
 
             return {
                 id: `evaluacion-${evaluacion.id}`,
                 title: evaluacion.nombre,
-                subtitleLines,
+                subtitleLines: [],
                 status: 'default',
                 evaluacionId: evaluacion.id,
                 children,
+                details,
             };
         });
 
