@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, catchError, map, of, switchMap } from 'rxjs';
 import { ApiMainService } from '../api/api-main.service';
@@ -50,6 +50,29 @@ export class EvaluacionProgramadasService extends ApiMainService {
 
         return this.http
             .get<EvaluacionProgramadaApi[]>(this.buildUrl(url), this.createOptions())
+            .pipe(
+                map((response) => this.normalizeEvaluacionProgramadas(response)),
+                catchError((error: HttpErrorResponse) => {
+                    if (error.status === 404) {
+                        return of([]);
+                    }
+
+                    return this.handleError(error);
+                })
+            );
+    }
+
+    listByFechaInicioRange(
+        fechaInicioDesde: string,
+        fechaInicioHasta: string
+    ): Observable<EvaluacionProgramada[]> {
+        const url = `${this.resourcePath}/fechaInicio/rango`;
+        const params = new HttpParams()
+            .set('fechaInicioDesde', fechaInicioDesde)
+            .set('fechaInicioHasta', fechaInicioHasta);
+
+        return this.http
+            .get<EvaluacionProgramadaApi[]>(this.buildUrl(url), this.createOptions({ params }))
             .pipe(
                 map((response) => this.normalizeEvaluacionProgramadas(response)),
                 catchError((error: HttpErrorResponse) => {

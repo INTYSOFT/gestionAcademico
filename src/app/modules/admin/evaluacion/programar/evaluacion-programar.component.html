@@ -1,131 +1,141 @@
-<div class="evaluacion-programar">
-    <div class="header">
-        <div class="header__titles">
-            <h1 class="header__title">Evaluación programada</h1>
-            <p class="header__subtitle">
-                Gestiona las evaluaciones programadas agrupadas por fecha de inicio.
-            </p>
-        </div>
-        <button mat-flat-button color="primary" (click)="createProgramacion()">
-            <mat-icon>add</mat-icon>
-            Nueva programación
-        </button>
-    </div>
-
-    <mat-card class="content">
-        <div class="content__layout">
-            <aside class="content__sidebar">
-                <div class="sidebar__header">
-                    <h2 class="sidebar__title">Fechas programadas</h2>
-                    <mat-progress-spinner
-                        *ngIf="isLoadingFechas$ | async"
-                        class="sidebar__spinner"
-                        diameter="28"
-                        mode="indeterminate"
-                    ></mat-progress-spinner>
+<div class="flex min-w-0 flex-auto flex-col">
+    <!-- Main -->
+    <div class="flex-auto p-6 sm:p-10">
+        <div class="h-400 max-h-400 min-h-400 rounded-2xl border-2 border-dashed border-gray-300">
+            <div class="evaluacion-programar">
+                <div class="header">
+                    <div class="header__titles">
+                        <h1 class="header__title">Evaluación programada</h1>
+                        <p class="header__subtitle">
+                            Gestiona las evaluaciones programadas filtrándolas por fecha de inicio.
+                        </p>
+                    </div>
+                    <button mat-flat-button color="primary" (click)="createProgramacion()">
+                        <mat-icon>add</mat-icon>
+                        Nueva programación
+                    </button>
                 </div>
 
-                <ng-container *ngIf="(fechaOptions$ | async) as fechas">
-                    <ng-container *ngIf="fechas.length; else emptyFechas">
-                        <mat-radio-group
-                            [formControl]="selectedFechaControl"
-                            class="fecha-selector"
-                            aria-label="Selecciona una fecha de evaluación"
-                        >
-                            <mat-radio-button
-                                class="fecha-selector__option"
-                                *ngFor="let option of fechas"
-                                [value]="option.value"
-                            >
-                                <span class="fecha-selector__label">{{ option.label }}</span>
-                                <span class="fecha-selector__value">{{ option.value }}</span>
-                            </mat-radio-button>
-                        </mat-radio-group>
-                    </ng-container>
-                </ng-container>
+                <mat-card class="content">
+                    <form class="filters" [formGroup]="dateRangeForm" (submit)="$event.preventDefault()">
+                        <div class="filters__controls">
+                            <mat-form-field appearance="outline" class="filters__field">
+                                <mat-label>Fecha de inicio desde</mat-label>
+                                <input
+                                    matInput
+                                    [matDatepicker]="startPicker"
+                                    formControlName="start"
+                                    placeholder="Selecciona la fecha inicial"
+                                />
+                                <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+                                <mat-datepicker #startPicker></mat-datepicker>
+                                <mat-error *ngIf="dateRangeForm.get('start')?.hasError('required')">
+                                    La fecha inicial es obligatoria.
+                                </mat-error>
+                            </mat-form-field>
 
-                <ng-template #emptyFechas>
-                    <p class="sidebar__empty">
-                        No hay fechas de evaluación programadas registradas.
-                    </p>
-                </ng-template>
-            </aside>
+                            <mat-form-field appearance="outline" class="filters__field">
+                                <mat-label>Fecha de inicio hasta</mat-label>
+                                <input
+                                    matInput
+                                    [matDatepicker]="endPicker"
+                                    formControlName="end"
+                                    placeholder="Selecciona la fecha final"
+                                />
+                                <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+                                <mat-datepicker #endPicker></mat-datepicker>
+                                <mat-error *ngIf="dateRangeForm.get('end')?.hasError('required')">
+                                    La fecha final es obligatoria.
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <mat-error class="filters__error" *ngIf="dateRangeForm.hasError('invalidDateRange')">
+                            La fecha final debe ser igual o posterior a la fecha inicial.
+                        </mat-error>
+                    </form>
 
-            <section class="content__main">
-                <header class="main__header">
-                    <h2 class="main__title">
-                        <ng-container *ngIf="selectedFechaControl.value; else noFecha">
-                            Programaciones del {{ formatSelectedFecha(selectedFechaControl.value) }}
-                        </ng-container>
-                        <ng-template #noFecha>Selecciona una fecha para ver sus programaciones</ng-template>
-                    </h2>
-                </header>
+                    <section class="schedule">
+                        <header class="schedule__header">
+                            <h2 class="schedule__title">
+                                <ng-container *ngIf="dateRangeForm.valid && dateRangeForm.value.start && dateRangeForm.value.end; else noRange">
+                                    Programaciones del
+                                    {{ formatDateControlValue(dateRangeForm.value.start) }}
+                                    al
+                                    {{ formatDateControlValue(dateRangeForm.value.end) }}
+                                </ng-container>
+                                <ng-template #noRange>
+                                    Selecciona un rango de fechas para visualizar las programaciones.
+                                </ng-template>
+                            </h2>
+                        </header>
 
-                <div class="main__body">
-                    <div class="main__loading" *ngIf="isLoadingEvaluaciones$ | async">
-                        <mat-progress-spinner diameter="56" mode="indeterminate"></mat-progress-spinner>
-                    </div>
+                        <div class="schedule__body">
+                            <div class="schedule__loading" *ngIf="isLoadingEvaluaciones$ | async">
+                                <mat-progress-spinner diameter="56" mode="indeterminate"></mat-progress-spinner>
+                            </div>
 
-                    <ng-container *ngIf="!(isLoadingEvaluaciones$ | async)">
-                        <mat-tree [dataSource]="treeDataSource" [treeControl]="treeControl" class="program-tree">
-                            <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
-                                <div class="tree-node tree-node--parent" matTreeNodePadding>
-                                    <button
-                                        mat-icon-button
-                                        matTreeNodeToggle
-                                        [attr.aria-label]="'Alternar ' + node.title"
-                                    >
-                                        <mat-icon>
-                                            {{ treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
-                                        </mat-icon>
-                                    </button>
-                                    <div class="tree-node__content">
-                                        <div class="tree-node__header">
-                                            <span class="tree-node__title">{{ node.title }}</span>
-                                            <div class="tree-node__actions" *ngIf="node.evaluacionId">
-                                                <button
-                                                    mat-icon-button
-                                                    matTooltip="Editar programación"
-                                                    (click)="editProgramacion(node.evaluacionId)"
-                                                >
-                                                    <mat-icon>edit</mat-icon>
-                                                </button>
+                            <ng-container *ngIf="!(isLoadingEvaluaciones$ | async)">
+                                <mat-tree [dataSource]="treeDataSource" [treeControl]="treeControl" class="program-tree">
+                                    <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
+                                        <div class="tree-node tree-node--parent" matTreeNodePadding>
+                                            <button
+                                                mat-icon-button
+                                                matTreeNodeToggle
+                                                [attr.aria-label]="'Alternar ' + node.title"
+                                            >
+                                                <mat-icon>
+                                                    {{ treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
+                                                </mat-icon>
+                                            </button>
+                                            <div class="tree-node__content">
+                                                <div class="tree-node__header">
+                                                    <span class="tree-node__title">{{ node.title }}</span>
+                                                    <div class="tree-node__actions" *ngIf="node.evaluacionId">
+                                                        <button
+                                                            mat-icon-button
+                                                            matTooltip="Editar programación"
+                                                            (click)="editProgramacion(node.evaluacionId)"
+                                                        >
+                                                            <mat-icon>edit</mat-icon>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node__subtitle" *ngFor="let line of node.subtitleLines">
+                                                    {{ line }}
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="tree-node__subtitle" *ngFor="let line of node.subtitleLines">
-                                            {{ line }}
+                                        <div class="tree-node__children">
+                                            <ng-container matTreeNodeOutlet></ng-container>
                                         </div>
-                                    </div>
-                                </div>
-                                <div class="tree-node__children">
-                                    <ng-container matTreeNodeOutlet></ng-container>
-                                </div>
-                            </mat-nested-tree-node>
+                                    </mat-nested-tree-node>
 
-                            <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
-                                <div
-                                    class="tree-node tree-node--child"
-                                    [ngClass]="{ 'tree-node--info': node.status === 'info' }"
-                                >
-                                    <mat-icon class="tree-node__bullet">
-                                        {{ node.status === 'info' ? 'info' : 'label_important' }}
-                                    </mat-icon>
-                                    <div class="tree-node__content">
-                                        <span class="tree-node__title">{{ node.title }}</span>
-                                        <div class="tree-node__subtitle" *ngFor="let line of node.subtitleLines">
-                                            {{ line }}
+                                    <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+                                        <div
+                                            class="tree-node tree-node--child"
+                                            [ngClass]="{ 'tree-node--info': node.status === 'info' }"
+                                        >
+                                            <mat-icon class="tree-node__bullet">
+                                                {{ node.status === 'info' ? 'info' : 'label_important' }}
+                                            </mat-icon>
+                                            <div class="tree-node__content">
+                                                <span class="tree-node__title">{{ node.title }}</span>
+                                                <div class="tree-node__subtitle" *ngFor="let line of node.subtitleLines">
+                                                    {{ line }}
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </mat-tree-node>
-                        </mat-tree>
+                                    </mat-tree-node>
+                                </mat-tree>
 
-                        <div *ngIf="!treeDataSource.data.length" class="main__empty">
-                            No hay programaciones registradas para la fecha seleccionada.
+                                <div *ngIf="!treeDataSource.data.length" class="schedule__empty">
+                                    No hay programaciones registradas para el rango seleccionado.
+                                </div>
+                            </ng-container>
                         </div>
-                    </ng-container>
-                </div>
-            </section>
+                    </section>
+                </mat-card>
+            </div>
         </div>
-    </mat-card>
+    </div>
 </div>

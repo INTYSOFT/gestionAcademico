@@ -6,17 +6,26 @@ import {
     OnInit,
     ViewEncapsulation,
 } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import {
+    AbstractControl,
+    FormBuilder,
+    ReactiveFormsModule,
+    ValidationErrors,
+    Validators,
+} from '@angular/forms';
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatRadioModule } from '@angular/material/radio';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 import {
     BehaviorSubject,
     Subject,
@@ -49,11 +58,6 @@ import type {
     EvaluacionProgramadaDialogResult,
 } from './evaluacion-programada-dialog/evaluacion-programada-dialog.component';
 
-interface FechaOption {
-    value: string;
-    label: string;
-}
-
 interface EvaluacionTreeNode {
     id: string;
     title: string;
@@ -80,18 +84,26 @@ interface EvaluacionTreeNode {
         MatCardModule,
         MatDialogModule,
         MatIconModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatDatepickerModule,
+        MatNativeDateModule,
         MatProgressSpinnerModule,
-        MatRadioModule,
         MatSnackBarModule,
         MatTooltipModule,
         MatTreeModule,
     ],
 })
 export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
-    protected readonly selectedFechaControl = this.fb.control<string | null>(null);
-
-    protected readonly fechaOptions$ = new BehaviorSubject<FechaOption[]>([]);
-    protected readonly isLoadingFechas$ = new BehaviorSubject<boolean>(false);
+    protected readonly dateRangeForm = this.fb.group(
+        {
+            start: this.fb.control<Date | null>(null, { validators: [Validators.required] }),
+            end: this.fb.control<Date | null>(null, { validators: [Validators.required] }),
+        },
+        {
+            validators: this.validateDateRange,
+        }
+    );
     protected readonly isLoadingEvaluaciones$ = new BehaviorSubject<boolean>(false);
 
     protected readonly treeControl = new NestedTreeControl<EvaluacionTreeNode>((node) => node.children ?? []);
@@ -104,6 +116,7 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
 
     private allEvaluaciones: EvaluacionProgramada[] = [];
     private evaluacionSecciones = new Map<number, EvaluacionProgramadaSeccion[]>();
+    private currentRangeKey: string | null = null;
 
     private sedes: Sede[] = [];
     private ciclos: Ciclo[] = [];
@@ -126,31 +139,17 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.loadCatalogs();
-        this.reloadData();
+        this.dateRangeForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(({ start, end }) => {
+            this.handleDateRangeChange(start, end);
+        });
 
-        this.selectedFechaControl.valueChanges
-            .pipe(takeUntil(this.destroy$))
-            .subscribe((fecha) => {
-                if (!fecha) {
-                    this.treeDataSource.data = [];
-                    return;
-                }
-
-                this.loadEvaluacionesPorFecha(fecha);
-            });
+        const defaultRange = this.buildDefaultDateRange();
+        this.dateRangeForm.setValue(defaultRange);
     }
 
     ngOnDestroy(): void {
         this.destroy$.next();
         this.destroy$.complete();
-    }
-
-    protected formatSelectedFecha(fecha: string | null): string {
-        if (!fecha) {
-            return '';
-        }
-
-        return this.formatFechaLabel(fecha);
     }
 
     protected createProgramacion(): void {
@@ -167,6 +166,19 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
         }
 
         this.openProgramacionDialog(evaluacion);
+    }
+
+    protected formatDateControlValue(date: Date | null): string {
+        if (!date) {
+            return '';
+        }
+
+        const formatted = DateTime.fromJSDate(date).setLocale('es');
+        if (!formatted.isValid) {
+            return '';
+        }
+
+        return formatted.toLocaleString(DateTime.DATE_FULL);
     }
 
     private loadCatalogs(): void {
@@ -198,63 +210,44 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
             });
     }
 
-    private reloadData(selectFecha?: string): void {
-        this.isLoadingFechas$.next(true);
-
-        this.evaluacionProgramadasService
-            .listAll()
-            .pipe(
-                finalize(() => this.isLoadingFechas$.next(false)),
-                takeUntil(this.destroy$)
-            )
-            .subscribe({
-                next: (evaluaciones) => {
-                    this.allEvaluaciones = evaluaciones;
-                    this.updateFechaOptions(selectFecha);
-                },
-                error: (error) => {
-                    this.snackBar.open(
-                        error.message ?? 'Ocurrió un error al cargar las evaluaciones programadas.',
-                        'Cerrar',
-                        {
-                            duration: 5000,
-                        }
-                    );
-                },
-            });
-    }
-
-    private updateFechaOptions(selectFecha?: string): void {
-        const options = this.buildFechaOptions(this.allEvaluaciones);
-        this.fechaOptions$.next(options);
-
-        const current = this.selectedFechaControl.value;
-        const targetFecha = selectFecha ?? current ?? options[0]?.value ?? null;
-
-        if (targetFecha && options.some((option) => option.value === targetFecha)) {
-            if (targetFecha !== current) {
-                this.selectedFechaControl.setValue(targetFecha);
-                return;
-            }
-
-            this.loadEvaluacionesPorFecha(targetFecha);
-        } else {
-            this.selectedFechaControl.setValue(null, { emitEvent: false });
-            this.treeDataSource.data = [];
+    private handleDateRangeChange(start: Date | null, end: Date | null): void {
+        if (!start || !end) {
+            this.currentRangeKey = null;
+            this.resetEvaluaciones();
+            return;
         }
+
+        if (this.dateRangeForm.invalid) {
+            this.currentRangeKey = null;
+            this.resetEvaluaciones();
+            return;
+        }
+
+        const desde = this.toIsoDate(start);
+        const hasta = this.toIsoDate(end);
+
+        if (!desde || !hasta) {
+            this.currentRangeKey = null;
+            this.resetEvaluaciones();
+            return;
+        }
+
+        const rangeKey = `${desde}_${hasta}`;
+        if (rangeKey === this.currentRangeKey) {
+            return;
+        }
+
+        this.currentRangeKey = rangeKey;
+        this.loadEvaluacionesPorFechaRango(desde, hasta);
     }
 
-    private loadEvaluacionesPorFecha(fecha: string): void {
+    private loadEvaluacionesPorFechaRango(fechaDesde: string, fechaHasta: string): void {
         this.isLoadingEvaluaciones$.next(true);
 
         this.evaluacionProgramadasService
-            .listByFechaInicio(fecha)
+            .listByFechaInicioRange(fechaDesde, fechaHasta)
             .pipe(
                 switchMap((evaluaciones) => {
-                    const evaluacionesMap = new Map<number, EvaluacionProgramada>();
-                    evaluaciones.forEach((item) => evaluacionesMap.set(item.id, item));
-                    this.allEvaluaciones = this.mergeEvaluaciones(this.allEvaluaciones, evaluaciones);
-
                     if (!evaluaciones.length) {
                         this.evaluacionSecciones = new Map();
                         return of([] as { evaluacion: EvaluacionProgramada; secciones: EvaluacionProgramadaSeccion[] }[]);
@@ -279,10 +272,12 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
                     const seccionesMap = new Map<number, EvaluacionProgramadaSeccion[]>(
                         items.map((item) => [item.evaluacion.id, item.secciones])
                     );
+                    this.allEvaluaciones = items.map((item) => item.evaluacion);
                     this.evaluacionSecciones = seccionesMap;
                     this.buildTreeData(items.map((item) => item.evaluacion), seccionesMap);
                 },
                 error: (error) => {
+                    this.resetEvaluaciones();
                     this.snackBar.open(
                         error.message ?? 'Ocurrió un error al cargar las programaciones de la fecha.',
                         'Cerrar',
@@ -292,6 +287,35 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
                     );
                 },
             });
+    }
+
+    private resetEvaluaciones(): void {
+        this.allEvaluaciones = [];
+        this.evaluacionSecciones = new Map();
+        this.treeDataSource.data = [];
+    }
+
+    private buildDefaultDateRange(): { start: Date; end: Date } {
+        const today = DateTime.now().startOf('day');
+        const start = today.minus({ days: 7 });
+
+        return {
+            start: start.toJSDate(),
+            end: today.toJSDate(),
+        };
+    }
+
+    private toIsoDate(value: Date | null): string | null {
+        if (!value) {
+            return null;
+        }
+
+        const date = DateTime.fromJSDate(value).startOf('day');
+        if (!date.isValid) {
+            return null;
+        }
+
+        return date.toISODate();
     }
 
     private buildTreeData(
@@ -355,34 +379,6 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
         queueMicrotask(() => this.treeControl.expandAll());
     }
 
-    private buildFechaOptions(evaluaciones: EvaluacionProgramada[]): FechaOption[] {
-        const unique = new Map<string, string>();
-
-        evaluaciones.forEach((evaluacion) => {
-            const fecha = evaluacion.fechaInicio?.trim();
-            if (!fecha || unique.has(fecha)) {
-                return;
-            }
-
-            unique.set(fecha, this.formatFechaLabel(fecha));
-        });
-
-        return Array.from(unique.entries())
-            .map(([value, label]) => ({ value, label }))
-            .sort((a, b) => this.compareDatesDesc(a.value, b.value));
-    }
-
-    private compareDatesDesc(a: string, b: string): number {
-        const dateA = DateTime.fromISO(a, { zone: 'utc' });
-        const dateB = DateTime.fromISO(b, { zone: 'utc' });
-
-        if (dateA.isValid && dateB.isValid) {
-            return dateB.toMillis() - dateA.toMillis();
-        }
-
-        return b.localeCompare(a);
-    }
-
     private formatFechaLabel(value: string): string {
         const date = DateTime.fromISO(value, { zone: 'utc' });
         if (date.isValid) {
@@ -441,24 +437,18 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
         return this.secciones.find((seccion) => seccion.id === id)?.nombre ?? `Sección #${id}`;
     }
 
-    private mergeEvaluaciones(
-        existing: EvaluacionProgramada[],
-        incoming: EvaluacionProgramada[]
-    ): EvaluacionProgramada[] {
-        const map = new Map<number, EvaluacionProgramada>();
-        existing.forEach((evaluacion) => map.set(evaluacion.id, evaluacion));
-        incoming.forEach((evaluacion) => map.set(evaluacion.id, evaluacion));
-        return Array.from(map.values());
-    }
-
     private openProgramacionDialog(evaluacion?: EvaluacionProgramada | null): void {
         blurActiveElement();
 
         void import('./evaluacion-programada-dialog/evaluacion-programada-dialog.component').then(
             ({ EvaluacionProgramadaDialogComponent }) => {
-                const existingFechas = this.fechaOptions$
-                    .value.map((option) => option.value)
-                    .filter((fecha) => !evaluacion || fecha !== evaluacion.fechaInicio);
+                const existingFechas = Array.from(
+                    new Set(
+                        this.allEvaluaciones
+                            .filter((item) => !evaluacion || item.id !== evaluacion.id)
+                            .map((item) => item.fechaInicio)
+                    )
+                );
 
                 const secciones = evaluacion ? this.evaluacionSecciones.get(evaluacion.id) ?? [] : [];
 
@@ -487,7 +477,7 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
                         }
 
                         if (result.action === 'created' || result.action === 'updated') {
-                            this.reloadData(result.evaluacion.fechaInicio);
+                            this.handlePostSaveRange(result.evaluacion.fechaInicio);
 
                             this.snackBar.open(
                                 result.action === 'created'
@@ -503,4 +493,62 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
             }
         );
     }
+
+    private handlePostSaveRange(fechaInicio: string): void {
+        const fecha = DateTime.fromISO(fechaInicio).startOf('day');
+        if (!fecha.isValid) {
+            return;
+        }
+
+        const currentStart = this.dateRangeForm.value.start
+            ? DateTime.fromJSDate(this.dateRangeForm.value.start).startOf('day')
+            : null;
+        const currentEnd = this.dateRangeForm.value.end
+            ? DateTime.fromJSDate(this.dateRangeForm.value.end).startOf('day')
+            : null;
+
+        if (!currentStart || !currentEnd || fecha < currentStart || fecha > currentEnd) {
+            this.dateRangeForm.setValue(
+                {
+                    start: fecha.toJSDate(),
+                    end: fecha.toJSDate(),
+                },
+                { emitEvent: true }
+            );
+            return;
+        }
+
+        const desde = this.toIsoDate(this.dateRangeForm.value.start ?? null);
+        const hasta = this.toIsoDate(this.dateRangeForm.value.end ?? null);
+        if (!desde || !hasta) {
+            return;
+        }
+
+        this.loadEvaluacionesPorFechaRango(desde, hasta);
+    }
+
+    private validateDateRange = (control: AbstractControl): ValidationErrors | null => {
+        const value = control.value as { start: Date | null; end: Date | null } | null;
+        if (!value) {
+            return null;
+        }
+
+        const { start, end } = value;
+        if (!start || !end) {
+            return null;
+        }
+
+        const startDate = DateTime.fromJSDate(start).startOf('day');
+        const endDate = DateTime.fromJSDate(end).startOf('day');
+
+        if (!startDate.isValid || !endDate.isValid) {
+            return { invalidDateRange: true };
+        }
+
+        if (endDate < startDate) {
+            return { invalidDateRange: true };
+        }
+
+        return null;
+    };
 }
