@@ -63,6 +63,13 @@ interface EvaluacionTreeNodeDetail {
     value: string;
 }
 
+interface EvaluacionTreeNodeIconConfig {
+    name: string;
+    classes?: string[];
+    tooltip?: string;
+    ariaLabel?: string;
+}
+
 interface EvaluacionTreeNode {
     id: string;
     title: string;
@@ -71,6 +78,8 @@ interface EvaluacionTreeNode {
     evaluacionId?: number;
     children?: EvaluacionTreeNode[];
     details?: EvaluacionTreeNodeDetail[];
+    leadingIcon?: EvaluacionTreeNodeIconConfig;
+    trailingIcon?: EvaluacionTreeNodeIconConfig;
 }
 
 function validateDateRange(control: AbstractControl): ValidationErrors | null {
@@ -365,15 +374,23 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
             const children: EvaluacionTreeNode[] = secciones.length
                 ? secciones.map<EvaluacionTreeNode>((seccion) => {
                       const seccionNombre = this.getSeccionNombre(seccion.seccionId);
-                      const estado = seccion.activo ? 'Activo' : 'Inactivo';
+                      const isActivo = Boolean(seccion.activo);
+
                       return {
                           id: `seccion-${evaluacion.id}-${seccion.id}`,
                           title: seccionNombre,
-                          subtitleLines: [
-                              `Sección ciclo ID: ${seccion.seccionCicloId}`,
-                              `Estado: ${estado}`,
-                          ],
-                          status: seccion.activo ? 'default' : 'info',
+                          subtitleLines: [],
+                          status: 'default',
+                          trailingIcon: {
+                              name: isActivo ? 'check_circle' : 'cancel',
+                              classes: [
+                                  isActivo
+                                      ? 'tree-node__status-icon--active'
+                                      : 'tree-node__status-icon--inactive',
+                              ],
+                              tooltip: isActivo ? 'Activo' : 'Inactivo',
+                              ariaLabel: `Estado ${isActivo ? 'activo' : 'inactivo'}`,
+                          },
                       };
                   })
                 : [
@@ -382,6 +399,12 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
                           title: 'No hay secciones registradas',
                           subtitleLines: [],
                           status: 'info',
+                          leadingIcon: {
+                              name: 'info',
+                              classes: ['tree-node__bullet--info'],
+                              tooltip: 'No hay secciones registradas para esta evaluación',
+                              ariaLabel: 'Sin secciones registradas',
+                          },
                       } satisfies EvaluacionTreeNode,
                   ];
 
