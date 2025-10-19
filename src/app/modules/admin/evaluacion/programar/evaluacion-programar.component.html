@@ -17,39 +17,73 @@
                 </div>
 
                 <mat-card class="content">
-                    <form class="filters" [formGroup]="dateRangeForm" (submit)="$event.preventDefault()">
-                        <div class="filters__controls">
-                            <mat-form-field appearance="outline" class="filters__field">
-                                <mat-label>Fecha de inicio desde</mat-label>
-                                <input
-                                    matInput
-                                    [matDatepicker]="startPicker"
-                                    formControlName="start"
-                                    placeholder="Selecciona la fecha inicial"
-                                />
-                                <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
-                                <mat-datepicker #startPicker></mat-datepicker>
-                                <mat-error *ngIf="dateRangeForm.get('start')?.hasError('required')">
-                                    La fecha inicial es obligatoria.
-                                </mat-error>
-                            </mat-form-field>
-
-                            <mat-form-field appearance="outline" class="filters__field">
-                                <mat-label>Fecha de inicio hasta</mat-label>
-                                <input
-                                    matInput
-                                    [matDatepicker]="endPicker"
-                                    formControlName="end"
-                                    placeholder="Selecciona la fecha final"
-                                />
-                                <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
-                                <mat-datepicker #endPicker></mat-datepicker>
-                                <mat-error *ngIf="dateRangeForm.get('end')?.hasError('required')">
-                                    La fecha final es obligatoria.
-                                </mat-error>
-                            </mat-form-field>
+                    <form class="filters" [formGroup]="filtersForm" (submit)="$event.preventDefault()">
+                        <div class="filters__mode">
+                            <span class="filters__mode-label">Buscar por:</span>
+                            <mat-button-toggle-group formControlName="mode">
+                                <mat-button-toggle [value]="SearchMode.Range">Rango de fechas</mat-button-toggle>
+                                <mat-button-toggle [value]="SearchMode.Date">Fecha específica</mat-button-toggle>
+                            </mat-button-toggle-group>
                         </div>
-                        <mat-error class="filters__error" *ngIf="dateRangeForm.hasError('invalidDateRange')">
+
+                        <ng-container [ngSwitch]="filtersForm.controls.mode.value">
+                            <div *ngSwitchCase="SearchMode.Range" class="filters__controls" formGroupName="range">
+                                <mat-form-field appearance="outline" class="filters__field">
+                                    <mat-label>Fecha de inicio desde</mat-label>
+                                    <input
+                                        matInput
+                                        [matDatepicker]="startPicker"
+                                        formControlName="start"
+                                        placeholder="Selecciona la fecha inicial"
+                                    />
+                                    <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+                                    <mat-datepicker #startPicker></mat-datepicker>
+                                    <mat-error *ngIf="filtersForm.controls.range.controls.start.hasError('required')">
+                                        La fecha inicial es obligatoria.
+                                    </mat-error>
+                                </mat-form-field>
+
+                                <mat-form-field appearance="outline" class="filters__field">
+                                    <mat-label>Fecha de inicio hasta</mat-label>
+                                    <input
+                                        matInput
+                                        [matDatepicker]="endPicker"
+                                        formControlName="end"
+                                        placeholder="Selecciona la fecha final"
+                                    />
+                                    <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+                                    <mat-datepicker #endPicker></mat-datepicker>
+                                    <mat-error *ngIf="filtersForm.controls.range.controls.end.hasError('required')">
+                                        La fecha final es obligatoria.
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+
+                            <div *ngSwitchCase="SearchMode.Date" class="filters__controls">
+                                <mat-form-field appearance="outline" class="filters__field filters__field--single">
+                                    <mat-label>Fecha de inicio</mat-label>
+                                    <input
+                                        matInput
+                                        [matDatepicker]="singleDatePicker"
+                                        formControlName="date"
+                                        placeholder="Selecciona la fecha"
+                                    />
+                                    <mat-datepicker-toggle matIconSuffix [for]="singleDatePicker"></mat-datepicker-toggle>
+                                    <mat-datepicker #singleDatePicker></mat-datepicker>
+                                    <mat-error *ngIf="filtersForm.controls.date.hasError('required')">
+                                        La fecha es obligatoria para la búsqueda.
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </ng-container>
+
+                        <mat-error
+                            class="filters__error"
+                            *ngIf="
+                                filtersForm.controls.mode.value === SearchMode.Range &&
+                                filtersForm.controls.range.hasError('invalidDateRange')
+                            "
+                        >
                             La fecha final debe ser igual o posterior a la fecha inicial.
                         </mat-error>
                     </form>
@@ -57,14 +91,31 @@
                     <section class="schedule">
                         <header class="schedule__header">
                             <h2 class="schedule__title">
-                                <ng-container *ngIf="dateRangeForm.valid && dateRangeForm.value.start && dateRangeForm.value.end; else noRange">
-                                    Programaciones del
-                                    {{ formatDateControlValue(dateRangeForm.value.start) }}
-                                    al
-                                    {{ formatDateControlValue(dateRangeForm.value.end) }}
+                                <ng-container [ngSwitch]="filtersForm.controls.mode.value">
+                                    <ng-container *ngSwitchCase="SearchMode.Range">
+                                        <ng-container
+                                            *ngIf="
+                                                filtersForm.controls.range.valid &&
+                                                filtersForm.controls.range.controls.start.value &&
+                                                filtersForm.controls.range.controls.end.value;
+                                                else noFilters
+                                            "
+                                        >
+                                            Programaciones del
+                                            {{ formatDateControlValue(filtersForm.controls.range.controls.start.value) }}
+                                            al
+                                            {{ formatDateControlValue(filtersForm.controls.range.controls.end.value) }}
+                                        </ng-container>
+                                    </ng-container>
+                                    <ng-container *ngSwitchCase="SearchMode.Date">
+                                        <ng-container *ngIf="filtersForm.controls.date.value; else noFilters">
+                                            Programaciones del
+                                            {{ formatDateControlValue(filtersForm.controls.date.value) }}
+                                        </ng-container>
+                                    </ng-container>
                                 </ng-container>
-                                <ng-template #noRange>
-                                    Selecciona un rango de fechas para visualizar las programaciones.
+                                <ng-template #noFilters>
+                                    Selecciona un criterio de búsqueda para visualizar las programaciones.
                                 </ng-template>
                             </h2>
                         </header>
@@ -156,7 +207,7 @@
                                 </mat-tree>
 
                                 <div *ngIf="!treeDataSource.data.length" class="schedule__empty">
-                                    No hay programaciones registradas para el rango seleccionado.
+                                    No hay programaciones registradas para el criterio seleccionado.
                                 </div>
                             </ng-container>
                         </div>

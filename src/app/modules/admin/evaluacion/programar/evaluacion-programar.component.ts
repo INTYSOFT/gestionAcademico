@@ -26,8 +26,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import {
     BehaviorSubject,
+    Observable,
     Subject,
     catchError,
     finalize,
@@ -82,6 +84,13 @@ interface EvaluacionTreeNode {
     trailingIcon?: EvaluacionTreeNodeIconConfig;
 }
 
+const EVALUACION_SEARCH_MODE = {
+    Date: 'date',
+    Range: 'range',
+} as const;
+
+type EvaluacionSearchMode = (typeof EVALUACION_SEARCH_MODE)[keyof typeof EVALUACION_SEARCH_MODE];
+
 function validateDateRange(control: AbstractControl): ValidationErrors | null {
     const value = control.value as { start: Date | null; end: Date | null } | null;
     if (!value) {
@@ -121,6 +130,7 @@ function validateDateRange(control: AbstractControl): ValidationErrors | null {
         NgIf,
         ReactiveFormsModule,
         MatButtonModule,
+        MatButtonToggleModule,
         MatCardModule,
         MatDialogModule,
         MatIconModule,
@@ -135,16 +145,23 @@ function validateDateRange(control: AbstractControl): ValidationErrors | null {
     ],
 })
 export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
-    protected readonly dateRangeForm = this.fb.group(
-        {
-            start: this.fb.control<Date | null>(null, { validators: [Validators.required] }),
-            end: this.fb.control<Date | null>(null, { validators: [Validators.required] }),
-        },
-        {
-            validators: validateDateRange,
-        }
-    );
+    protected readonly filtersForm = this.fb.group({
+        mode: this.fb.control<EvaluacionSearchMode>(EVALUACION_SEARCH_MODE.Range, {
+            nonNullable: true,
+        }),
+        date: this.fb.control<Date | null>(null),
+        range: this.fb.group(
+            {
+                start: this.fb.control<Date | null>(null, { validators: [Validators.required] }),
+                end: this.fb.control<Date | null>(null, { validators: [Validators.required] }),
+            },
+            {
+                validators: validateDateRange,
+            }
+        ),
+    });
     protected readonly isLoadingEvaluaciones$ = new BehaviorSubject<boolean>(false);
+    protected readonly SearchMode = EVALUACION_SEARCH_MODE;
 
     protected readonly treeControl = new NestedTreeControl<EvaluacionTreeNode>((node) => node.children ?? []);
     protected readonly treeDataSource = new MatTreeNestedDataSource<EvaluacionTreeNode>();
@@ -156,7 +173,13 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
 
     private allEvaluaciones: EvaluacionProgramada[] = [];
     private evaluacionSecciones = new Map<number, EvaluacionProgramadaSeccion[]>();
-    private currentRangeKey: string | null = null;
+    private readonly modeControl = this.filtersForm.controls.mode;
+    private readonly dateControl = this.filtersForm.controls.date;
+    private readonly rangeGroup = this.filtersForm.controls.range;
+    private readonly rangeStartControl = this.rangeGroup.controls.start;
+    private readonly rangeEndControl = this.rangeGroup.controls.end;
+
+    private currentQueryKey: string | null = null;
 
     private sedes: Sede[] = [];
     private ciclos: Ciclo[] = [];
@@ -179,12 +202,7 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.loadCatalogs();
-        this.dateRangeForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(({ start, end }) => {
-            this.handleDateRangeChange(start, end);
-        });
-
-        const defaultRange = this.buildDefaultDateRange();
-        this.dateRangeForm.setValue(defaultRange);
+        this.initializeFilters();
     }
 
     ngOnDestroy(): void {
@@ -250,47 +268,139 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
             });
     }
 
-    private handleDateRangeChange(start: Date | null, end: Date | null): void {
-        if (!start || !end) {
-            this.currentRangeKey = null;
+    private initializeFilters(): void {
+        const defaultRange = this.buildDefaultDateRange();
+        this.rangeGroup.setValue(defaultRange, { emitEvent: false });
+        this.dateControl.setValue(defaultRange.end, { emitEvent: false });
+
+        this.modeControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((mode) => {
+            this.applyModeValidators(mode);
+            this.currentQueryKey = null;
+            this.triggerFilter();
+        });
+
+        this.dateControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
+            if (this.modeControl.value === EVALUACION_SEARCH_MODE.Date) {
+                this.triggerFilter();
+            }
+        });
+
+        this.rangeGroup.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
+            if (this.modeControl.value === EVALUACION_SEARCH_MODE.Range) {
+                this.triggerFilter();
+            }
+        });
+
+        this.applyModeValidators(this.modeControl.value, { emitEvent: false });
+        this.triggerFilter();
+    }
+
+    private applyModeValidators(mode: EvaluacionSearchMode, options: { emitEvent?: boolean } = {}): void {
+        const emitEvent = options.emitEvent ?? true;
+
+        if (mode === EVALUACION_SEARCH_MODE.Date) {
+            this.dateControl.addValidators(Validators.required);
+            this.dateControl.updateValueAndValidity({ emitEvent });
+
+            this.rangeStartControl.clearValidators();
+            this.rangeEndControl.clearValidators();
+            this.rangeStartControl.updateValueAndValidity({ emitEvent: false });
+            this.rangeEndControl.updateValueAndValidity({ emitEvent: false });
+        } else {
+            this.rangeStartControl.addValidators(Validators.required);
+            this.rangeEndControl.addValidators(Validators.required);
+            this.rangeStartControl.updateValueAndValidity({ emitEvent: false });
+            this.rangeEndControl.updateValueAndValidity({ emitEvent: false });
+
+            this.dateControl.clearValidators();
+        }
+
+        this.rangeGroup.updateValueAndValidity({ emitEvent: false });
+        if (mode !== EVALUACION_SEARCH_MODE.Date) {
+            this.dateControl.updateValueAndValidity({ emitEvent: false });
+        }
+    }
+
+    private triggerFilter(force = false): void {
+        const mode = this.modeControl.value;
+
+        if (mode === EVALUACION_SEARCH_MODE.Date) {
+            if (this.dateControl.invalid) {
+                this.currentQueryKey = null;
+                this.resetEvaluaciones();
+                return;
+            }
+
+            const fecha = this.toIsoDate(this.dateControl.value ?? null);
+            if (!fecha) {
+                this.currentQueryKey = null;
+                this.resetEvaluaciones();
+                return;
+            }
+
+            const key = `date_${fecha}`;
+            if (!force && key === this.currentQueryKey) {
+                return;
+            }
+
+            this.currentQueryKey = key;
+            this.loadEvaluacionesPorFecha(fecha);
+            return;
+        }
+
+        if (this.rangeGroup.invalid) {
+            this.currentQueryKey = null;
             this.resetEvaluaciones();
             return;
         }
 
-        if (this.dateRangeForm.invalid) {
-            this.currentRangeKey = null;
-            this.resetEvaluaciones();
-            return;
-        }
-
-        const desde = this.toIsoDate(start);
-        const hasta = this.toIsoDate(end);
+        const desde = this.toIsoDate(this.rangeStartControl.value ?? null);
+        const hasta = this.toIsoDate(this.rangeEndControl.value ?? null);
 
         if (!desde || !hasta) {
-            this.currentRangeKey = null;
+            this.currentQueryKey = null;
             this.resetEvaluaciones();
             return;
         }
 
-        const rangeKey = `${desde}_${hasta}`;
-        if (rangeKey === this.currentRangeKey) {
+        const key = `range_${desde}_${hasta}`;
+        if (!force && key === this.currentQueryKey) {
             return;
         }
 
-        this.currentRangeKey = rangeKey;
+        this.currentQueryKey = key;
         this.loadEvaluacionesPorFechaRango(desde, hasta);
     }
 
+    private loadEvaluacionesPorFecha(fecha: string): void {
+        this.loadEvaluaciones(
+            this.evaluacionProgramadasService.listByFechaInicio(fecha),
+            'Ocurrió un error al cargar las programaciones de la fecha seleccionada.'
+        );
+    }
+
     private loadEvaluacionesPorFechaRango(fechaDesde: string, fechaHasta: string): void {
+        this.loadEvaluaciones(
+            this.evaluacionProgramadasService.listByFechaInicioRange(fechaDesde, fechaHasta),
+            'Ocurrió un error al cargar las programaciones del rango seleccionado.'
+        );
+    }
+
+    private loadEvaluaciones(
+        source$: Observable<EvaluacionProgramada[]>,
+        fallbackErrorMessage: string
+    ): void {
         this.isLoadingEvaluaciones$.next(true);
 
-        this.evaluacionProgramadasService
-            .listByFechaInicioRange(fechaDesde, fechaHasta)
+        source$
             .pipe(
                 switchMap((evaluaciones) => {
                     if (!evaluaciones.length) {
                         this.evaluacionSecciones = new Map();
-                        return of([] as { evaluacion: EvaluacionProgramada; secciones: EvaluacionProgramadaSeccion[] }[]);
+                        return of([] as {
+                            evaluacion: EvaluacionProgramada;
+                            secciones: EvaluacionProgramadaSeccion[];
+                        }[]);
                     }
 
                     const detailRequests = evaluaciones.map((evaluacion) =>
@@ -318,13 +428,9 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
                 },
                 error: (error) => {
                     this.resetEvaluaciones();
-                    this.snackBar.open(
-                        error.message ?? 'Ocurrió un error al cargar las programaciones de la fecha.',
-                        'Cerrar',
-                        {
-                            duration: 5000,
-                        }
-                    );
+                    this.snackBar.open(error.message ?? fallbackErrorMessage, 'Cerrar', {
+                        duration: 5000,
+                    });
                 },
             });
     }
@@ -532,7 +638,7 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
                         }
 
                         if (result.action === 'created' || result.action === 'updated') {
-                            this.handlePostSaveRange(result.evaluacion.fechaInicio);
+                            this.handlePostSave(result.evaluacion.fechaInicio);
 
                             this.snackBar.open(
                                 result.action === 'created'
@@ -549,37 +655,47 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
         );
     }
 
-    private handlePostSaveRange(fechaInicio: string): void {
+    private handlePostSave(fechaInicio: string): void {
         const fecha = DateTime.fromISO(fechaInicio).startOf('day');
         if (!fecha.isValid) {
             return;
         }
 
-        const currentStart = this.dateRangeForm.value.start
-            ? DateTime.fromJSDate(this.dateRangeForm.value.start).startOf('day')
+        const mode = this.modeControl.value;
+        const targetDate = fecha.toJSDate();
+
+        if (mode === EVALUACION_SEARCH_MODE.Date) {
+            const currentDateIso = this.toIsoDate(this.dateControl.value ?? null);
+            const newDateIso = fecha.toISODate();
+
+            if (currentDateIso !== newDateIso) {
+                this.dateControl.setValue(targetDate, { emitEvent: true });
+                return;
+            }
+
+            this.triggerFilter(true);
+            return;
+        }
+
+        const currentStart = this.rangeStartControl.value
+            ? DateTime.fromJSDate(this.rangeStartControl.value).startOf('day')
             : null;
-        const currentEnd = this.dateRangeForm.value.end
-            ? DateTime.fromJSDate(this.dateRangeForm.value.end).startOf('day')
+        const currentEnd = this.rangeEndControl.value
+            ? DateTime.fromJSDate(this.rangeEndControl.value).startOf('day')
             : null;
 
         if (!currentStart || !currentEnd || fecha < currentStart || fecha > currentEnd) {
-            this.dateRangeForm.setValue(
+            this.rangeGroup.setValue(
                 {
-                    start: fecha.toJSDate(),
-                    end: fecha.toJSDate(),
+                    start: targetDate,
+                    end: targetDate,
                 },
                 { emitEvent: true }
             );
             return;
         }
 
-        const desde = this.toIsoDate(this.dateRangeForm.value.start ?? null);
-        const hasta = this.toIsoDate(this.dateRangeForm.value.end ?? null);
-        if (!desde || !hasta) {
-            return;
-        }
-
-        this.loadEvaluacionesPorFechaRango(desde, hasta);
+        this.triggerFilter(true);
     }
 
 }
