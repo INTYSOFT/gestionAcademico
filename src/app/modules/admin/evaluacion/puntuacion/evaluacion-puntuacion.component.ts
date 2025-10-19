@@ -29,7 +29,10 @@ import { EvaluacionProgramada } from 'app/core/models/centro-estudios/evaluacion
 import { EvaluacionProgramadaSeccion } from 'app/core/models/centro-estudios/evaluacion-programada-seccion.model';
 import { Seccion } from 'app/core/models/centro-estudios/seccion.model';
 import { TipoEvaluacion } from 'app/core/models/centro-estudios/tipo-evaluacion.model';
-import { EvaluacionDetalle } from 'app/core/models/centro-estudios/evaluacion-detalle.model';
+import {
+    EvaluacionDetalle,
+    type CreateEvaluacionDetallePayload,
+} from 'app/core/models/centro-estudios/evaluacion-detalle.model';
 import { EvaluacionProgramadasService } from 'app/core/services/centro-estudios/evaluacion-programadas.service';
 import { EvaluacionProgramadaSeccionesService } from 'app/core/services/centro-estudios/evaluacion-programada-secciones.service';
 import { SeccionesService } from 'app/core/services/centro-estudios/secciones.service';
@@ -459,22 +462,52 @@ export class EvaluacionPuntuacionComponent implements OnInit {
         sourceTab: EvaluacionSeccionTabView,
         evaluacionProgramadaId: number
     ): void {
-        const payloads = sourceTab.detalles.map((detalle) => ({
-            evaluacionProgramadaId,
-            seccionId: targetTab.seccionId,
-            rangoInicio: detalle.rangoInicio,
-            rangoFin: detalle.rangoFin,
-            valorBuena: detalle.valorBuena,
-            valorMala: detalle.valorMala,
-            valorBlanca: detalle.valorBlanca,
-            observacion: detalle.observacion,
-            activo: detalle.activo,
-        }));
+        const existingRangeKeys = new Set(
+            targetTab.detalles.map((detalle) =>
+                this.buildDetalleRangeKey(detalle.rangoInicio, detalle.rangoFin)
+            )
+        );
+
+        const payloads: CreateEvaluacionDetallePayload[] = [];
+        const duplicatedRanges: string[] = [];
+
+        for (const detalle of sourceTab.detalles) {
+            const rangeKey = this.buildDetalleRangeKey(detalle.rangoInicio, detalle.rangoFin);
+
+            if (existingRangeKeys.has(rangeKey)) {
+                duplicatedRanges.push(this.formatDetalleRangeLabel(detalle.rangoInicio, detalle.rangoFin));
+                continue;
+            }
+
+            existingRangeKeys.add(rangeKey);
+            payloads.push({
+                evaluacionProgramadaId,
+                seccionId: targetTab.seccionId,
+                rangoInicio: detalle.rangoInicio,
+                rangoFin: detalle.rangoFin,
+                valorBuena: detalle.valorBuena,
+                valorMala: detalle.valorMala,
+                valorBlanca: detalle.valorBlanca,
+                observacion: detalle.observacion,
+                activo: detalle.activo,
+            });
+        }
+
+        const duplicateMessage =
+            duplicatedRanges.length > 0
+                ? duplicatedRanges.length === 1
+                    ? `El rango ${duplicatedRanges[0]} ya existe en la sección seleccionada y no se importó.`
+                    : `Los rangos ${duplicatedRanges.join(', ')} ya existen en la sección seleccionada y no se importaron.`
+                : null;
 
         if (payloads.length === 0) {
-            this.snackBar.open('No hay detalles para importar.', 'Cerrar', {
-                duration: 4000,
-            });
+            this.snackBar.open(
+                duplicateMessage ?? 'No hay detalles para importar.',
+                'Cerrar',
+                {
+                    duration: 5000,
+                }
+            );
             return;
         }
 
@@ -484,8 +517,18 @@ export class EvaluacionPuntuacionComponent implements OnInit {
             .pipe(finalize(() => this.isLoadingDetallesSubject.next(false)))
             .subscribe({
                 next: () => {
-                    this.snackBar.open('Detalles importados correctamente.', 'Cerrar', {
-                        duration: 4000,
+                    const messageParts = [
+                        payloads.length === 1
+                            ? 'Detalle importado correctamente.'
+                            : 'Detalles importados correctamente.',
+                    ];
+
+                    if (duplicateMessage) {
+                        messageParts.push(duplicateMessage);
+                    }
+
+                    this.snackBar.open(messageParts.join(' '), 'Cerrar', {
+                        duration: duplicateMessage ? 8000 : 4000,
                     });
                     this.reloadDetalles();
                 },
@@ -496,6 +539,14 @@ export class EvaluacionPuntuacionComponent implements OnInit {
                     );
                 },
             });
+    }
+
+    private buildDetalleRangeKey(rangoInicio: number, rangoFin: number): string {
+        return `${rangoInicio}-${rangoFin}`;
+    }
+
+    private formatDetalleRangeLabel(rangoInicio: number, rangoFin: number): string {
+        return `${rangoInicio}-${rangoFin}`;
     }
 
     private loadTipoEvaluacion(tipoEvaluacionId: number): void {
