@@ -180,6 +180,10 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
             }),
         });
 
+        if (this.data.mode === 'create') {
+            this.form.controls['estadoId'].setValue(1);
+        }
+
         this.form.setValidators(this.horarioValidator.bind(this));
 
         this.handleSubmitStream();
@@ -450,11 +454,10 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
         const tipoEvaluacionId = this.form.controls['tipoEvaluacionId'].value;
         const sedeId = this.form.controls['sedeId'].value;
         const cicloId = this.form.controls['cicloId'].value;
-        //estadoId, si es null o undefined, se envía como 1
-        let estadoId = this.form.controls['estadoId'].value;
-        if (estadoId === null || estadoId === undefined) {
-            estadoId = 1;
-        }
+        const estadoId =
+            this.data.mode === 'create'
+                ? 1
+                : this.form.controls['estadoId'].value ?? 1;
 
         const fechaInicioDate = this.form.controls['fechaInicio'].value as
             | DateTime
@@ -491,7 +494,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
             tipoEvaluacionId,
             sedeId,
             cicloId: cicloId ?? null,
-            estadoId: estadoId ?? 1,
+            estadoId,
             fechaInicio,
             horaInicio: horaInicioNormalized,
             horaFin: horaFinNormalized,
