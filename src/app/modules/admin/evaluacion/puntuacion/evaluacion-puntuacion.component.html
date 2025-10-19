@@ -257,6 +257,16 @@
                                                                                 >
                                                                                     <mat-icon>edit</mat-icon>
                                                                                 </button>
+                                                                                <button
+                                                                                    mat-icon-button
+                                                                                    type="button"
+                                                                                    color="warn"
+                                                                                    matTooltip="Eliminar detalle"
+                                                                                    (click)="confirmDeleteDetalle(detalle)"
+                                                                                    [disabled]="isLoadingDetalles$ | async"
+                                                                                >
+                                                                                    <mat-icon>delete</mat-icon>
+                                                                                </button>
                                                                             </td>
                                                                         </tr>
                                                                     </tbody>

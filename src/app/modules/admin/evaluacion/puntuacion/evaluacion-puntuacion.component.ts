@@ -44,6 +44,7 @@ import {
     EvaluacionDetalleImportDialogComponent,
     EvaluacionDetalleImportDialogResult,
 } from './evaluacion-detalle-import-dialog/evaluacion-detalle-import-dialog.component';
+import { FuseConfirmationService } from '@fuse/services/confirmation';
 
 interface EvaluacionSeccionTabView {
     key: string;
@@ -130,7 +131,8 @@ export class EvaluacionPuntuacionComponent implements OnInit {
         private readonly seccionesService: SeccionesService,
         private readonly tipoEvaluacionesService: TipoEvaluacionesService,
         private readonly snackBar: MatSnackBar,
-        private readonly dialog: MatDialog
+        private readonly dialog: MatDialog,
+        private readonly confirmationService: FuseConfirmationService
     ) {
         this.dateControl.valueChanges
             .pipe(takeUntilDestroyed(this.destroyRef))
@@ -335,6 +337,40 @@ export class EvaluacionPuntuacionComponent implements OnInit {
         dialogRef.afterClosed().subscribe((result) => {
             if (result?.action === 'updated') {
                 this.reloadDetalles();
+            }
+        });
+    }
+
+    protected confirmDeleteDetalle(detalle: EvaluacionDetalle): void {
+        const rangeLabel = this.formatDetalleRangeLabel(
+            detalle.rangoInicio,
+            detalle.rangoFin
+        );
+
+        const dialogRef = this.confirmationService.open({
+            title: 'Eliminar detalle',
+            message: `¿Estás seguro de que deseas eliminar el rango <strong>${rangeLabel}</strong>? Esta acción no se puede deshacer.`,
+            icon: {
+                show: true,
+                name: 'heroicons_outline:trash',
+                color: 'warn',
+            },
+            actions: {
+                confirm: {
+                    show: true,
+                    label: 'Eliminar',
+                    color: 'warn',
+                },
+                cancel: {
+                    show: true,
+                    label: 'Cancelar',
+                },
+            },
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+            if (result === 'confirmed') {
+                this.deleteDetalle(detalle.id);
             }
         });
     }
@@ -659,5 +695,26 @@ export class EvaluacionPuntuacionComponent implements OnInit {
         this.snackBar.open(message, 'Cerrar', {
             duration: 5000,
         });
+    }
+
+    private deleteDetalle(detalleId: number): void {
+        this.isLoadingDetallesSubject.next(true);
+
+        this.evaluacionDetallesService
+            .delete(detalleId)
+            .pipe(finalize(() => this.isLoadingDetallesSubject.next(false)))
+            .subscribe({
+                next: () => {
+                    this.snackBar.open('Detalle eliminado correctamente.', 'Cerrar', {
+                        duration: 4000,
+                    });
+                    this.reloadDetalles();
+                },
+                error: (error) => {
+                    this.showError(
+                        error.message ?? 'No fue posible eliminar el detalle de la evaluación.'
+                    );
+                },
+            });
     }
 }
