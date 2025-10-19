@@ -2,15 +2,18 @@
     display: flex;
     flex-direction: column;
     gap: 2.4rem;
+    height: 100%;
     padding: 2.4rem;
+    box-sizing: border-box;
+    overflow: auto;
 }
 
 .header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 1.6rem;
-    flex-wrap: wrap;
 
     &__titles {
         display: flex;
@@ -38,88 +41,42 @@
 }
 
 .content {
-    padding: 0;
-
-    &__layout {
-        display: grid;
-        grid-template-columns: minmax(260px, 320px) 1fr;
-        gap: 2.4rem;
-    }
-
-    &__sidebar {
-        border-right: 1px solid rgba(0, 0, 0, 0.08);
-        padding: 2rem 2.4rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1.6rem;
-    }
-
-    &__main {
-        padding: 2rem 2.4rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1.6rem;
-    }
-}
-
-.sidebar {
-    &__header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1.2rem;
-    }
-
-    &__title {
-        margin: 0;
-        font-size: 1.6rem;
-        font-weight: 600;
-    }
-
-    &__spinner {
-        --mdc-circular-progress-active-indicator-color: #3f51b5;
-    }
-
-    &__empty {
-        margin: 0;
-        color: rgba(0, 0, 0, 0.54);
-        font-style: italic;
-    }
-}
-
-.fecha-selector {
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
+    gap: 2.4rem;
+    padding: 2.4rem;
+    box-sizing: border-box;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(4px);
+}
 
-    &__option {
-        align-items: flex-start;
-        padding: 0.8rem 1rem;
-        border-radius: 0.8rem;
-        transition: background-color 200ms ease;
+.filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.6rem;
 
-        &:hover {
-            background-color: rgba(63, 81, 181, 0.08);
-        }
-
-        .mdc-form-field {
-            width: 100%;
-        }
+    &__controls {
+        display: contents;
     }
 
-    &__label {
-        display: block;
-        font-weight: 600;
+    &__field {
+        width: 100%;
     }
 
-    &__value {
-        display: block;
+    &__error {
+        grid-column: 1 / -1;
         font-size: 1.2rem;
-        color: rgba(0, 0, 0, 0.54);
+        margin: -0.4rem 0 0;
     }
 }
 
-.main {
+.schedule {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+    flex: 1;
+
     &__header {
         display: flex;
         align-items: center;
@@ -134,7 +91,7 @@
 
     &__body {
         position: relative;
-        min-height: 280px;
+        min-height: 320px;
         display: flex;
         flex-direction: column;
         gap: 1.6rem;
@@ -146,21 +103,20 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: rgba(255, 255, 255, 0.72);
+        background-color: rgba(255, 255, 255, 0.78);
+        backdrop-filter: blur(2px);
         z-index: 1;
     }
 
     &__empty {
+        text-align: center;
         color: rgba(0, 0, 0, 0.54);
         font-style: italic;
-        text-align: center;
         padding: 1.6rem 0;
     }
 }
 
 .program-tree {
-    --node-gap: 0.8rem;
-
     .tree-node {
         display: flex;
         align-items: flex-start;
@@ -178,13 +134,17 @@
         }
 
         &--child {
-            padding-left: 3.8rem;
+            padding-left: 3.6rem;
         }
 
         &--info {
             .tree-node__title {
                 color: rgba(0, 0, 0, 0.6);
             }
+        }
+
+        &__bullet {
+            color: rgba(63, 81, 181, 0.8);
         }
 
         &__content {
@@ -203,39 +163,29 @@
 
         &__title {
             font-weight: 600;
-            font-size: 1.5rem;
         }
 
         &__subtitle {
-            color: rgba(0, 0, 0, 0.6);
             font-size: 1.3rem;
+            color: rgba(0, 0, 0, 0.65);
         }
 
         &__actions {
             display: flex;
+            align-items: center;
             gap: 0.4rem;
-        }
-
-        &__bullet {
-            margin-top: 0.3rem;
-            color: rgba(63, 81, 181, 0.8);
-        }
-
-        &__children {
-            margin-left: 2.8rem;
-            border-left: 2px solid rgba(0, 0, 0, 0.06);
-            padding-left: 1.6rem;
         }
     }
 }
 
 @media (max-width: 960px) {
-    .content__layout {
-        grid-template-columns: 1fr;
+    .content {
+        padding: 1.6rem;
     }
 
-    .content__sidebar {
-        border-right: none;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    .schedule {
+        &__body {
+            min-height: 260px;
+        }
     }
 }
