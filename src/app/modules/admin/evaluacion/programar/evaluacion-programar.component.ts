@@ -1,4 +1,4 @@
-import { AsyncPipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase, NgSwitchDefault } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -128,6 +128,9 @@ function validateDateRange(control: AbstractControl): ValidationErrors | null {
         NgClass,
         NgFor,
         NgIf,
+        NgSwitch,
+        NgSwitchCase,
+        NgSwitchDefault,
         ReactiveFormsModule,
         MatButtonModule,
         MatButtonToggleModule,
