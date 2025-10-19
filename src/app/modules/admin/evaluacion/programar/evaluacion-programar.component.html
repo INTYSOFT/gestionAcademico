@@ -123,11 +123,30 @@
                                             class="tree-node tree-node--child"
                                             [ngClass]="{ 'tree-node--info': node.status === 'info' }"
                                         >
-                                            <mat-icon class="tree-node__bullet">
-                                                {{ node.status === 'info' ? 'info' : 'label_important' }}
+                                            <mat-icon
+                                                *ngIf="node.leadingIcon"
+                                                class="tree-node__bullet"
+                                                [ngClass]="node.leadingIcon.classes ?? []"
+                                                [matTooltip]="node.leadingIcon.tooltip ?? ''"
+                                                [matTooltipDisabled]="!node.leadingIcon.tooltip"
+                                                [attr.aria-label]="node.leadingIcon.ariaLabel ?? null"
+                                            >
+                                                {{ node.leadingIcon.name }}
                                             </mat-icon>
                                             <div class="tree-node__content">
-                                                <span class="tree-node__title">{{ node.title }}</span>
+                                                <div class="tree-node__title-row">
+                                                    <span class="tree-node__title">{{ node.title }}</span>
+                                                    <mat-icon
+                                                        *ngIf="node.trailingIcon"
+                                                        class="tree-node__status-icon"
+                                                        [ngClass]="node.trailingIcon.classes ?? []"
+                                                        [matTooltip]="node.trailingIcon.tooltip ?? ''"
+                                                        [matTooltipDisabled]="!node.trailingIcon.tooltip"
+                                                        [attr.aria-label]="node.trailingIcon.ariaLabel ?? null"
+                                                    >
+                                                        {{ node.trailingIcon.name }}
+                                                    </mat-icon>
+                                                </div>
                                                 <div class="tree-node__subtitle" *ngFor="let line of node.subtitleLines">
                                                     {{ line }}
                                                 </div>
