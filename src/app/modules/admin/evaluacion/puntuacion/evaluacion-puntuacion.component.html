@@ -119,28 +119,12 @@
                                                 >
                                                     {{ tipoEvaluacion.nombre }}
                                                 </span>
-                                                <button
-                                                    mat-stroked-button
-                                                    color="primary"
-                                                    type="button"
-                                                    (click)="openTipoEvaluacionDialog(tipoEvaluacion)"
-                                                >
-                                                    Editar tipo
-                                                </button>
                                             </ng-container>
                                         </ng-template>
                                         <ng-template #tipoEvaluacionNoDisponible>
                                             <span class="text-sm text-gray-500">Tipo de evaluación no disponible.</span>
                                         </ng-template>
                                     </div>
-                                    <button
-                                        mat-flat-button
-                                        color="primary"
-                                        type="button"
-                                        (click)="openTipoEvaluacionDialog(null)"
-                                    >
-                                        Nuevo tipo
-                                    </button>
                                 </div>
                             </div>
                             <mat-divider></mat-divider>
@@ -172,7 +156,15 @@
                                                     [label]="tab.label"
                                                 >
                                                     <div class="mt-4 flex flex-col gap-4">
-                                                        <div class="flex justify-end">
+                                                        <div class="flex flex-wrap justify-end gap-2">
+                                                            <button
+                                                                mat-stroked-button
+                                                                type="button"
+                                                                (click)="openDetalleImportDialog(tab)"
+                                                                [disabled]="!canImportDetalles(tab)"
+                                                            >
+                                                                Importar detalles
+                                                            </button>
                                                             <button
                                                                 mat-stroked-button
                                                                 color="primary"

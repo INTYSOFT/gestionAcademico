@@ -22,7 +22,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatNativeDateModule } from '@angular/material/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { BehaviorSubject, combineLatest } from 'rxjs';
+import { BehaviorSubject, combineLatest, forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { DateTime } from 'luxon';
 import { EvaluacionProgramada } from 'app/core/models/centro-estudios/evaluacion-programada.model';
@@ -35,10 +35,12 @@ import { EvaluacionProgramadaSeccionesService } from 'app/core/services/centro-e
 import { SeccionesService } from 'app/core/services/centro-estudios/secciones.service';
 import { TipoEvaluacionesService } from 'app/core/services/centro-estudios/tipo-evaluaciones.service';
 import { EvaluacionDetallesService } from 'app/core/services/centro-estudios/evaluacion-detalles.service';
-import { TipoEvaluacionFormDialogComponent } from '../tipo-evaluacion/tipo-evaluacion-form-dialog/tipo-evaluacion-form-dialog.component';
-import type { TipoEvaluacionFormDialogResult } from '../tipo-evaluacion/tipo-evaluacion-form-dialog/tipo-evaluacion-form-dialog.component';
 import { EvaluacionDetalleFormDialogComponent } from './evaluacion-detalle-form-dialog/evaluacion-detalle-form-dialog.component';
 import type { EvaluacionDetalleFormDialogResult } from './evaluacion-detalle-form-dialog/evaluacion-detalle-form-dialog.component';
+import {
+    EvaluacionDetalleImportDialogComponent,
+    EvaluacionDetalleImportDialogResult,
+} from './evaluacion-detalle-import-dialog/evaluacion-detalle-import-dialog.component';
 
 interface EvaluacionSeccionTabView {
     key: string;
@@ -212,24 +214,6 @@ export class EvaluacionPuntuacionComponent implements OnInit {
         return parsed.toFormat('dd/MM/yyyy');
     }
 
-    protected openTipoEvaluacionDialog(tipoEvaluacion: TipoEvaluacion | null): void {
-        const dialogRef = this.dialog.open<TipoEvaluacionFormDialogComponent, { tipoEvaluacion: TipoEvaluacion | null }, TipoEvaluacionFormDialogResult>(
-            TipoEvaluacionFormDialogComponent,
-            {
-                width: '520px',
-                data: {
-                    tipoEvaluacion,
-                },
-            }
-        );
-
-        dialogRef.afterClosed().subscribe((result) => {
-            if (result?.action === 'updated') {
-                this.tipoEvaluacionSubject.next(result.tipoEvaluacion);
-            }
-        });
-    }
-
     protected openDetalleDialogForCreate(tab: EvaluacionSeccionTabView): void {
         const evaluacion = this.selectedEvaluacionSubject.value;
         if (!evaluacion) {
@@ -260,6 +244,64 @@ export class EvaluacionPuntuacionComponent implements OnInit {
                 this.reloadDetalles();
             }
         });
+    }
+
+    protected openDetalleImportDialog(targetTab: EvaluacionSeccionTabView): void {
+        const evaluacion = this.selectedEvaluacionSubject.value;
+        if (!evaluacion) {
+            return;
+        }
+
+        const sourceTabs = this.seccionTabsSubject.value.filter(
+            (tab) => tab.key !== targetTab.key && tab.detalles.length > 0
+        );
+
+        if (sourceTabs.length === 0) {
+            this.snackBar.open(
+                'No hay secciones con detalles disponibles para importar.',
+                'Cerrar',
+                {
+                    duration: 4000,
+                }
+            );
+            return;
+        }
+
+        const dialogRef = this.dialog.open<
+            EvaluacionDetalleImportDialogComponent,
+            {
+                targetTabLabel: string;
+                sources: { key: string; label: string; detallesCount: number }[];
+            },
+            EvaluacionDetalleImportDialogResult
+        >(EvaluacionDetalleImportDialogComponent, {
+            width: '420px',
+            data: {
+                targetTabLabel: targetTab.label,
+                sources: sourceTabs.map((tab) => ({
+                    key: tab.key,
+                    label: tab.label,
+                    detallesCount: tab.detalles.length,
+                })),
+            },
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+            if (result?.action === 'import') {
+                const sourceTab = sourceTabs.find((tab) => tab.key === result.sourceKey);
+                if (!sourceTab) {
+                    return;
+                }
+
+                this.importDetallesFromTab(targetTab, sourceTab, evaluacion.id);
+            }
+        });
+    }
+
+    protected canImportDetalles(tab: EvaluacionSeccionTabView): boolean {
+        return this.seccionTabsSubject.value.some(
+            (other) => other.key !== tab.key && other.detalles.length > 0
+        );
     }
 
     protected openDetalleDialogForEdit(detalle: EvaluacionDetalle): void {
@@ -410,6 +452,50 @@ export class EvaluacionPuntuacionComponent implements OnInit {
         }
 
         this.loadDetalles(evaluacion.id);
+    }
+
+    private importDetallesFromTab(
+        targetTab: EvaluacionSeccionTabView,
+        sourceTab: EvaluacionSeccionTabView,
+        evaluacionProgramadaId: number
+    ): void {
+        const payloads = sourceTab.detalles.map((detalle) => ({
+            evaluacionProgramadaId,
+            seccionId: targetTab.seccionId,
+            rangoInicio: detalle.rangoInicio,
+            rangoFin: detalle.rangoFin,
+            valorBuena: detalle.valorBuena,
+            valorMala: detalle.valorMala,
+            valorBlanca: detalle.valorBlanca,
+            observacion: detalle.observacion,
+            activo: detalle.activo,
+        }));
+
+        if (payloads.length === 0) {
+            this.snackBar.open('No hay detalles para importar.', 'Cerrar', {
+                duration: 4000,
+            });
+            return;
+        }
+
+        this.isLoadingDetallesSubject.next(true);
+
+        forkJoin(payloads.map((payload) => this.evaluacionDetallesService.create(payload)))
+            .pipe(finalize(() => this.isLoadingDetallesSubject.next(false)))
+            .subscribe({
+                next: () => {
+                    this.snackBar.open('Detalles importados correctamente.', 'Cerrar', {
+                        duration: 4000,
+                    });
+                    this.reloadDetalles();
+                },
+                error: (error) => {
+                    this.showError(
+                        error.message ??
+                            'No fue posible importar los detalles seleccionados.'
+                    );
+                },
+            });
     }
 
     private loadTipoEvaluacion(tipoEvaluacionId: number): void {
