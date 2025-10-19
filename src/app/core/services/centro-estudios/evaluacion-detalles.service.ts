@@ -82,6 +82,15 @@ export class EvaluacionDetallesService extends ApiMainService {
         );
     }
 
+    delete(id: number): Observable<void> {
+        return this.http
+            .delete<void>(
+                this.buildUrl(`${this.resourcePath}/${id}`),
+                this.createOptions()
+            )
+            .pipe(catchError((error) => this.handleError(error)));
+    }
+
     private getEvaluacionDetalle(id: number): Observable<EvaluacionDetalle> {
         return this.get<EvaluacionDetalleApi>(`${this.resourcePath}/${id}`).pipe(
             map((response) => this.normalizeEvaluacionDetalleOrThrow(response))
