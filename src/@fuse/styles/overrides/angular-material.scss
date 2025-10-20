@@ -1112,6 +1112,18 @@
     }
 }
 
+.cdk-overlay-container {
+    .mat-mdc-select-panel {
+        --mat-select-panel-background-color: var(--fuse-bg-card) !important;
+        --mat-select-panel-color: var(--fuse-text-default) !important;
+        @apply bg-card text-default shadow-lg #{'!important'};
+
+        .mat-mdc-option {
+            @apply text-default #{'!important'};
+        }
+    }
+}
+
 /* -------------------------------------------------------------------------- */
 /*  @ Slide Toggle
 /* -------------------------------------------------------------------------- */
