@@ -27,6 +27,47 @@ interface EvaluacionDetalleApi extends Partial<EvaluacionDetalle> {
     UsuaraioActualizacionId?: number | string | null;
 }
 
+export function parseEvaluacionDetalleNumber(value: unknown): number | null {
+    if (value === null || value === undefined) {
+        return null;
+    }
+
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : null;
+    }
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+
+        if (!trimmed) {
+            return null;
+        }
+
+        let sanitized = trimmed
+            .replace(/\u00a0/g, '')
+            .replace(/\s+/g, '');
+
+        const lastCommaIndex = sanitized.lastIndexOf(',');
+        const lastDotIndex = sanitized.lastIndexOf('.');
+
+        if (lastCommaIndex > -1 && lastDotIndex > -1) {
+            if (lastCommaIndex > lastDotIndex) {
+                sanitized = sanitized.replace(/\./g, '').replace(',', '.');
+            } else {
+                sanitized = sanitized.replace(/,/g, '');
+            }
+        } else if (lastCommaIndex > -1) {
+            sanitized = sanitized.replace(/,/g, '.');
+        }
+
+        const parsed = Number(sanitized);
+
+        return Number.isNaN(parsed) ? null : parsed;
+    }
+
+    return null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class EvaluacionDetallesService extends ApiMainService {
     private readonly resourcePath = CENTRO_ESTUDIOS_API.evaluacionDetalles;
@@ -241,20 +282,7 @@ export class EvaluacionDetallesService extends ApiMainService {
     }
 
     private coerceNumber(value: unknown): number | null {
-        if (value === null || value === undefined) {
-            return null;
-        }
-
-        if (typeof value === 'number' && !Number.isNaN(value)) {
-            return value;
-        }
-
-        if (typeof value === 'string' && value.trim().length > 0) {
-            const parsed = Number(value);
-            return Number.isNaN(parsed) ? null : parsed;
-        }
-
-        return null;
+        return parseEvaluacionDetalleNumber(value);
     }
 
     private coerceOptionalNumber(value: unknown): number | null {
