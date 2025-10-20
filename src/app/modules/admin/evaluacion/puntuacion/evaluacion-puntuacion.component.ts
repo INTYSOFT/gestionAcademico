@@ -6,6 +6,7 @@ import {
     DestroyRef,
     ElementRef,
     OnInit,
+    TrackByFunction,
     ViewChild,
     ViewEncapsulation,
     inject,
@@ -94,8 +95,10 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         validators: [Validators.required],
     });
 
-    protected readonly trackByEvaluacion = (_: number, evaluacion: EvaluacionProgramada) =>
-        evaluacion.id;
+    protected readonly trackByEvaluacion: TrackByFunction<EvaluacionProgramada> = (
+        _,
+        evaluacion
+    ) => this.buildEvaluacionTrackKey(evaluacion);
     protected readonly trackByTab = (_: number, tab: EvaluacionSeccionTabView) => tab.key;
     protected readonly trackByDetalle = (_: number, detalle: EvaluacionDetalle) => detalle.id;
 
@@ -332,6 +335,21 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         const ciclo = this.getCicloNombre(evaluacion.cicloId);
 
         return `Sede: ${sede} · Ciclo: ${ciclo}`;
+    }
+
+    private buildEvaluacionTrackKey(evaluacion: EvaluacionProgramada): string {
+        if (evaluacion.id !== null && evaluacion.id !== undefined) {
+            return `evaluacion-${evaluacion.id}`;
+        }
+
+        const fallbackParts = [
+            evaluacion.fechaInicio ?? 'sin-fecha',
+            evaluacion.horaInicio ?? 'sin-hora-inicio',
+            evaluacion.horaFin ?? 'sin-hora-fin',
+            evaluacion.nombre ?? 'sin-nombre',
+        ];
+
+        return `evaluacion-${fallbackParts.join('|')}`;
     }
 
     protected getSedeLabel(evaluacion: EvaluacionProgramada): string {
