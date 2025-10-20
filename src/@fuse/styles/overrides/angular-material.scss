@@ -1126,6 +1126,30 @@
             @apply text-default #{'!important'};
         }
     }
+
+    .mat-datepicker-content {
+        --mat-datepicker-calendar-container-background-color: var(
+            --fuse-bg-card
+        ) !important;
+        --mat-datepicker-calendar-text-color: var(
+            --fuse-text-default
+        ) !important;
+
+        border-radius: 0.75rem;
+        @apply bg-card text-default shadow-lg #{'!important'};
+
+        .mat-calendar {
+            background-color: inherit !important;
+            color: inherit !important;
+        }
+
+        .mat-calendar-table,
+        .mat-calendar-body,
+        .mat-calendar-body-cell-content {
+            background-color: inherit !important;
+            color: inherit !important;
+        }
+    }
 }
 
 /* -------------------------------------------------------------------------- */
