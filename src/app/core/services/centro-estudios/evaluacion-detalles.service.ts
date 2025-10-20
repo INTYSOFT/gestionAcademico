@@ -13,6 +13,7 @@ interface EvaluacionDetalleApi extends Partial<EvaluacionDetalle> {
     Id?: number | string;
     EvaluacionProgramadaId?: number | string;
     SeccionId?: number | string | null;
+    EvaluacionTipoPreguntaId?: number | string | null;
     RangoInicio?: number | string;
     RangoFin?: number | string;
     ValorBuena?: number | string;
@@ -153,6 +154,11 @@ export class EvaluacionDetallesService extends ApiMainService {
             normalized.SeccionId = payload.seccionId;
         }
 
+        if (payload.evaluacionTipoPreguntaId !== undefined) {
+            normalized.evaluacionTipoPreguntaId = payload.evaluacionTipoPreguntaId;
+            normalized.EvaluacionTipoPreguntaId = payload.evaluacionTipoPreguntaId;
+        }
+
         if (payload.rangoInicio !== undefined) {
             normalized.rangoInicio = payload.rangoInicio;
             normalized.RangoInicio = payload.rangoInicio;
@@ -236,6 +242,9 @@ export class EvaluacionDetallesService extends ApiMainService {
             id,
             evaluacionProgramadaId,
             seccionId: this.coerceOptionalNumber(raw.seccionId ?? raw.SeccionId),
+            evaluacionTipoPreguntaId: this.coerceOptionalNumber(
+                raw.evaluacionTipoPreguntaId ?? raw.EvaluacionTipoPreguntaId
+            ),
             rangoInicio,
             rangoFin,
             valorBuena,

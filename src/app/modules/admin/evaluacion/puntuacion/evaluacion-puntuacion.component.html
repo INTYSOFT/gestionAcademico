@@ -214,6 +214,9 @@
                                             Valor en blanco
                                           </th>
                                           <th class="px-4 py-3 text-left font-medium text-gray-600">
+                                            Tipo de pregunta
+                                          </th>
+                                          <th class="px-4 py-3 text-left font-medium text-gray-600">
                                             Observación
                                           </th>
                                           <th class="px-4 py-3 text-center font-medium text-gray-600">
@@ -243,6 +246,13 @@
                                             </td>
                                             <td class="px-4 py-3">
                                               {{ detalle.valorBlanca | number: '1.2-2' }}
+                                            </td>
+                                            <td class="px-4 py-3">
+                                              {{
+                                                getEvaluacionTipoPreguntaLabel(
+                                                  detalle.evaluacionTipoPreguntaId
+                                                )
+                                              }}
                                             </td>
                                             <td class="px-4 py-3">
                                               @if (detalle.observacion) {

@@ -43,6 +43,8 @@ import { EvaluacionProgramadaSeccionesService } from 'app/core/services/centro-e
 import { SeccionesService } from 'app/core/services/centro-estudios/secciones.service';
 import { TipoEvaluacionesService } from 'app/core/services/centro-estudios/tipo-evaluaciones.service';
 import { EvaluacionDetallesService } from 'app/core/services/centro-estudios/evaluacion-detalles.service';
+import { EvaluacionTipoPregunta } from 'app/core/models/centro-estudios/evaluacion-tipo-pregunta.model';
+import { EvaluacionTipoPreguntasService } from 'app/core/services/centro-estudios/evaluacion-tipo-preguntas.service';
 import { EvaluacionDetalleFormDialogComponent } from './evaluacion-detalle-form-dialog/evaluacion-detalle-form-dialog.component';
 import type { EvaluacionDetalleFormDialogResult } from './evaluacion-detalle-form-dialog/evaluacion-detalle-form-dialog.component';
 import {
@@ -112,6 +114,9 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     private readonly evaluacionDetallesSubject = new BehaviorSubject<EvaluacionDetalle[]>([]);
     private readonly seccionTabsSubject = new BehaviorSubject<EvaluacionSeccionTabView[]>([]);
     private readonly tipoEvaluacionSubject = new BehaviorSubject<TipoEvaluacion | null>(null);
+    private readonly evaluacionTipoPreguntasSubject = new BehaviorSubject<
+        EvaluacionTipoPregunta[]
+    >([]);
 
     private readonly isLoadingEvaluacionesSubject = new BehaviorSubject<boolean>(false);
     private readonly isLoadingSeccionesSubject = new BehaviorSubject<boolean>(false);
@@ -124,6 +129,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
     private readonly sedeNombreMap = new Map<number, string>();
     private readonly cicloNombreMap = new Map<number, string>();
+    private readonly evaluacionTipoPreguntaNombreMap = new Map<number, string>();
 
     @ViewChild('evaluacionesListContainer', { static: true })
     private readonly evaluacionesListContainer?: ElementRef<HTMLDivElement>;
@@ -151,6 +157,8 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     protected readonly selectedEvaluacion$ = this.selectedEvaluacionSubject.asObservable();
     protected readonly seccionTabs$ = this.seccionTabsSubject.asObservable();
     protected readonly tipoEvaluacion$ = this.tipoEvaluacionSubject.asObservable();
+    protected readonly evaluacionTipoPreguntas$ =
+        this.evaluacionTipoPreguntasSubject.asObservable();
 
     protected readonly isLoadingEvaluaciones$ = this.isLoadingEvaluacionesSubject.asObservable();
     protected readonly isLoadingSecciones$ = this.isLoadingSeccionesSubject.asObservable();
@@ -164,6 +172,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         private readonly evaluacionProgramadasService: EvaluacionProgramadasService,
         private readonly evaluacionProgramadaSeccionesService: EvaluacionProgramadaSeccionesService,
         private readonly evaluacionDetallesService: EvaluacionDetallesService,
+        private readonly evaluacionTipoPreguntasService: EvaluacionTipoPreguntasService,
         private readonly seccionesService: SeccionesService,
         private readonly tipoEvaluacionesService: TipoEvaluacionesService,
         private readonly sedeService: SedeService,
@@ -198,6 +207,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         this.loadSeccionesCatalog();
         this.loadSedesCatalog();
         this.loadCiclosCatalog();
+        this.loadEvaluacionTipoPreguntas();
 
         const initialDate = this.dateControl.value ?? new Date();
         this.dateControl.setValue(initialDate, { emitEvent: false });
@@ -360,6 +370,19 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         return this.getCicloNombre(evaluacion.cicloId);
     }
 
+    protected getEvaluacionTipoPreguntaLabel(
+        evaluacionTipoPreguntaId: number | null | undefined
+    ): string {
+        if (evaluacionTipoPreguntaId === null || evaluacionTipoPreguntaId === undefined) {
+            return 'Sin tipo asignado';
+        }
+
+        return (
+            this.evaluacionTipoPreguntaNombreMap.get(evaluacionTipoPreguntaId) ??
+            `Tipo ${evaluacionTipoPreguntaId}`
+        );
+    }
+
     protected formatFecha(fecha: string | null | undefined): string {
         if (!fecha) {
             return 'Sin fecha';
@@ -386,6 +409,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 evaluacionProgramadaId: number;
                 seccionId: number | null;
                 detalle: null;
+                evaluacionTipoPreguntas: EvaluacionTipoPregunta[];
             },
             EvaluacionDetalleFormDialogResult
         >(EvaluacionDetalleFormDialogComponent, {
@@ -395,6 +419,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 evaluacionProgramadaId: evaluacion.id,
                 seccionId: tab.seccionId,
                 detalle: null,
+                evaluacionTipoPreguntas: this.evaluacionTipoPreguntasSubject.value,
             },
         });
 
@@ -476,6 +501,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 evaluacionProgramadaId: number;
                 seccionId: number | null;
                 detalle: EvaluacionDetalle;
+                evaluacionTipoPreguntas: EvaluacionTipoPregunta[];
             },
             EvaluacionDetalleFormDialogResult
         >(EvaluacionDetalleFormDialogComponent, {
@@ -485,6 +511,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 evaluacionProgramadaId: evaluacion.id,
                 seccionId: detalle.seccionId,
                 detalle,
+                evaluacionTipoPreguntas: this.evaluacionTipoPreguntasSubject.value,
             },
         });
 
@@ -578,6 +605,26 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 this.showError(
                     error.message ?? 'No fue posible cargar los ciclos disponibles.'
                 );
+            },
+        });
+    }
+
+    private loadEvaluacionTipoPreguntas(): void {
+        this.evaluacionTipoPreguntasService.listAll().subscribe({
+            next: (records) => {
+                this.evaluacionTipoPreguntasSubject.next(records);
+                this.evaluacionTipoPreguntaNombreMap.clear();
+                records.forEach((item) => {
+                    this.evaluacionTipoPreguntaNombreMap.set(item.id, item.nombre);
+                });
+            },
+            error: (error) => {
+                this.showError(
+                    error.message ??
+                        'No fue posible obtener los tipos de pregunta de evaluación disponibles.'
+                );
+                this.evaluacionTipoPreguntasSubject.next([]);
+                this.evaluacionTipoPreguntaNombreMap.clear();
             },
         });
     }
@@ -703,6 +750,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             payloads.push({
                 evaluacionProgramadaId,
                 seccionId: targetTab.seccionId,
+                evaluacionTipoPreguntaId: detalle.evaluacionTipoPreguntaId ?? null,
                 rangoInicio: detalle.rangoInicio,
                 rangoFin: detalle.rangoFin,
                 valorBuena: detalle.valorBuena,
