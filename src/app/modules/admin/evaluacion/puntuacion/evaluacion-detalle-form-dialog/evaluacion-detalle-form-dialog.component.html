@@ -1,6 +1,20 @@
 <h2 mat-dialog-title>{{ title }}</h2>
 <mat-dialog-content>
   <form class="flex flex-col gap-4" [formGroup]="form">
+    <mat-form-field appearance="outline">
+      <mat-label>Tipo de pregunta</mat-label>
+      <mat-select formControlName="evaluacionTipoPreguntaId">
+        <mat-option [value]="null">Seleccionar tipo</mat-option>
+        @for (tipo of evaluacionTipoPreguntas; track tipo.id) {
+          <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+        }
+      </mat-select>
+      @if (hasError('evaluacionTipoPreguntaId', 'required')) {
+        <mat-error>
+          El tipo de pregunta es obligatorio.
+        </mat-error>
+      }
+    </mat-form-field>
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <mat-form-field appearance="outline">
         <mat-label>Rango inicio</mat-label>
