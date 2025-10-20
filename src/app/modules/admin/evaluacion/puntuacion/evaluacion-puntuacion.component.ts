@@ -127,7 +127,24 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     @ViewChild('evaluacionesListContainer', { static: true })
     private readonly evaluacionesListContainer?: ElementRef<HTMLDivElement>;
 
+    @ViewChild('evaluacionesList', { read: ElementRef })
+    private set evaluacionesList(ref: ElementRef<HTMLElement> | undefined) {
+        if (this.evaluacionesListResizeObserver && this.evaluacionesListElement) {
+            this.evaluacionesListResizeObserver.unobserve(this.evaluacionesListElement);
+        }
+
+        this.evaluacionesListElement = ref?.nativeElement ?? null;
+
+        if (this.evaluacionesListResizeObserver && this.evaluacionesListElement) {
+            this.evaluacionesListResizeObserver.observe(this.evaluacionesListElement);
+        }
+
+        queueMicrotask(() => this.updateEvaluacionesListHeight());
+    }
+
     protected readonly evaluacionesListMaxHeight = signal<number | null>(null);
+    private evaluacionesListElement: HTMLElement | null = null;
+    private evaluacionesListResizeObserver?: ResizeObserver;
 
     protected readonly evaluaciones$ = this.evaluacionesSubject.asObservable();
     protected readonly selectedEvaluacion$ = this.selectedEvaluacionSubject.asObservable();
@@ -220,10 +237,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             return;
         }
 
-        const updateHeight = () => {
-            const nextHeight = container.clientHeight;
-            this.evaluacionesListMaxHeight.set(nextHeight > 0 ? nextHeight : null);
-        };
+        const updateHeight = () => this.updateEvaluacionesListHeight();
 
         queueMicrotask(updateHeight);
 
@@ -244,7 +258,56 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         });
 
         resizeObserver.observe(container);
+
+        if (this.evaluacionesListElement) {
+            resizeObserver.observe(this.evaluacionesListElement);
+        }
+
+        this.evaluacionesListResizeObserver = resizeObserver;
         this.destroyRef.onDestroy(() => resizeObserver.disconnect());
+    }
+
+    private updateEvaluacionesListHeight(): void {
+        const container = this.evaluacionesListContainer?.nativeElement;
+
+        if (!container) {
+            this.evaluacionesListMaxHeight.set(null);
+            return;
+        }
+
+        const list = this.evaluacionesListElement;
+
+        if (!list) {
+            const containerHeight = container.clientHeight;
+            this.evaluacionesListMaxHeight.set(containerHeight > 0 ? containerHeight : null);
+            return;
+        }
+
+        let availableHeight = container.clientHeight;
+
+        if (typeof window !== 'undefined') {
+            const containerStyles = window.getComputedStyle(container);
+            availableHeight -= this.parseCssSize(containerStyles.paddingTop);
+            availableHeight -= this.parseCssSize(containerStyles.paddingBottom);
+
+            const listStyles = window.getComputedStyle(list);
+            availableHeight -= this.parseCssSize(listStyles.paddingTop);
+            availableHeight -= this.parseCssSize(listStyles.paddingBottom);
+            availableHeight -= this.parseCssSize(listStyles.borderTopWidth);
+            availableHeight -= this.parseCssSize(listStyles.borderBottomWidth);
+        }
+
+        const nextHeight = Number.isFinite(availableHeight) && availableHeight > 0 ? availableHeight : null;
+        this.evaluacionesListMaxHeight.set(nextHeight);
+    }
+
+    private parseCssSize(value: string | null | undefined): number {
+        if (!value) {
+            return 0;
+        }
+
+        const parsed = Number.parseFloat(value);
+        return Number.isFinite(parsed) ? parsed : 0;
     }
 
     protected buildHorarioLabel(evaluacion: EvaluacionProgramada): string {
