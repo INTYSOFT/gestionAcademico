@@ -1,0 +1,17 @@
+.competencias-preguntas-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+
+    mat-form-field {
+        width: 100%;
+    }
+
+    &__actions {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+    }
+}
