@@ -64,6 +64,7 @@ interface EvaluacionSeccionTabView {
     key: string;
     label: string;
     seccionId: number | null;
+    seccionCicloId: number | null;
     evaluacionSeccion: EvaluacionProgramadaSeccion | null;
     detalles: EvaluacionDetalle[];
 }
@@ -417,7 +418,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             data: {
                 mode: 'create',
                 evaluacionProgramadaId: evaluacion.id,
-                seccionId: tab.seccionId,
+                seccionId: this.resolveDetalleSeccionId(tab),
                 detalle: null,
                 tipoPreguntas: [...tipoPreguntas],
             },
@@ -726,6 +727,8 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         sourceTab: EvaluacionSeccionTabView,
         evaluacionProgramadaId: number
     ): void {
+        const targetSeccionId = this.resolveDetalleSeccionId(targetTab);
+
         const existingRangeKeys = new Set(
             targetTab.detalles.map((detalle) =>
                 this.buildDetalleRangeKey(detalle.rangoInicio, detalle.rangoFin)
@@ -746,7 +749,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             existingRangeKeys.add(rangeKey);
             payloads.push({
                 evaluacionProgramadaId,
-                seccionId: targetTab.seccionId,
+                seccionId: targetSeccionId,
                 evaluacionTipoPreguntaId: detalle.evaluacionTipoPreguntaId,
                 rangoInicio: detalle.rangoInicio,
                 rangoFin: detalle.rangoFin,
@@ -848,6 +851,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
         const tabs = secciones.map<EvaluacionSeccionTabView>((seccion) => {
             const seccionId = seccion.seccionId ?? null;
+            const seccionCicloId = seccion.seccionCicloId ?? null;
             const label =
                 seccionId !== null
                     ? seccionNombreMap.get(seccionId) ?? `Sección ${seccionId}`
@@ -862,15 +866,24 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 const coincidePorEvaluacionSeccionId =
                     detalleSeccionId !== null && detalleSeccionId === seccion.id;
 
+                const coincidePorSeccionCicloId =
+                    seccionCicloId !== null && detalleSeccionId === seccionCicloId;
+
                 const esGeneral = seccionId === null && isGeneralDetalle(detalle);
 
-                return coincidePorSeccionId || coincidePorEvaluacionSeccionId || esGeneral;
+                return (
+                    coincidePorSeccionId ||
+                    coincidePorEvaluacionSeccionId ||
+                    coincidePorSeccionCicloId ||
+                    esGeneral
+                );
             });
 
             return {
                 key: `seccion-${seccion.id}`,
                 label,
                 seccionId,
+                seccionCicloId,
                 evaluacionSeccion: seccion,
                 detalles: detallesAsociados,
             };
@@ -884,6 +897,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 key: 'seccion-general',
                 label: 'General',
                 seccionId: null,
+                seccionCicloId: null,
                 evaluacionSeccion: null,
                 detalles: detallesGenerales,
             });
@@ -903,6 +917,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 key: 'seccion-sin-asignacion',
                 label: 'Sin sección asociada',
                 seccionId: null,
+                seccionCicloId: null,
                 evaluacionSeccion: null,
                 detalles: detallesSinAsignar,
             });
@@ -918,12 +933,27 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 key: 'seccion-todos',
                 label: 'Detalles',
                 seccionId: null,
+                seccionCicloId: null,
                 evaluacionSeccion: null,
                 detalles,
             });
         }
 
         return tabs;
+    }
+
+    private resolveDetalleSeccionId(
+        tab: EvaluacionSeccionTabView
+    ): number | null {
+        if (tab.seccionId !== null && tab.seccionId !== undefined) {
+            return tab.seccionId;
+        }
+
+        if (tab.seccionCicloId !== null && tab.seccionCicloId !== undefined) {
+            return tab.seccionCicloId;
+        }
+
+        return null;
     }
 
     private formatDateForApi(date: Date): string | null {
