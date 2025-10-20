@@ -1,0 +1,54 @@
+<h2 mat-dialog-title>
+  {{ data.evaluacionTipoPregunta ? 'Editar tipo de pregunta' : 'Nuevo tipo de pregunta' }}
+</h2>
+
+<div mat-dialog-content>
+  <form [formGroup]="form" class="competencias-preguntas-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Nombre</mat-label>
+      <input matInput type="text" formControlName="nombre" maxlength="150" />
+      <mat-error *ngIf="form.controls['nombre'].hasError('required')">
+        El nombre es obligatorio.
+      </mat-error>
+      <mat-error *ngIf="form.controls['nombre'].hasError('maxlength')">
+        Máximo 150 caracteres.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Código</mat-label>
+      <input matInput type="text" formControlName="codigo" maxlength="50" />
+      <mat-error *ngIf="form.controls['codigo'].hasError('required')">
+        El código es obligatorio.
+      </mat-error>
+      <mat-error *ngIf="form.controls['codigo'].hasError('maxlength')">
+        Máximo 50 caracteres.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Descripción</mat-label>
+      <textarea
+        matInput
+        rows="3"
+        formControlName="descripcion"
+        maxlength="300"
+        placeholder="Descripción opcional"></textarea>
+      <mat-hint align="end">{{ form.controls['descripcion'].value?.length || 0 }}/300</mat-hint>
+      <mat-error *ngIf="form.controls['descripcion'].hasError('maxlength')">
+        Máximo 300 caracteres.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-slide-toggle formControlName="activo">Activo</mat-slide-toggle>
+  </form>
+</div>
+
+<div mat-dialog-actions align="end" class="competencias-preguntas-form__actions">
+  <button mat-button type="button" (click)="cancel()">Cancelar</button>
+  <button mat-raised-button color="primary" type="button" (click)="save()" [disabled]="isSaving$ | async">
+    Guardar
+  </button>
+</div>
+
+<mat-progress-bar *ngIf="isSaving$ | async" mode="indeterminate" color="primary"></mat-progress-bar>
