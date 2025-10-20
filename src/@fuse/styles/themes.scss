@@ -179,6 +179,17 @@ $typography-config: mat.m2-define-typography-config(
             500,
             theme('fontFamily.sans')
         )
+
+);
+
+/* Create a base theme without any color to set the density and typography */
+@include mat.all-component-themes(
+    (
+        color: null,
+        density: 0,
+        typography: $typography-config,
+    )
+
 );
 
 /* Loop through user themes and generate Angular Material themes */
@@ -279,6 +290,23 @@ $typography-config: mat.m2-define-typography-config(
                     background: $dark-background,
                 )
             ),
+            typography: $typography-config,
+            density: 0,
+        )
+    );
+
+    /* Ensure typography & density information are present */
+    $light-theme: map.merge(
+        $light-theme,
+        (
+            typography: $typography-config,
+            density: 0,
+        )
+    );
+
+    $dark-theme: map.merge(
+        $dark-theme,
+        (
             typography: $typography-config,
             density: 0,
         )
