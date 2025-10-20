@@ -59,7 +59,6 @@ interface EvaluacionSeccionTabView {
     key: string;
     label: string;
     seccionId: number | null;
-    seccionCicloId: number | null;
     evaluacionSeccion: EvaluacionProgramadaSeccion | null;
     detalles: EvaluacionDetalle[];
 }
@@ -394,7 +393,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             data: {
                 mode: 'create',
                 evaluacionProgramadaId: evaluacion.id,
-                seccionId: this.resolveDetalleSeccionId(tab),
+                seccionId: tab.seccionId,
                 detalle: null,
             },
         });
@@ -683,8 +682,6 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         sourceTab: EvaluacionSeccionTabView,
         evaluacionProgramadaId: number
     ): void {
-        const targetSeccionId = this.resolveDetalleSeccionId(targetTab);
-
         const existingRangeKeys = new Set(
             targetTab.detalles.map((detalle) =>
                 this.buildDetalleRangeKey(detalle.rangoInicio, detalle.rangoFin)
@@ -705,12 +702,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             existingRangeKeys.add(rangeKey);
             payloads.push({
                 evaluacionProgramadaId,
-<<<<<<< HEAD
-                seccionId: targetSeccionId,
-                evaluacionTipoPreguntaId: detalle.evaluacionTipoPreguntaId,
-=======
                 seccionId: targetTab.seccionId,
->>>>>>> parent of 58612dd (feat: add tipo pregunta selection to evaluacion detalles)
                 rangoInicio: detalle.rangoInicio,
                 rangoFin: detalle.rangoFin,
                 valorBuena: detalle.valorBuena,
@@ -805,115 +797,50 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             seccionNombreMap.set(seccion.id, seccion.nombre);
         });
 
-        const isGeneralDetalle = (detalle: EvaluacionDetalle): boolean => {
-            return detalle.seccionId === null || detalle.seccionId === 0;
-        };
-
         const tabs = secciones.map<EvaluacionSeccionTabView>((seccion) => {
             const seccionId = seccion.seccionId ?? null;
-            const seccionCicloId = seccion.seccionCicloId ?? null;
             const label =
                 seccionId !== null
                     ? seccionNombreMap.get(seccionId) ?? `Sección ${seccionId}`
                     : 'Sin sección asignada';
 
-            const detallesAsociados = detalles.filter((detalle) => {
-                const detalleSeccionId = detalle.seccionId;
-
-                const coincidePorSeccionId =
-                    seccionId !== null && detalleSeccionId === seccionId;
-
-                const coincidePorEvaluacionSeccionId =
-                    detalleSeccionId !== null && detalleSeccionId === seccion.id;
-
-                const coincidePorSeccionCicloId =
-                    seccionCicloId !== null && detalleSeccionId === seccionCicloId;
-
-                const esGeneral = seccionId === null && isGeneralDetalle(detalle);
-
-                return (
-                    coincidePorSeccionId ||
-                    coincidePorEvaluacionSeccionId ||
-                    coincidePorSeccionCicloId ||
-                    esGeneral
-                );
-            });
+            const detallesAsociados = detalles.filter(
+                (detalle) => detalle.seccionId === seccionId
+            );
 
             return {
                 key: `seccion-${seccion.id}`,
                 label,
                 seccionId,
-                seccionCicloId,
                 evaluacionSeccion: seccion,
                 detalles: detallesAsociados,
             };
         });
 
         const tieneTabGeneral = tabs.some((tab) => tab.seccionId === null);
-        const detallesGenerales = detalles.filter((detalle) => isGeneralDetalle(detalle));
+        const detallesGenerales = detalles.filter((detalle) => detalle.seccionId === null);
 
         if (!tieneTabGeneral && detallesGenerales.length > 0) {
             tabs.push({
                 key: 'seccion-general',
                 label: 'General',
                 seccionId: null,
-                seccionCicloId: null,
                 evaluacionSeccion: null,
                 detalles: detallesGenerales,
             });
         }
 
-        const detallesAsignados = new Set<number>();
-        tabs.forEach((tab) => {
-            tab.detalles.forEach((detalle) => detallesAsignados.add(detalle.id));
-        });
-
-        const detallesSinAsignar = detalles.filter(
-            (detalle) => !detallesAsignados.has(detalle.id)
-        );
-
-        if (detallesSinAsignar.length > 0) {
-            tabs.push({
-                key: 'seccion-sin-asignacion',
-                label: 'Sin sección asociada',
-                seccionId: null,
-                seccionCicloId: null,
-                evaluacionSeccion: null,
-                detalles: detallesSinAsignar,
-            });
-        }
-
-        if (
-            tabs.length === 0 &&
-            detallesGenerales.length === 0 &&
-            detallesSinAsignar.length === 0 &&
-            detalles.length > 0
-        ) {
+        if (tabs.length === 0 && detallesGenerales.length === 0 && detalles.length > 0) {
             tabs.push({
                 key: 'seccion-todos',
                 label: 'Detalles',
                 seccionId: null,
-                seccionCicloId: null,
                 evaluacionSeccion: null,
                 detalles,
             });
         }
 
         return tabs;
-    }
-
-    private resolveDetalleSeccionId(
-        tab: EvaluacionSeccionTabView
-    ): number | null {
-        if (tab.seccionId !== null && tab.seccionId !== undefined) {
-            return tab.seccionId;
-        }
-
-        if (tab.seccionCicloId !== null && tab.seccionCicloId !== undefined) {
-            return tab.seccionCicloId;
-        }
-
-        return null;
     }
 
     private formatDateForApi(date: Date): string | null {
