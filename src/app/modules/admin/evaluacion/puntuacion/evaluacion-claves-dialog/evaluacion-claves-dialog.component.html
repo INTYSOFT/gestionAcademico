@@ -1,0 +1,90 @@
+<h2 mat-dialog-title>Claves de evaluación</h2>
+
+<mat-dialog-content>
+  <div class="space-y-4">
+    <div class="text-sm text-gray-600">
+      Gestiona las respuestas para las preguntas del rango
+      <span class="font-medium text-gray-800">{{ detalle.rangoInicio }}</span>
+      al
+      <span class="font-medium text-gray-800">{{ detalle.rangoFin }}</span>.
+    </div>
+
+    @if (isLoading$ | async) {
+      <div class="flex justify-center py-6">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      </div>
+    } @else {
+      <form [formGroup]="form" class="space-y-4">
+        <div formArrayName="claves" class="space-y-3">
+          @if (clavesForm.length > 0) {
+            @for (control of clavesForm.controls; track trackByClave($index, control); let i = $index) {
+              <div
+                class="grid gap-3 rounded-xl border border-gray-200 p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+                [formGroupName]="i"
+              >
+                <mat-form-field appearance="outline">
+                  <mat-label>Pregunta</mat-label>
+                  <input
+                    matInput
+                    type="number"
+                    formControlName="preguntaOrden"
+                    min="0"
+                    step="1"
+                    />
+                    @if (clavesForm.at(i).get('preguntaOrden')?.invalid && clavesForm.at(i).get('preguntaOrden')?.touched) {
+                      <mat-error>Ingresa un número válido.</mat-error>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Respuesta</mat-label>
+                    <mat-select formControlName="respuesta">
+                      @for (respuesta of respuestas; track respuesta) {
+                        <mat-option [value]="respuesta">{{ respuesta }}</mat-option>
+                      }
+                    </mat-select>
+                    @if (clavesForm.at(i).get('respuesta')?.invalid && clavesForm.at(i).get('respuesta')?.touched) {
+                      <mat-error>Selecciona una respuesta.</mat-error>
+                    }
+                  </mat-form-field>
+
+                  <div class="flex items-center justify-end">
+                    <button
+                      mat-icon-button
+                      type="button"
+                      color="warn"
+                      (click)="removeClave(i)"
+                      matTooltip="Eliminar"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              }
+            } @else {
+              <div class="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
+                No hay claves registradas. Usa el botón "Agregar registro" para crear una nueva clave.
+              </div>
+            }
+          </div>
+        </form>
+      }
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="gap-2">
+  <button mat-stroked-button type="button" (click)="addClave()">
+    Agregar registro
+  </button>
+  <span class="flex-1"></span>
+  <button mat-button type="button" (click)="cancel()">Cancelar</button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    (click)="save()"
+    [disabled]="isSaving$ | async"
+  >
+    Guardar
+  </button>
+</mat-dialog-actions>

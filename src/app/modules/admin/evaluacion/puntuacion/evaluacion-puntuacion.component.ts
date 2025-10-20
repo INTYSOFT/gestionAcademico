@@ -51,6 +51,10 @@ import {
     EvaluacionDetalleImportDialogComponent,
     EvaluacionDetalleImportDialogResult,
 } from './evaluacion-detalle-import-dialog/evaluacion-detalle-import-dialog.component';
+import {
+    EvaluacionClavesDialogComponent,
+    EvaluacionClavesDialogResult,
+} from './evaluacion-claves-dialog/evaluacion-claves-dialog.component';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
 import { Sede } from 'app/core/models/centro-estudios/sede.model';
 import { SedeService } from 'app/core/services/centro-estudios/sede.service';
@@ -519,6 +523,25 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             if (result?.action === 'updated') {
                 this.reloadDetalles();
             }
+        });
+    }
+
+    protected openDetalleClavesDialog(detalle: EvaluacionDetalle): void {
+        const evaluacion = this.selectedEvaluacionSubject.value;
+        if (!evaluacion) {
+            return;
+        }
+
+        this.dialog.open<
+            EvaluacionClavesDialogComponent,
+            { evaluacion: EvaluacionProgramada; detalle: EvaluacionDetalle },
+            EvaluacionClavesDialogResult | undefined
+        >(EvaluacionClavesDialogComponent, {
+            width: '720px',
+            data: {
+                evaluacion,
+                detalle,
+            },
         });
     }
 
