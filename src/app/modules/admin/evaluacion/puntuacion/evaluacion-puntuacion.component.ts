@@ -842,6 +842,10 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             seccionNombreMap.set(seccion.id, seccion.nombre);
         });
 
+        const isGeneralDetalle = (detalle: EvaluacionDetalle): boolean => {
+            return detalle.seccionId === null || detalle.seccionId === 0;
+        };
+
         const tabs = secciones.map<EvaluacionSeccionTabView>((seccion) => {
             const seccionId = seccion.seccionId ?? null;
             const label =
@@ -849,9 +853,19 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                     ? seccionNombreMap.get(seccionId) ?? `Sección ${seccionId}`
                     : 'Sin sección asignada';
 
-            const detallesAsociados = detalles.filter(
-                (detalle) => detalle.seccionId === seccionId
-            );
+            const detallesAsociados = detalles.filter((detalle) => {
+                const detalleSeccionId = detalle.seccionId;
+
+                const coincidePorSeccionId =
+                    seccionId !== null && detalleSeccionId === seccionId;
+
+                const coincidePorEvaluacionSeccionId =
+                    detalleSeccionId !== null && detalleSeccionId === seccion.id;
+
+                const esGeneral = seccionId === null && isGeneralDetalle(detalle);
+
+                return coincidePorSeccionId || coincidePorEvaluacionSeccionId || esGeneral;
+            });
 
             return {
                 key: `seccion-${seccion.id}`,
@@ -863,7 +877,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         });
 
         const tieneTabGeneral = tabs.some((tab) => tab.seccionId === null);
-        const detallesGenerales = detalles.filter((detalle) => detalle.seccionId === null);
+        const detallesGenerales = detalles.filter((detalle) => isGeneralDetalle(detalle));
 
         if (!tieneTabGeneral && detallesGenerales.length > 0) {
             tabs.push({
@@ -875,7 +889,31 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             });
         }
 
-        if (tabs.length === 0 && detallesGenerales.length === 0 && detalles.length > 0) {
+        const detallesAsignados = new Set<number>();
+        tabs.forEach((tab) => {
+            tab.detalles.forEach((detalle) => detallesAsignados.add(detalle.id));
+        });
+
+        const detallesSinAsignar = detalles.filter(
+            (detalle) => !detallesAsignados.has(detalle.id)
+        );
+
+        if (detallesSinAsignar.length > 0) {
+            tabs.push({
+                key: 'seccion-sin-asignacion',
+                label: 'Sin sección asociada',
+                seccionId: null,
+                evaluacionSeccion: null,
+                detalles: detallesSinAsignar,
+            });
+        }
+
+        if (
+            tabs.length === 0 &&
+            detallesGenerales.length === 0 &&
+            detallesSinAsignar.length === 0 &&
+            detalles.length > 0
+        ) {
             tabs.push({
                 key: 'seccion-todos',
                 label: 'Detalles',
