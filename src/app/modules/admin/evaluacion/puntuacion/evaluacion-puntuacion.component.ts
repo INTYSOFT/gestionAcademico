@@ -532,7 +532,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             return;
         }
 
-        this.dialog.open<
+        const dialogRef = this.dialog.open<
             EvaluacionClavesDialogComponent,
             { evaluacion: EvaluacionProgramada; detalle: EvaluacionDetalle },
             EvaluacionClavesDialogResult | undefined
@@ -542,6 +542,12 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 evaluacion,
                 detalle,
             },
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+            if (result?.action === 'saved') {
+                this.reloadDetalles();
+            }
         });
     }
 
