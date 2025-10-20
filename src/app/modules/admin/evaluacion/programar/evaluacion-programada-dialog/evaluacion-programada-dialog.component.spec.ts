@@ -24,7 +24,7 @@ describe('EvaluacionProgramadaDialogComponent', () => {
     function setupTestBed(dataOverrides: Partial<EvaluacionProgramadaDialogData> = {}) {
         const data: EvaluacionProgramadaDialogData = {
             mode: 'create',
-            existingFechas: [],
+            existingProgramaciones: [],
             evaluacion: null,
             secciones: [],
             ...dataOverrides,
@@ -115,6 +115,37 @@ describe('EvaluacionProgramadaDialogComponent', () => {
         expect(evaluacionServiceSpy.create).toHaveBeenCalledTimes(1);
         expect(seccionesServiceSpy.create).toHaveBeenCalledTimes(1);
         expect(dialogRefSpy.close).toHaveBeenCalledTimes(1);
+    }));
+
+    it('should flag fechaInicio as duplicated when same fecha and ciclo exist', fakeAsync(() => {
+        setupTestBed({
+            existingProgramaciones: [
+                {
+                    fechaInicio: '2024-06-10',
+                    cicloId: 100,
+                },
+            ],
+        });
+
+        const fixture = TestBed.createComponent(EvaluacionProgramadaDialogComponent);
+        const component = fixture.componentInstance as EvaluacionProgramadaDialogComponent & {
+            form: unknown;
+        };
+
+        fixture.detectChanges();
+        tick();
+
+        const form = (component as any).form as any;
+        form.controls['sedeId'].setValue(10);
+        tick();
+
+        form.controls['cicloId'].setValue(100);
+        tick();
+
+        form.controls['fechaInicio'].setValue(DateTime.fromISO('2024-06-10'));
+        tick();
+
+        expect(form.controls['fechaInicio'].hasError('fechaDuplicada')).toBeTrue();
     }));
 });
 
