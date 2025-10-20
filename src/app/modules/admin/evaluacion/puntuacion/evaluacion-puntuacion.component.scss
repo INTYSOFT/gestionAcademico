@@ -21,6 +21,31 @@ mat-nav-list {
     }
 }
 
+.evaluacion-puntuacion__evaluaciones-panel {
+    padding: 0.75rem;
+    background-color: #ffffff;
+    gap: 0.75rem;
+}
+
+.evaluacion-puntuacion__evaluaciones-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.evaluacion-puntuacion__evaluaciones-nav .mat-mdc-list-item {
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    align-items: flex-start;
+}
+
+.evaluacion-puntuacion__evaluaciones-nav .mat-mdc-list-item .mdc-list-item__primary-text {
+    width: 100%;
+}
+
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;

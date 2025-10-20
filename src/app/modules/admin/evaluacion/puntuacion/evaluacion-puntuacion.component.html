@@ -4,7 +4,7 @@
       class="flex min-h-[400px] flex-col rounded-2xl border-2 border-dashed border-gray-300 bg-white p-6"
       >
       <div class="flex min-h-0 flex-col gap-6 lg:flex-row lg:items-start">
-        <div class="flex w-full max-w-full flex-col gap-4 lg:w-80 lg:min-h-0">
+        <div class="flex w-full max-w-full flex-1 flex-col gap-4 lg:w-80 lg:min-h-0">
           <div class="flex items-center justify-between gap-2">
             <button
               mat-icon-button
@@ -41,7 +41,7 @@
 
             <div
               #evaluacionesListContainer
-              class="relative flex min-h-[200px] flex-1 flex-col overflow-hidden rounded-xl border border-gray-200"
+              class="evaluacion-puntuacion__evaluaciones-panel relative flex min-h-[320px] flex-1 flex-col overflow-hidden rounded-xl border border-gray-200"
               >
               @if (isLoadingEvaluaciones$ | async) {
                 <div
@@ -56,7 +56,7 @@
                   @if (selectedEvaluacion$ | async; as selectedEvaluacion) {
                     <mat-nav-list
                       #evaluacionesList
-                      class="flex-1 overflow-y-auto"
+                      class="evaluacion-puntuacion__evaluaciones-nav flex-1 overflow-y-auto"
                       [style.maxHeight.px]="evaluacionesListMaxHeight() ?? null"
                       >
                       @for (evaluacion of evaluaciones; track trackByEvaluacion($index, evaluacion)) {
