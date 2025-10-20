@@ -40,6 +40,7 @@ describe('EvaluacionProgramadaDialogComponent', () => {
                 id: 1,
                 sedeId: 10,
                 cicloId: 100,
+                estadoId: 1,
                 tipoEvaluacionId: 5,
                 nombre: 'Evaluación',
                 fechaInicio: '2024-06-10',
@@ -63,6 +64,8 @@ describe('EvaluacionProgramadaDialogComponent', () => {
                 activo: true,
                 fechaRegistro: null,
                 fechaActualizacion: null,
+                usuaraioRegistroId: null,
+                usuaraioActualizacionId: null,
             } satisfies EvaluacionProgramadaSeccion)
         );
 
@@ -151,7 +154,20 @@ describe('EvaluacionProgramadaDialogComponent', () => {
 
 function createSedeServiceMock(): Pick<SedeService, 'getSedes'> {
     return {
-        getSedes: () => of([{ id: 10, nombre: 'Central', activo: true }]),
+        getSedes: () =>
+            of([
+                {
+                    id: 10,
+                    nombre: 'Central',
+                    ubigeoCode: '010101',
+                    direccion: 'Principal 123',
+                    activo: true,
+                    fechaRegistro: null,
+                    fechaActualizacion: null,
+                    usuaraioRegistroId: null,
+                    usuaraioActualizacionId: null,
+                },
+            ]),
     };
 }
 
@@ -162,9 +178,15 @@ function createCiclosServiceMock(): Pick<CiclosService, 'listAll'> {
                 {
                     id: 100,
                     nombre: '2024-I',
+                    fechaInicio: '2024-03-01',
                     activo: true,
                     fechaAperturaInscripcion: '2024-01-01',
                     fechaCierreInscripcion: '2024-12-31',
+                    fechaFin: '2024-07-31',
+                    fechaRegistro: null,
+                    fechaActualizacion: null,
+                    usuaraioRegistroId: null,
+                    usuaraioActualizacionId: null,
                 },
             ]),
     };
@@ -172,7 +194,19 @@ function createCiclosServiceMock(): Pick<CiclosService, 'listAll'> {
 
 function createTiposServiceMock(): Pick<TipoEvaluacionesService, 'listAll'> {
     return {
-        listAll: () => of([{ id: 5, nombre: 'Parcial', activo: true }]),
+        listAll: () =>
+            of([
+                {
+                    id: 5,
+                    nombre: 'Parcial',
+                    descripcion: null,
+                    activo: true,
+                    fechaRegistro: null,
+                    fechaActualizacion: null,
+                    usuaraioRegistroId: null,
+                    usuaraioActualizacionId: null,
+                },
+            ]),
     };
 }
 
@@ -184,13 +218,38 @@ function createCarrerasServiceMock(): Pick<CarrerasService, 'list'> {
 
 function createSeccionesCatalogServiceMock(): Pick<SeccionesService, 'list'> {
     return {
-        list: () => of([{ id: 200, nombre: 'A', activo: true }]),
+        list: () =>
+            of([
+                {
+                    id: 200,
+                    nombre: 'A',
+                    capacidad: 30,
+                    activo: true,
+                    fechaRegistro: null,
+                    fechaActualizacion: null,
+                    usuaraioRegistroId: null,
+                    usuaraioActualizacionId: null,
+                },
+            ]),
     };
 }
 
 function createAperturaCicloServiceMock(): Pick<AperturaCicloService, 'listBySede'> {
     return {
-        listBySede: () => of([{ id: 1, cicloId: 100, activo: true }]),
+        listBySede: () =>
+            of([
+                {
+                    id: 1,
+                    sedeId: 10,
+                    cicloId: 100,
+                    observacion: null,
+                    activo: true,
+                    fechaRegistro: null,
+                    fechaActualizacion: null,
+                    usuaraioRegistroId: null,
+                    usuaraioActualizacionId: null,
+                },
+            ]),
     };
 }
 
@@ -203,7 +262,14 @@ function createSeccionCicloServiceMock(): Pick<SeccionCicloService, 'listBySedeA
                     cicloId: 100,
                     sedeId: 10,
                     seccionId: 200,
+                    nivelId: 1,
+                    capacidad: 30,
+                    precio: 0,
                     activo: true,
+                    fechaRegistro: null,
+                    fechaActualizacion: null,
+                    usuaraioRegistroId: null,
+                    usuaraioActualizacionId: null,
                 },
             ]),
     };
