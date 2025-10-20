@@ -1,11 +1,15 @@
 import { AsyncPipe, DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import {
+    AfterViewInit,
     ChangeDetectionStrategy,
     Component,
     DestroyRef,
+    ElementRef,
     OnInit,
+    ViewChild,
     ViewEncapsulation,
     inject,
+    signal,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -22,7 +26,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatNativeDateModule } from '@angular/material/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { BehaviorSubject, combineLatest, forkJoin } from 'rxjs';
+import { BehaviorSubject, combineLatest, forkJoin, fromEvent } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { DateTime } from 'luxon';
 import { EvaluacionProgramada } from 'app/core/models/centro-estudios/evaluacion-programada.model';
@@ -87,7 +91,7 @@ interface EvaluacionSeccionTabView {
         MatDividerModule,
     ],
 })
-export class EvaluacionPuntuacionComponent implements OnInit {
+export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     protected readonly dateControl = this.fb.control<Date | null>(new Date(), {
         validators: [Validators.required],
     });
@@ -119,6 +123,11 @@ export class EvaluacionPuntuacionComponent implements OnInit {
 
     private readonly sedeNombreMap = new Map<number, string>();
     private readonly cicloNombreMap = new Map<number, string>();
+
+    @ViewChild('evaluacionesListContainer', { static: true })
+    private readonly evaluacionesListContainer?: ElementRef<HTMLDivElement>;
+
+    protected readonly evaluacionesListMaxHeight = signal<number | null>(null);
 
     protected readonly evaluaciones$ = this.evaluacionesSubject.asObservable();
     protected readonly selectedEvaluacion$ = this.selectedEvaluacionSubject.asObservable();
@@ -177,6 +186,10 @@ export class EvaluacionPuntuacionComponent implements OnInit {
         this.loadEvaluaciones(initialDate);
     }
 
+    ngAfterViewInit(): void {
+        this.initializeEvaluacionesListSizing();
+    }
+
     protected goToPreviousDay(): void {
         this.shiftSelectedDateBy(-1);
     }
@@ -198,6 +211,40 @@ export class EvaluacionPuntuacionComponent implements OnInit {
         selected: EvaluacionProgramada | null
     ): boolean {
         return selected?.id === evaluacion.id;
+    }
+
+    private initializeEvaluacionesListSizing(): void {
+        const container = this.evaluacionesListContainer?.nativeElement;
+
+        if (!container) {
+            return;
+        }
+
+        const updateHeight = () => {
+            const nextHeight = container.clientHeight;
+            this.evaluacionesListMaxHeight.set(nextHeight > 0 ? nextHeight : null);
+        };
+
+        queueMicrotask(updateHeight);
+
+        if (typeof ResizeObserver === 'undefined') {
+            updateHeight();
+
+            if (typeof window !== 'undefined') {
+                fromEvent(window, 'resize')
+                    .pipe(takeUntilDestroyed(this.destroyRef))
+                    .subscribe(() => updateHeight());
+            }
+
+            return;
+        }
+
+        const resizeObserver = new ResizeObserver(() => {
+            updateHeight();
+        });
+
+        resizeObserver.observe(container);
+        this.destroyRef.onDestroy(() => resizeObserver.disconnect());
     }
 
     protected buildHorarioLabel(evaluacion: EvaluacionProgramada): string {
