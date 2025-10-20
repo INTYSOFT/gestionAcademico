@@ -11,6 +11,16 @@ mat-dialog-actions {
   padding: 16px 24px;
 }
 
-mat-form-field {
-  width: 100%;
+.ag-theme-quartz {
+  --ag-font-family: inherit;
+  --ag-data-color: var(--fuse-text-default, #111827);
+  --ag-background-color: var(--fuse-bg-card, #ffffff);
+  --ag-odd-row-background-color: rgba(15, 23, 42, 0.02);
+  --ag-header-foreground-color: var(--fuse-text-secondary, #4b5563);
+  --ag-invalid-border-color: #f87171;
+}
+
+.ag-theme-quartz .ag-cell.ag-cell-invalid {
+  box-shadow: inset 0 0 0 1px var(--ag-invalid-border-color);
+  background-color: rgba(248, 113, 113, 0.12);
 }

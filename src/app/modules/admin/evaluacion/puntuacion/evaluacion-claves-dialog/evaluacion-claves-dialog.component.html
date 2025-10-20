@@ -15,59 +15,29 @@
       </div>
     } @else {
       <form [formGroup]="form" class="space-y-4">
-        <div formArrayName="claves" class="space-y-3">
-          @if (clavesForm.length > 0) {
-            @for (control of clavesForm.controls; track trackByClave($index, control); let i = $index) {
-              <div
-                class="grid gap-3 rounded-xl border border-gray-200 p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
-                [formGroupName]="i"
-              >
-                <mat-form-field appearance="outline">
-                  <mat-label>Pregunta</mat-label>
-                  <input
-                    matInput
-                    type="number"
-                    formControlName="preguntaOrden"
-                    min="0"
-                    step="1"
-                    />
-                    @if (clavesForm.at(i).get('preguntaOrden')?.invalid && clavesForm.at(i).get('preguntaOrden')?.touched) {
-                      <mat-error>Ingresa un número válido.</mat-error>
-                    }
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Respuesta</mat-label>
-                    <mat-select formControlName="respuesta">
-                      @for (respuesta of respuestas; track respuesta) {
-                        <mat-option [value]="respuesta">{{ respuesta }}</mat-option>
-                      }
-                    </mat-select>
-                    @if (clavesForm.at(i).get('respuesta')?.invalid && clavesForm.at(i).get('respuesta')?.touched) {
-                      <mat-error>Selecciona una respuesta.</mat-error>
-                    }
-                  </mat-form-field>
-
-                  <div class="flex items-center justify-end">
-                    <button
-                      mat-icon-button
-                      type="button"
-                      color="warn"
-                      (click)="removeClave(i)"
-                      matTooltip="Eliminar"
-                    >
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </div>
-              }
-            } @else {
-              <div class="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
-                No hay claves registradas. Usa el botón "Agregar registro" para crear una nueva clave.
-              </div>
-            }
+        <div formArrayName="claves">
+          <div class="ag-theme-quartz h-[24rem] w-full">
+            <ag-grid-angular
+              [rowData]="rowData$ | async"
+              [columnDefs]="columnDefs"
+              [defaultColDef]="defaultColDef"
+              [domLayout]="'normal'"
+              [rowHeight]="48"
+              [headerHeight]="44"
+              [stopEditingWhenCellsLoseFocus]="true"
+              [suppressDragLeaveHidesColumns]="true"
+              [overlayNoRowsTemplate]="noRowsOverlayTemplate"
+              class="w-full"
+              (gridReady)="onGridReady($event)"
+              (firstDataRendered)="onFirstDataRendered($event)"
+            ></ag-grid-angular>
+            <ng-container *ngIf="false">
+              <!-- Mantiene el renderer de acciones disponible para ag-grid -->
+              <app-evaluacion-clave-actions-cell></app-evaluacion-clave-actions-cell>
+            </ng-container>
           </div>
-        </form>
+        </div>
+      </form>
       }
   </div>
 </mat-dialog-content>
