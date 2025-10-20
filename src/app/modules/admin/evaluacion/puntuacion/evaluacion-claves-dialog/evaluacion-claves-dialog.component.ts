@@ -3,6 +3,7 @@ import {
     ChangeDetectionStrategy,
     Component,
     Inject,
+    OnDestroy,
     OnInit,
     ViewEncapsulation,
 } from '@angular/core';
@@ -16,14 +17,22 @@ import {
 } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { BehaviorSubject, finalize, forkJoin, switchMap } from 'rxjs';
+import { BehaviorSubject, Subscription, finalize, forkJoin, switchMap } from 'rxjs';
+import { AgGridAngular } from 'ag-grid-angular';
+import {
+    CellClassParams,
+    CellClassRules,
+    ColDef,
+    FirstDataRenderedEvent,
+    GridApi,
+    GridReadyEvent,
+    ValueGetterParams,
+    ValueSetterParams,
+} from 'ag-grid-community';
 import { EvaluacionProgramada } from 'app/core/models/centro-estudios/evaluacion-programada.model';
 import { EvaluacionDetalle } from 'app/core/models/centro-estudios/evaluacion-detalle.model';
 import {
@@ -32,6 +41,14 @@ import {
     UpdateEvaluacionClavePayload,
 } from 'app/core/models/centro-estudios/evaluacion-clave.model';
 import { EvaluacionClavesService } from 'app/core/services/centro-estudios/evaluacion-claves.service';
+import {
+    EvaluacionClaveActionsCellComponent,
+    EvaluacionClaveActionsCellParams,
+} from './evaluacion-clave-actions-cell.component';
+
+interface ClaveGridRow {
+    formGroup: EvaluacionClaveFormGroup;
+}
 
 export interface EvaluacionClavesDialogData {
     evaluacion: EvaluacionProgramada;
@@ -87,16 +104,15 @@ interface EvaluacionClaveFormValue {
         ReactiveFormsModule,
         MatDialogModule,
         MatButtonModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatSelectModule,
         MatIconModule,
         MatSnackBarModule,
         MatTooltipModule,
         MatProgressBarModule,
+        AgGridAngular,
+        EvaluacionClaveActionsCellComponent,
     ],
 })
-export class EvaluacionClavesDialogComponent implements OnInit {
+export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
     protected readonly detalle = this.data.detalle;
     protected readonly evaluacion = this.data.evaluacion;
 
@@ -111,8 +127,72 @@ export class EvaluacionClavesDialogComponent implements OnInit {
     protected readonly isLoading$ = new BehaviorSubject<boolean>(false);
     protected readonly isSaving$ = new BehaviorSubject<boolean>(false);
 
+    protected readonly defaultColDef: ColDef<ClaveGridRow> = {
+        sortable: false,
+        resizable: true,
+        flex: 1,
+        suppressHeaderMenuButton: true,
+        suppressMovable: true,
+        filter: false,
+    };
+
+    protected readonly columnDefs: ColDef<ClaveGridRow>[] = [
+        {
+            headerName: 'Pregunta',
+            colId: 'preguntaOrden',
+            minWidth: 140,
+            valueGetter: (params) => this.getNumericValue(params, 'preguntaOrden'),
+            valueSetter: (params) => this.setNumericValue(params, 'preguntaOrden'),
+            editable: true,
+            cellEditor: 'agNumberCellEditor',
+            cellDataType: 'number',
+            cellClassRules: this.createInvalidCellClassRules('preguntaOrden'),
+        },
+        {
+            headerName: 'Respuesta',
+            colId: 'respuesta',
+            minWidth: 160,
+            valueGetter: (params) => this.getStringValue(params, 'respuesta'),
+            valueSetter: (params) => this.setSelectValue(params, 'respuesta'),
+            editable: true,
+            cellEditor: 'agSelectCellEditor',
+            cellEditorParams: () => ({
+                values: this.respuestas,
+            }),
+            cellClassRules: this.createInvalidCellClassRules('respuesta'),
+        },
+        {
+            headerName: 'Acciones',
+            colId: 'actions',
+            width: 110,
+            maxWidth: 120,
+            cellRenderer: EvaluacionClaveActionsCellComponent,
+            cellRendererParams: (params): Partial<EvaluacionClaveActionsCellParams> => ({
+                onDelete: () => this.removeClaveByGroup(params.data.formGroup),
+                disableDelete: this.isSaving$.value,
+            }),
+            editable: false,
+            suppressAutoSize: true,
+            sortable: false,
+            resizable: false,
+            filter: false,
+        },
+    ];
+
+    protected readonly noRowsOverlayTemplate = `
+        <div class="flex h-full items-center justify-center px-6 text-center text-sm text-gray-500">
+            No hay claves registradas. Usa el botón "Agregar registro" para crear una nueva clave.
+        </div>
+    `;
+
+    private readonly rowDataSubject = new BehaviorSubject<ClaveGridRow[]>([]);
+    protected readonly rowData$ = this.rowDataSubject.asObservable();
+
     private readonly deletedIds = new Set<number>();
     private readonly initialValueMap = new Map<number, EvaluacionClaveFormValue>();
+    private readonly subscriptions = new Subscription();
+
+    private gridApi?: GridApi<ClaveGridRow>;
 
     constructor(
         @Inject(MAT_DIALOG_DATA) private readonly data: EvaluacionClavesDialogData,
@@ -123,26 +203,37 @@ export class EvaluacionClavesDialogComponent implements OnInit {
         private readonly fb: FormBuilder,
         private readonly snackBar: MatSnackBar,
         private readonly evaluacionClavesService: EvaluacionClavesService
-    ) {}
+    ) {
+        this.subscriptions.add(
+            this.isSaving$.subscribe(() => {
+                this.refreshActionsColumn();
+            })
+        );
+    }
 
     ngOnInit(): void {
         this.loadClaves();
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.unsubscribe();
     }
 
     protected get clavesForm(): FormArray<EvaluacionClaveFormGroup> {
         return this.form.get('claves') as FormArray<EvaluacionClaveFormGroup>;
     }
 
-    protected trackByClave(_index: number, group: EvaluacionClaveFormGroup): number {
-        const id = group.controls.id.value;
-        const preguntaOrden = group.controls.preguntaOrden.value;
-        return id ?? preguntaOrden ?? _index;
-    }
-
     protected addClave(): void {
         const nextOrden = this.calculateNextPreguntaOrden();
         const value = this.buildFormValue({ preguntaOrden: nextOrden });
-        this.clavesForm.push(this.createClaveGroup(value));
+        const group = this.createClaveGroup(value);
+        this.clavesForm.push(group);
+        this.syncGridRows();
+        queueMicrotask(() => {
+            const rowIndex = this.clavesForm.length - 1;
+            this.gridApi?.ensureIndexVisible(rowIndex, 'bottom');
+            this.gridApi?.startEditingCell({ rowIndex, colKey: 'preguntaOrden' });
+        });
     }
 
     protected removeClave(index: number): void {
@@ -158,6 +249,14 @@ export class EvaluacionClavesDialogComponent implements OnInit {
         }
 
         this.clavesForm.removeAt(index);
+        this.syncGridRows();
+    }
+
+    private removeClaveByGroup(group: EvaluacionClaveFormGroup): void {
+        const index = this.clavesForm.controls.indexOf(group);
+        if (index >= 0) {
+            this.removeClave(index);
+        }
     }
 
     protected cancel(): void {
@@ -254,6 +353,21 @@ export class EvaluacionClavesDialogComponent implements OnInit {
             });
     }
 
+    protected onGridReady(event: GridReadyEvent<ClaveGridRow>): void {
+        this.gridApi = event.api;
+        this.gridApi.setGridOption('overlayNoRowsTemplate', this.noRowsOverlayTemplate);
+        this.updateNoRowsOverlay();
+        this.autoSizeColumns();
+    }
+
+    protected onFirstDataRendered(event: FirstDataRenderedEvent<ClaveGridRow>): void {
+        if (event?.api !== this.gridApi) {
+            this.gridApi = event.api;
+        }
+        this.autoSizeColumns();
+        this.updateNoRowsOverlay();
+    }
+
     private loadClaves(): void {
         this.isLoading$.next(true);
         this.evaluacionClavesService
@@ -286,6 +400,7 @@ export class EvaluacionClavesDialogComponent implements OnInit {
             this.initialValueMap.set(clave.id, value);
             this.clavesForm.push(this.createClaveGroup(value));
         }
+        this.syncGridRows();
     }
 
     private populateFormWithDefaults(): void {
@@ -304,12 +419,15 @@ export class EvaluacionClavesDialogComponent implements OnInit {
         for (const value of defaults) {
             this.clavesForm.push(this.createClaveGroup(value));
         }
+        this.syncGridRows();
     }
 
     private resetFormState(): void {
         this.deletedIds.clear();
         this.initialValueMap.clear();
         this.clavesForm.clear();
+        this.rowDataSubject.next([]);
+        this.updateNoRowsOverlay();
     }
 
     private createClaveGroup(value: EvaluacionClaveFormValue): EvaluacionClaveFormGroup {
@@ -476,5 +594,153 @@ export class EvaluacionClavesDialogComponent implements OnInit {
             .filter(([, count]) => count > 1)
             .map(([orden]) => orden)
             .sort((a, b) => a - b);
+    }
+
+    private syncGridRows(): void {
+        const rows = this.clavesForm.controls.map((formGroup) => ({ formGroup }));
+        this.rowDataSubject.next(rows);
+        this.updateNoRowsOverlay();
+        this.autoSizeColumns();
+    }
+
+    private getNumericValue(
+        params: ValueGetterParams<ClaveGridRow>,
+        control: 'preguntaOrden'
+    ): number | null {
+        const value = params.data?.formGroup.controls[control].value;
+        return value ?? null;
+    }
+
+    private getStringValue(
+        params: ValueGetterParams<ClaveGridRow>,
+        control: 'respuesta'
+    ): string {
+        const value = params.data?.formGroup.controls[control].value;
+        return value ?? '';
+    }
+
+    private setNumericValue(
+        params: ValueSetterParams<ClaveGridRow>,
+        control: 'preguntaOrden'
+    ): boolean {
+        const group = params.data?.formGroup;
+        if (!group) {
+            return false;
+        }
+
+        const formControl = group.controls[control];
+        const parsed = Number(params.newValue);
+
+        if (!Number.isFinite(parsed)) {
+            formControl.markAsTouched();
+            formControl.markAsDirty();
+            formControl.setErrors({ ...(formControl.errors ?? {}), invalidNumber: true });
+            this.refreshCell(params);
+            return false;
+        }
+
+        const currentErrors = { ...(formControl.errors ?? {}) };
+        if ('invalidNumber' in currentErrors) {
+            delete currentErrors.invalidNumber;
+        }
+
+        formControl.setErrors(Object.keys(currentErrors).length > 0 ? currentErrors : null);
+        formControl.setValue(parsed, { emitEvent: false });
+        formControl.markAsTouched();
+        formControl.markAsDirty();
+        formControl.updateValueAndValidity({ emitEvent: false });
+        this.refreshCell(params);
+        return true;
+    }
+
+    private setSelectValue(
+        params: ValueSetterParams<ClaveGridRow>,
+        control: 'respuesta'
+    ): boolean {
+        const group = params.data?.formGroup;
+        if (!group) {
+            return false;
+        }
+
+        const formControl = group.controls[control];
+        const value = (params.newValue ?? '').toString().trim().toUpperCase();
+
+        if (!this.respuestas.includes(value)) {
+            return false;
+        }
+
+        formControl.setValue(value, { emitEvent: false });
+        formControl.markAsTouched();
+        formControl.markAsDirty();
+        formControl.updateValueAndValidity({ emitEvent: false });
+        this.refreshCell(params);
+        return true;
+    }
+
+    private createInvalidCellClassRules(
+        control: 'preguntaOrden' | 'respuesta'
+    ): CellClassRules<ClaveGridRow> {
+        return {
+            'ag-cell-invalid': (params: CellClassParams<ClaveGridRow>): boolean => {
+                const formGroup = params.data?.formGroup;
+                if (!formGroup) {
+                    return false;
+                }
+
+                const formControl = formGroup.controls[control];
+                return formControl.invalid && (formControl.dirty || formControl.touched);
+            },
+        };
+    }
+
+    private autoSizeColumns(): void {
+        if (!this.gridApi) {
+            return;
+        }
+
+        const columns = this.gridApi.getColumns();
+        if (!columns?.length) {
+            return;
+        }
+
+        const columnIds = columns.map((column) => column.getId()).filter(Boolean) as string[];
+        if (columnIds.length > 0) {
+            this.gridApi.autoSizeColumns(columnIds, false);
+        }
+    }
+
+    private updateNoRowsOverlay(): void {
+        if (!this.gridApi) {
+            return;
+        }
+
+        if (this.clavesForm.length === 0) {
+            this.gridApi.showNoRowsOverlay();
+        } else {
+            this.gridApi.hideOverlay();
+        }
+    }
+
+    private refreshActionsColumn(): void {
+        if (!this.gridApi) {
+            return;
+        }
+
+        this.gridApi.refreshCells({
+            columns: ['actions'],
+            force: true,
+        });
+    }
+
+    private refreshCell(params: ValueSetterParams<ClaveGridRow>): void {
+        if (!params.node) {
+            return;
+        }
+
+        params.api.refreshCells({
+            rowNodes: [params.node],
+            columns: [params.column.getColId()],
+            force: true,
+        });
     }
 }
