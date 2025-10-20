@@ -605,19 +605,18 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
 
         void import('./evaluacion-programada-dialog/evaluacion-programada-dialog.component').then(
             ({ EvaluacionProgramadaDialogComponent }) => {
-                const existingFechas = Array.from(
-                    new Set(
-                        this.allEvaluaciones
-                            .filter((item) => !evaluacion || item.id !== evaluacion.id)
-                            .map((item) => item.fechaInicio)
-                    )
-                );
+                const existingProgramaciones = this.allEvaluaciones
+                    .filter((item) => !evaluacion || item.id !== evaluacion.id)
+                    .map((item) => ({
+                        fechaInicio: item.fechaInicio,
+                        cicloId: item.cicloId ?? null,
+                    }));
 
                 const secciones = evaluacion ? this.evaluacionSecciones.get(evaluacion.id) ?? [] : [];
 
                 const data: EvaluacionProgramadaDialogData = {
                     mode: evaluacion ? 'edit' : 'create',
-                    existingFechas,
+                    existingProgramaciones,
                     evaluacion: evaluacion ?? null,
                     secciones,
                 };

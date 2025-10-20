@@ -62,9 +62,14 @@ import { SeccionesService } from 'app/core/services/centro-estudios/secciones.se
 import { AperturaCicloService } from 'app/core/services/centro-estudios/apertura-ciclo.service';
 import { SeccionCicloService } from 'app/core/services/centro-estudios/seccion-ciclo.service';
 
+interface FechaCicloRegistro {
+    fechaInicio: string;
+    cicloId: number | null;
+}
+
 export interface EvaluacionProgramadaDialogData {
     mode: 'create' | 'edit';
-    existingFechas: string[];
+    existingProgramaciones: FechaCicloRegistro[];
     evaluacion: EvaluacionProgramada | null;
     secciones: EvaluacionProgramadaSeccion[];
 }
@@ -127,7 +132,9 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
 
     private readonly destroyRef = inject(DestroyRef);
     private readonly submit$ = new Subject<void>();
-    private readonly existingFechasSet = new Set(this.data.existingFechas);
+    private readonly existingFechaCicloSet = new Set(
+        this.data.existingProgramaciones.map((item) => this.buildFechaCicloKey(item.fechaInicio, item.cicloId))
+    );
     private ciclosCache: Ciclo[] = [];
     private initialSeccionRecords: EvaluacionProgramadaSeccion[] = [...this.data.secciones];
 
@@ -293,6 +300,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
             .pipe(
                 takeUntilDestroyed(this.destroyRef),
                 switchMap((cicloId) => {
+                    this.revalidateFechaInicio();
                     const sedeId = this.form.controls['sedeId'].value;
                     this.form.controls['seccionCicloIds'].setValue([]);
                     this.seccionOptions$.next([]);
@@ -333,6 +341,10 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
                     this.form.controls['seccionCicloIds'].setValue(initialIds);
                 }
             });
+    }
+
+    private revalidateFechaInicio(): void {
+        this.form.controls['fechaInicio'].updateValueAndValidity({ onlySelf: true, emitEvent: false });
     }
 
     private setControlEnabled(control: 'cicloId' | 'seccionCicloIds', enabled: boolean): void {
@@ -527,11 +539,23 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
             return null;
         }
 
-        if (this.data.mode === 'edit' && this.data.evaluacion?.fechaInicio === fecha) {
+        const cicloId = this.form.getRawValue().cicloId ?? null;
+
+        if (
+            this.data.mode === 'edit' &&
+            this.data.evaluacion?.fechaInicio === fecha &&
+            (this.data.evaluacion?.cicloId ?? null) === cicloId
+        ) {
             return null;
         }
 
-        return this.existingFechasSet.has(fecha) ? { fechaDuplicada: true } : null;
+        const key = this.buildFechaCicloKey(fecha, cicloId);
+
+        return this.existingFechaCicloSet.has(key) ? { fechaDuplicada: true } : null;
+    }
+
+    private buildFechaCicloKey(fecha: string, cicloId: number | null): string {
+        return `${fecha}__${cicloId ?? 'null'}`;
     }
 
     private horarioValidator(form: FormGroup): { horarioInvalido: boolean } | null {
