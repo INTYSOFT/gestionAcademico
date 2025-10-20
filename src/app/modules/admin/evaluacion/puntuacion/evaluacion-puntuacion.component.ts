@@ -45,6 +45,10 @@ import {
     EvaluacionDetalleImportDialogResult,
 } from './evaluacion-detalle-import-dialog/evaluacion-detalle-import-dialog.component';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
+import { Sede } from 'app/core/models/centro-estudios/sede.model';
+import { SedeService } from 'app/core/services/centro-estudios/sede.service';
+import { Ciclo } from 'app/core/models/centro-estudios/ciclo.model';
+import { CiclosService } from 'app/core/services/centro-estudios/ciclos.service';
 
 interface EvaluacionSeccionTabView {
     key: string;
@@ -110,6 +114,11 @@ export class EvaluacionPuntuacionComponent implements OnInit {
     private readonly isLoadingTipoEvaluacionSubject = new BehaviorSubject<boolean>(false);
 
     private readonly seccionesCatalogSubject = new BehaviorSubject<Seccion[]>([]);
+    private readonly sedesCatalogSubject = new BehaviorSubject<Sede[]>([]);
+    private readonly ciclosCatalogSubject = new BehaviorSubject<Ciclo[]>([]);
+
+    private readonly sedeNombreMap = new Map<number, string>();
+    private readonly cicloNombreMap = new Map<number, string>();
 
     protected readonly evaluaciones$ = this.evaluacionesSubject.asObservable();
     protected readonly selectedEvaluacion$ = this.selectedEvaluacionSubject.asObservable();
@@ -130,6 +139,8 @@ export class EvaluacionPuntuacionComponent implements OnInit {
         private readonly evaluacionDetallesService: EvaluacionDetallesService,
         private readonly seccionesService: SeccionesService,
         private readonly tipoEvaluacionesService: TipoEvaluacionesService,
+        private readonly sedeService: SedeService,
+        private readonly ciclosService: CiclosService,
         private readonly snackBar: MatSnackBar,
         private readonly dialog: MatDialog,
         private readonly confirmationService: FuseConfirmationService
@@ -158,6 +169,8 @@ export class EvaluacionPuntuacionComponent implements OnInit {
 
     ngOnInit(): void {
         this.loadSeccionesCatalog();
+        this.loadSedesCatalog();
+        this.loadCiclosCatalog();
 
         const initialDate = this.dateControl.value ?? new Date();
         this.dateControl.setValue(initialDate, { emitEvent: false });
@@ -204,6 +217,21 @@ export class EvaluacionPuntuacionComponent implements OnInit {
         }
 
         return 'Horario sin definir';
+    }
+
+    protected buildUbicacionLabel(evaluacion: EvaluacionProgramada): string {
+        const sede = this.getSedeNombre(evaluacion.sedeId);
+        const ciclo = this.getCicloNombre(evaluacion.cicloId);
+
+        return `Sede: ${sede} · Ciclo: ${ciclo}`;
+    }
+
+    protected getSedeLabel(evaluacion: EvaluacionProgramada): string {
+        return this.getSedeNombre(evaluacion.sedeId);
+    }
+
+    protected getCicloLabel(evaluacion: EvaluacionProgramada): string {
+        return this.getCicloNombre(evaluacion.cicloId);
     }
 
     protected formatFecha(fecha: string | null | undefined): string {
@@ -393,6 +421,36 @@ export class EvaluacionPuntuacionComponent implements OnInit {
             error: (error) => {
                 this.showError(
                     error.message ?? 'No fue posible cargar las secciones disponibles.'
+                );
+            },
+        });
+    }
+
+    private loadSedesCatalog(): void {
+        this.sedeService.getSedes().subscribe({
+            next: (sedes) => {
+                this.sedesCatalogSubject.next(sedes);
+                this.refreshSedeNombreMap(sedes);
+            },
+            error: (error) => {
+                this.sedesCatalogSubject.next([]);
+                this.refreshSedeNombreMap([]);
+                this.showError(error.message ?? 'No fue posible cargar las sedes disponibles.');
+            },
+        });
+    }
+
+    private loadCiclosCatalog(): void {
+        this.ciclosService.listAll().subscribe({
+            next: (ciclos) => {
+                this.ciclosCatalogSubject.next(ciclos);
+                this.refreshCicloNombreMap(ciclos);
+            },
+            error: (error) => {
+                this.ciclosCatalogSubject.next([]);
+                this.refreshCicloNombreMap([]);
+                this.showError(
+                    error.message ?? 'No fue posible cargar los ciclos disponibles.'
                 );
             },
         });
@@ -694,6 +752,36 @@ export class EvaluacionPuntuacionComponent implements OnInit {
     private showError(message: string): void {
         this.snackBar.open(message, 'Cerrar', {
             duration: 5000,
+        });
+    }
+
+    private getSedeNombre(sedeId: number | null | undefined): string {
+        if (sedeId === null || sedeId === undefined) {
+            return 'Sede no disponible';
+        }
+
+        return this.sedeNombreMap.get(sedeId) ?? `Sede #${sedeId}`;
+    }
+
+    private getCicloNombre(cicloId: number | null | undefined): string {
+        if (cicloId === null || cicloId === undefined) {
+            return 'Sin ciclo asignado';
+        }
+
+        return this.cicloNombreMap.get(cicloId) ?? `Ciclo #${cicloId}`;
+    }
+
+    private refreshSedeNombreMap(sedes: Sede[]): void {
+        this.sedeNombreMap.clear();
+        sedes.forEach((sede) => {
+            this.sedeNombreMap.set(sede.id, sede.nombre);
+        });
+    }
+
+    private refreshCicloNombreMap(ciclos: Ciclo[]): void {
+        this.cicloNombreMap.clear();
+        ciclos.forEach((ciclo) => {
+            this.cicloNombreMap.set(ciclo.id, ciclo.nombre);
         });
     }
 

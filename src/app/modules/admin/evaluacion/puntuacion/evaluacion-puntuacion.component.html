@@ -69,6 +69,9 @@
                                                     {{ buildHorarioLabel(evaluacion) }} ·
                                                     {{ formatFecha(evaluacion.fechaInicio) }}
                                                 </span>
+                                                <span class="text-xs text-gray-500">
+                                                    {{ buildUbicacionLabel(evaluacion) }}
+                                                </span>
                                             </div>
                                         </button>
                                     </mat-nav-list>
@@ -101,6 +104,14 @@
                                         <div>
                                             <span class="font-medium text-gray-700">Horario:</span>
                                             {{ buildHorarioLabel(evaluacion) }}
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-gray-700">Sede:</span>
+                                            {{ getSedeLabel(evaluacion) }}
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-gray-700">Ciclo:</span>
+                                            {{ getCicloLabel(evaluacion) }}
                                         </div>
                                     </div>
                                 </div>
