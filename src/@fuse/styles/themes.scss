@@ -179,6 +179,7 @@ $typography-config: mat.m2-define-typography-config(
             500,
             theme('fontFamily.sans')
         )
+
 );
 
 /* Create a base theme without any color to set the density and typography */
@@ -188,64 +189,110 @@ $typography-config: mat.m2-define-typography-config(
         density: 0,
         typography: $typography-config,
     )
+
 );
 
 /* Loop through user themes and generate Angular Material themes */
 @each $name, $theme in userThemes.$user-themes {
     /* Generate the palettes */
     $palettes: ();
-    @each $name in (primary, accent, warn) {
-        /* Define the Angular Material theme */
-        $palette: mat.m2-define-palette(map.get($theme, $name));
+    @each $palette-name in (primary, accent, warn) {
+        $palette-config: map.get($theme, $palette-name);
+        $palette: mat.m2-define-palette($palette-config);
+
+        $default-color: if(
+            map.has-key($palette-config, DEFAULT),
+            map.get($palette-config, DEFAULT),
+            map.get($palette, default)
+        );
+        $lighter-color: if(
+            map.has-key($palette-config, 100),
+            map.get($palette-config, 100),
+            map.get($palette, lighter)
+        );
+        $darker-color: if(
+            map.has-key($palette-config, 700),
+            map.get($palette-config, 700),
+            map.get($palette, darker)
+        );
+        $contrast-map: map.get($palette-config, contrast);
+        $default-contrast: if(
+            $contrast-map and map.has-key($contrast-map, DEFAULT),
+            map.get($contrast-map, DEFAULT),
+            map.get($palette, default-contrast)
+        );
+        $lighter-contrast: if(
+            $contrast-map and map.has-key($contrast-map, 100),
+            map.get($contrast-map, 100),
+            map.get($palette, lighter-contrast)
+        );
+        $darker-contrast: if(
+            $contrast-map and map.has-key($contrast-map, 700),
+            map.get($contrast-map, 700),
+            map.get($palette, darker-contrast)
+        );
 
         /* Replace the default colors on the defined Material palette */
         $palette: map.merge(
             $palette,
             (
-                default: map.get(map.get($theme, $name), DEFAULT),
-                lighter: map.get(map.get($theme, $name), 100),
-                darker: map.get(map.get($theme, $name), 700),
-                text: map.get(map.get($theme, $name), DEFAULT),
-                default-contrast:
-                    map.get(map.get(map.get($theme, $name), contrast), DEFAULT),
-                lighter-contrast:
-                    map.get(map.get(map.get($theme, $name), contrast), 100),
-                darker-contrast:
-                    map.get(map.get(map.get($theme, $name), contrast), 700),
+                default: $default-color,
+                lighter: $lighter-color,
+                darker: $darker-color,
+                text: $default-color,
+                default-contrast: $default-contrast,
+                lighter-contrast: $lighter-contrast,
+                darker-contrast: $darker-contrast,
             )
         );
 
-        $palettes: map.merge($palettes, (#{$name}: $palette));
+        $palettes: map.set($palettes, $palette-name, $palette);
     }
 
-    /* Define a light & dark Angular Material theme with the generated palettes */
+    $light-foreground: map.merge(
+        mat.$m2-light-theme-foreground-palette,
+        map.get($light-base, foreground)
+    );
+    $light-background: map.merge(
+        mat.$m2-light-theme-background-palette,
+        map.get($light-base, background)
+    );
+
+    $dark-foreground: map.merge(
+        mat.$m2-dark-theme-foreground-palette,
+        map.get($dark-base, foreground)
+    );
+    $dark-background: map.merge(
+        mat.$m2-dark-theme-background-palette,
+        map.get($dark-base, background)
+    );
+
     $light-theme: mat.m2-define-light-theme(
         (
-            color: $palettes,
+            color: map.merge(
+                $palettes,
+                (
+                    foreground: $light-foreground,
+                    background: $light-background,
+                )
+            ),
+            typography: $typography-config,
+            density: 0,
         )
     );
 
     $dark-theme: mat.m2-define-dark-theme(
         (
-            color: $palettes,
+            color: map.merge(
+                $palettes,
+                (
+                    foreground: $dark-foreground,
+                    background: $dark-background,
+                )
+            ),
+            typography: $typography-config,
+            density: 0,
         )
-    );
-
-    /* Merge the custom base colors with the generated themes */
-    $light-theme-colors: map.merge(map.get($light-theme, color), $light-base);
-    $light-theme: map.merge(
-        (
-            color: $light-theme-colors,
-        ),
-        $light-theme-colors
-    );
-
-    $dark-theme-colors: map.merge(map.get($dark-theme, color), $dark-base);
-    $dark-theme: map.merge(
-        (
-            color: $dark-theme-colors,
-        ),
-        $dark-theme-colors
     );
 
     /* Ensure typography & density information are present */
