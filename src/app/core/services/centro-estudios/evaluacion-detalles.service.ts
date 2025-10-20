@@ -13,7 +13,6 @@ interface EvaluacionDetalleApi extends Partial<EvaluacionDetalle> {
     Id?: number | string;
     EvaluacionProgramadaId?: number | string;
     SeccionId?: number | string | null;
-    EvaluacionTipoPreguntaId?: number | string;
     RangoInicio?: number | string;
     RangoFin?: number | string;
     ValorBuena?: number | string;
@@ -154,11 +153,6 @@ export class EvaluacionDetallesService extends ApiMainService {
             normalized.SeccionId = payload.seccionId;
         }
 
-        if (payload.evaluacionTipoPreguntaId !== undefined) {
-            normalized.evaluacionTipoPreguntaId = payload.evaluacionTipoPreguntaId;
-            normalized.EvaluacionTipoPreguntaId = payload.evaluacionTipoPreguntaId;
-        }
-
         if (payload.rangoInicio !== undefined) {
             normalized.rangoInicio = payload.rangoInicio;
             normalized.RangoInicio = payload.rangoInicio;
@@ -220,9 +214,6 @@ export class EvaluacionDetallesService extends ApiMainService {
         const evaluacionProgramadaId = this.coerceNumber(
             raw.evaluacionProgramadaId ?? raw.EvaluacionProgramadaId
         );
-        const evaluacionTipoPreguntaId = this.coerceNumber(
-            raw.evaluacionTipoPreguntaId ?? raw.EvaluacionTipoPreguntaId
-        );
         const rangoInicio = this.coerceNumber(raw.rangoInicio ?? raw.RangoInicio);
         const rangoFin = this.coerceNumber(raw.rangoFin ?? raw.RangoFin);
         const valorBuena = this.coerceNumber(raw.valorBuena ?? raw.ValorBuena);
@@ -232,7 +223,6 @@ export class EvaluacionDetallesService extends ApiMainService {
         if (
             id === null ||
             evaluacionProgramadaId === null ||
-            evaluacionTipoPreguntaId === null ||
             rangoInicio === null ||
             rangoFin === null ||
             valorBuena === null ||
@@ -246,7 +236,6 @@ export class EvaluacionDetallesService extends ApiMainService {
             id,
             evaluacionProgramadaId,
             seccionId: this.coerceOptionalNumber(raw.seccionId ?? raw.SeccionId),
-            evaluacionTipoPreguntaId,
             rangoInicio,
             rangoFin,
             valorBuena,

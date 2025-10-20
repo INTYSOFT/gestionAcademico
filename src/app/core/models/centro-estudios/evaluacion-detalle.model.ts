@@ -2,7 +2,6 @@ export interface EvaluacionDetalle {
     id: number;
     evaluacionProgramadaId: number;
     seccionId: number | null;
-    evaluacionTipoPreguntaId: number;
     rangoInicio: number;
     rangoFin: number;
     valorBuena: number;
@@ -19,7 +18,6 @@ export interface EvaluacionDetalle {
 export interface CreateEvaluacionDetallePayload {
     evaluacionProgramadaId: number;
     seccionId: number | null;
-    evaluacionTipoPreguntaId: number;
     rangoInicio: number;
     rangoFin: number;
     valorBuena: number;
