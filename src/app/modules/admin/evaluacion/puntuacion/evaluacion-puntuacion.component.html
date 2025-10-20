@@ -54,6 +54,7 @@
                             <ng-container *ngIf="evaluaciones.length > 0; else sinEvaluaciones">
                                 <ng-container *ngIf="selectedEvaluacion$ | async as selectedEvaluacion">
                                     <mat-nav-list
+                                        #evaluacionesList
                                         class="flex-1 overflow-y-auto"
                                         [style.maxHeight.px]="evaluacionesListMaxHeight() ?? null"
                                     >
