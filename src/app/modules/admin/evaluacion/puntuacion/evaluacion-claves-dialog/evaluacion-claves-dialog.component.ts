@@ -356,6 +356,10 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
     protected onGridReady(event: GridReadyEvent<ClaveGridRow>): void {
         this.gridApi = event.api;
         this.gridApi.setGridOption('overlayNoRowsTemplate', this.noRowsOverlayTemplate);
+
+        this.gridApi.setGridOption('rowData', this.rowDataSubject.value);
+
+
         this.updateNoRowsOverlay();
         this.autoSizeColumns();
     }
@@ -599,6 +603,9 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
     private syncGridRows(): void {
         const rows = this.clavesForm.controls.map((formGroup) => ({ formGroup }));
         this.rowDataSubject.next(rows);
+
+        this.gridApi?.setGridOption('rowData', rows);
+
         this.updateNoRowsOverlay();
         this.autoSizeColumns();
     }
