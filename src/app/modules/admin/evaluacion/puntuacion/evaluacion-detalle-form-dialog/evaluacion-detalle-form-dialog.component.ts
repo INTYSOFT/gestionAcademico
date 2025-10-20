@@ -17,6 +17,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -27,12 +28,14 @@ import {
     UpdateEvaluacionDetallePayload,
 } from 'app/core/models/centro-estudios/evaluacion-detalle.model';
 import { EvaluacionDetallesService } from 'app/core/services/centro-estudios/evaluacion-detalles.service';
+import { EvaluacionTipoPregunta } from 'app/core/models/centro-estudios/evaluacion-tipo-pregunta.model';
 
 export interface EvaluacionDetalleFormDialogData {
     mode: 'create' | 'edit';
     evaluacionProgramadaId: number;
     seccionId: number | null;
     detalle: EvaluacionDetalle | null;
+    tipoPreguntas: EvaluacionTipoPregunta[];
 }
 
 export type EvaluacionDetalleFormDialogResult =
@@ -72,6 +75,7 @@ function rangoValidator(control: AbstractControl): ValidationErrors | null {
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatSlideToggleModule,
     MatSnackBarModule,
     MatProgressBarModule
@@ -85,6 +89,7 @@ export class EvaluacionDetalleFormDialogComponent {
 
     protected readonly form: FormGroup;
     protected readonly isSaving$ = new BehaviorSubject<boolean>(false);
+    protected readonly tipoPreguntas: EvaluacionTipoPregunta[];
 
     constructor(
         @Inject(MAT_DIALOG_DATA) private readonly data: EvaluacionDetalleFormDialogData,
@@ -96,8 +101,10 @@ export class EvaluacionDetalleFormDialogComponent {
         private readonly snackBar: MatSnackBar,
         private readonly evaluacionDetallesService: EvaluacionDetallesService
     ) {
+        this.tipoPreguntas = [...data.tipoPreguntas];
         this.form = this.fb.group(
             {
+                evaluacionTipoPreguntaId: [null, [Validators.required]],
                 rangoInicio: [0, [Validators.required, Validators.min(0)]],
                 rangoFin: [0, [Validators.required, Validators.min(0)]],
                 valorBuena: [0, [Validators.required]],
@@ -171,6 +178,7 @@ export class EvaluacionDetalleFormDialogComponent {
 
     private patchForm(detalle: EvaluacionDetalle): void {
         this.form.patchValue({
+            evaluacionTipoPreguntaId: detalle.evaluacionTipoPreguntaId,
             rangoInicio: detalle.rangoInicio,
             rangoFin: detalle.rangoFin,
             valorBuena: detalle.valorBuena,
@@ -187,6 +195,7 @@ export class EvaluacionDetalleFormDialogComponent {
         const payload: CreateEvaluacionDetallePayload = {
             evaluacionProgramadaId: this.data.evaluacionProgramadaId,
             seccionId: this.data.seccionId ?? null,
+            evaluacionTipoPreguntaId: Number(controls['evaluacionTipoPreguntaId'].value),
             rangoInicio: Number(controls['rangoInicio'].value),
             rangoFin: Number(controls['rangoFin'].value),
             valorBuena: Number(controls['valorBuena'].value),
