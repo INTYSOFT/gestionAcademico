@@ -63,6 +63,23 @@ export class EvaluacionProgramadasService extends ApiMainService {
             );
     }
 
+    listByFechaYCiclo(fechaInicio: string, cicloId: number): Observable<EvaluacionProgramada[]> {
+        const url = `${this.resourcePath}/fechaInicio/${fechaInicio}/ciclo/${cicloId}`;
+
+        return this.http
+            .get<EvaluacionProgramadaApi[]>(this.buildUrl(url), this.createOptions())
+            .pipe(
+                map((response) => this.normalizeEvaluacionProgramadas(response)),
+                catchError((error: HttpErrorResponse) => {
+                    if (error.status === 404) {
+                        return of([]);
+                    }
+
+                    return this.handleError(error);
+                })
+            );
+    }
+
     listByFechaInicioRange(
         fechaInicioDesde: string,
         fechaInicioHasta: string
@@ -125,6 +142,11 @@ export class EvaluacionProgramadasService extends ApiMainService {
         if (payload.cicloId !== undefined) {
             normalized.cicloId = payload.cicloId;
             normalized.CicloId = payload.cicloId;
+        }
+
+        if (payload.estadoId !== undefined) {
+            normalized.estadoId = payload.estadoId;
+            normalized.EstadoId = payload.estadoId;
         }
 
         if (payload.tipoEvaluacionId !== undefined) {

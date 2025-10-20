@@ -26,11 +26,15 @@ import {
     Observable,
     Subject,
     catchError,
+    combineLatest,
+    debounceTime,
+    distinctUntilChanged,
     exhaustMap,
     finalize,
     forkJoin,
     map,
     of,
+    startWith,
     switchMap,
 } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -135,6 +139,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
     private readonly existingFechaCicloSet = new Set(
         this.data.existingProgramaciones.map((item) => this.buildFechaCicloKey(item.fechaInicio, item.cicloId))
     );
+    private readonly apiFechaCicloSet = new Set<string>();
     private ciclosCache: Ciclo[] = [];
     private initialSeccionRecords: EvaluacionProgramadaSeccion[] = [...this.data.secciones];
 
@@ -200,6 +205,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
         this.loadCatalogs();
         this.handleSedeChanges();
         this.handleCicloChanges();
+        this.handleFechaYCicloValidation();
     }
 
     protected submitForm(): void {
@@ -430,6 +436,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
             tipoEvaluacionId: evaluacion.tipoEvaluacionId,
             sedeId: evaluacion.sedeId,
             cicloId: evaluacion.cicloId,
+            estadoId: evaluacion.estadoId ?? 1,
             fechaInicio: this.parseDate(evaluacion.fechaInicio),
             horaInicio: this.parseHora(evaluacion.horaInicio),
             horaFin: this.parseHora(evaluacion.horaFin),
@@ -551,11 +558,80 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
 
         const key = this.buildFechaCicloKey(fecha, cicloId);
 
-        return this.existingFechaCicloSet.has(key) ? { fechaDuplicada: true } : null;
+        if (this.existingFechaCicloSet.has(key) || this.apiFechaCicloSet.has(key)) {
+            return { fechaDuplicada: true };
+        }
+
+        return null;
     }
 
     private buildFechaCicloKey(fecha: string, cicloId: number | null): string {
         return `${fecha}__${cicloId ?? 'null'}`;
+    }
+
+    private handleFechaYCicloValidation(): void {
+        const fechaControl = this.form.controls['fechaInicio'];
+        const cicloControl = this.form.controls['cicloId'];
+
+        combineLatest([
+            fechaControl.valueChanges.pipe(startWith(fechaControl.value)),
+            cicloControl.valueChanges.pipe(startWith(cicloControl.value)),
+        ])
+            .pipe(
+                debounceTime(300),
+                map(([fechaValue, cicloId]) => ({
+                    fecha: this.formatDate(fechaValue as DateTime | Date | string | null),
+                    cicloId: cicloId ?? null,
+                })),
+                distinctUntilChanged((prev, curr) => prev.fecha === curr.fecha && prev.cicloId === curr.cicloId),
+                switchMap(({ fecha, cicloId }) => {
+                    if (!fecha || cicloId === null) {
+                        return of<{ key: string | null; hasDuplicate: boolean }>({ key: null, hasDuplicate: false });
+                    }
+
+                    if (
+                        this.data.mode === 'edit' &&
+                        this.data.evaluacion?.fechaInicio === fecha &&
+                        (this.data.evaluacion?.cicloId ?? null) === cicloId
+                    ) {
+                        return of<{ key: string | null; hasDuplicate: boolean }>({
+                            key: this.buildFechaCicloKey(fecha, cicloId),
+                            hasDuplicate: false,
+                        });
+                    }
+
+                    const key = this.buildFechaCicloKey(fecha, cicloId);
+
+                    return this.evaluacionProgramadasService.listByFechaYCiclo(fecha, cicloId).pipe(
+                        map((evaluaciones) =>
+                            evaluaciones.some((evaluacion) => evaluacion.id !== this.data.evaluacion?.id)
+                        ),
+                        catchError((error) => {
+                            this.snackBar.open(
+                                error.message ?? 'No fue posible validar la fecha seleccionada.',
+                                'Cerrar',
+                                { duration: 5000 }
+                            );
+                            return of(false);
+                        }),
+                        map((hasDuplicate) => ({ key, hasDuplicate }))
+                    );
+                }),
+                takeUntilDestroyed(this.destroyRef)
+            )
+            .subscribe(({ key, hasDuplicate }) => {
+                this.updateApiFechaCicloDuplicates(key, hasDuplicate);
+            });
+    }
+
+    private updateApiFechaCicloDuplicates(key: string | null, hasDuplicate: boolean): void {
+        this.apiFechaCicloSet.clear();
+
+        if (key && hasDuplicate) {
+            this.apiFechaCicloSet.add(key);
+        }
+
+        this.revalidateFechaInicio();
     }
 
     private horarioValidator(form: FormGroup): { horarioInvalido: boolean } | null {
