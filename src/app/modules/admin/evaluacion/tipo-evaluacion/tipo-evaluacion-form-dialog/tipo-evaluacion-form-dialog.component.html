@@ -1,46 +1,49 @@
 <h2 mat-dialog-title>
-    {{ data.tipoEvaluacion ? 'Editar tipo de evaluación' : 'Registrar tipo de evaluación' }}
+  {{ data.tipoEvaluacion ? 'Editar tipo de evaluación' : 'Registrar tipo de evaluación' }}
 </h2>
 
 <div mat-dialog-content class="tipo-evaluacion-form">
-    <form [formGroup]="form" (ngSubmit)="save()" class="tipo-evaluacion-form__form">
-        <mat-form-field appearance="outline" class="tipo-evaluacion-form__field">
-            <mat-label>Nombre</mat-label>
-            <input matInput formControlName="nombre" maxlength="150" />
-            <mat-error *ngIf="form.get('nombre')?.hasError('required')">
-                El nombre es obligatorio
-            </mat-error>
-            <mat-hint align="end">{{ form.get('nombre')?.value?.length || 0 }}/150</mat-hint>
-        </mat-form-field>
+  <form [formGroup]="form" (ngSubmit)="save()" class="tipo-evaluacion-form__form">
+    <mat-form-field appearance="outline" class="tipo-evaluacion-form__field">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="nombre" maxlength="150" />
+      @if (form.get('nombre')?.hasError('required')) {
+        <mat-error>
+          El nombre es obligatorio
+        </mat-error>
+      }
+      <mat-hint align="end">{{ form.get('nombre')?.value?.length || 0 }}/150</mat-hint>
+    </mat-form-field>
 
-        <mat-form-field appearance="outline" class="tipo-evaluacion-form__field">
-            <mat-label>Descripción</mat-label>
-            <textarea matInput formControlName="descripcion" rows="3" maxlength="300"></textarea>
-            <mat-hint align="end">
-                {{ form.get('descripcion')?.value?.length || 0 }}/300
-            </mat-hint>
-        </mat-form-field>
+    <mat-form-field appearance="outline" class="tipo-evaluacion-form__field">
+      <mat-label>Descripción</mat-label>
+      <textarea matInput formControlName="descripcion" rows="3" maxlength="300"></textarea>
+      <mat-hint align="end">
+        {{ form.get('descripcion')?.value?.length || 0 }}/300
+      </mat-hint>
+    </mat-form-field>
 
-        <mat-slide-toggle formControlName="activo">Activo</mat-slide-toggle>
-    </form>
+    <mat-slide-toggle formControlName="activo">Activo</mat-slide-toggle>
+  </form>
 </div>
 
 <div mat-dialog-actions align="end">
-    <button mat-button type="button" (click)="cancel()" [disabled]="isSaving$ | async">
-        Cancelar
-    </button>
-    <button
-        mat-raised-button
-        color="primary"
-        type="button"
-        (click)="save()"
-        [disabled]="isSaving$ | async">
-        Guardar
-    </button>
+  <button mat-button type="button" (click)="cancel()" [disabled]="isSaving$ | async">
+    Cancelar
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
+    type="button"
+    (click)="save()"
+    [disabled]="isSaving$ | async">
+    Guardar
+  </button>
 </div>
 
-<mat-progress-bar
-    *ngIf="isSaving$ | async"
+@if (isSaving$ | async) {
+  <mat-progress-bar
     mode="indeterminate"
     color="primary"
-    class="tipo-evaluacion-form__progress"></mat-progress-bar>
+  class="tipo-evaluacion-form__progress"></mat-progress-bar>
+}

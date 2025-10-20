@@ -1,31 +1,35 @@
 <h2 mat-dialog-title>Importar detalles</h2>
 <mat-dialog-content class="space-y-4 text-sm text-gray-700">
-    <p>
-        Selecciona la sección que contiene los detalles que deseas importar a
-        <strong>{{ data.targetTabLabel }}</strong>.
-    </p>
-    <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Sección origen</mat-label>
-        <mat-select [formControl]="form.controls.sourceKey" required>
-            <mat-option *ngFor="let option of data.sources" [value]="option.key">
-                {{ option.label }} · {{ option.detallesCount }}
-                {{ option.detallesCount === 1 ? 'detalle' : 'detalles' }}
-            </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.controls.sourceKey.hasError('required')">
-            Selecciona una sección válida.
-        </mat-error>
-    </mat-form-field>
+  <p>
+    Selecciona la sección que contiene los detalles que deseas importar a
+    <strong>{{ data.targetTabLabel }}</strong>.
+  </p>
+  <mat-form-field appearance="outline" class="w-full">
+    <mat-label>Sección origen</mat-label>
+    <mat-select [formControl]="form.controls.sourceKey" required>
+      @for (option of data.sources; track option) {
+        <mat-option [value]="option.key">
+          {{ option.label }} · {{ option.detallesCount }}
+          {{ option.detallesCount === 1 ? 'detalle' : 'detalles' }}
+        </mat-option>
+      }
+    </mat-select>
+    @if (form.controls.sourceKey.hasError('required')) {
+      <mat-error>
+        Selecciona una sección válida.
+      </mat-error>
+    }
+  </mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-    <button mat-button type="button" (click)="cancel()">Cancelar</button>
-    <button
-        mat-flat-button
-        color="primary"
-        type="button"
-        (click)="import()"
-        [disabled]="form.invalid"
+  <button mat-button type="button" (click)="cancel()">Cancelar</button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    (click)="import()"
+    [disabled]="form.invalid"
     >
-        Importar
-    </button>
+    Importar
+  </button>
 </mat-dialog-actions>

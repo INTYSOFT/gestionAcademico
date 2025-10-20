@@ -1,4 +1,4 @@
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -41,17 +41,16 @@ export type CursoFormDialogResult =
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        NgIf,
-        AsyncPipe,
-        ReactiveFormsModule,
-        MatDialogModule,
-        MatButtonModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatSnackBarModule,
-        MatSlideToggleModule,
-        MatProgressBarModule,
-    ],
+    AsyncPipe,
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSnackBarModule,
+    MatSlideToggleModule,
+    MatProgressBarModule
+],
 })
 export class CursoFormDialogComponent {
     protected readonly isSaving$ = new BehaviorSubject<boolean>(false);

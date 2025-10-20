@@ -1,89 +1,92 @@
 <div class="flex min-w-0 flex-auto flex-col">
-    <div class="flex-auto p-6 sm:p-10">
+  <div class="flex-auto p-6 sm:p-10">
+    <div>
+      <div>
         <div>
-            <div>
-                <div>
-                    <div>
-                        <h2 class="text-xl font-semibold">Universidades registradas</h2>
-                        <mat-form-field appearance="outline" class="w-full sm:w-72">
-                            <mat-label>Buscar universidad</mat-label>
-                            <input
-                                matInput
-                                type="search"
-                                [formControl]="searchControl"
-                                (input)="applyFilter(searchControl.value)"
-                                placeholder="Nombre, ciudad..."
-                            />
-                            <button
-                                mat-icon-button
-                                matSuffix
-                                type="button"
-                                *ngIf="searchControl.value"
-                                (click)="searchControl.setValue(''); applyFilter('')"
-                                aria-label="Limpiar búsqueda"
-                            >
-                                <mat-icon>close</mat-icon>
-                            </button>
-                        </mat-form-field>
-                    </div>
-                </div>
-
-                <button mat-stroked-button color="primary" (click)="openUniversidadDialog()">
-                    <mat-icon class="mr-2">add</mat-icon>
-                    Nueva universidad
-                </button>
+          <div>
+            <h2 class="text-xl font-semibold">Universidades registradas</h2>
+            <mat-form-field appearance="outline" class="w-full sm:w-72">
+              <mat-label>Buscar universidad</mat-label>
+              <input
+                matInput
+                type="search"
+                [formControl]="searchControl"
+                (input)="applyFilter(searchControl.value)"
+                placeholder="Nombre, ciudad..."
+                />
+                @if (searchControl.value) {
+                  <button
+                    mat-icon-button
+                    matSuffix
+                    type="button"
+                    (click)="searchControl.setValue(''); applyFilter('')"
+                    aria-label="Limpiar búsqueda"
+                    >
+                    <mat-icon>close</mat-icon>
+                  </button>
+                }
+              </mat-form-field>
             </div>
+          </div>
 
-            <mat-progress-bar *ngIf="(isLoading$ | async)" mode="indeterminate"></mat-progress-bar>
-            <div class="overflow-x-auto rounded-2xl border border-outline">
-                <table mat-table [dataSource]="dataSource" class="min-w-full">
-                    <ng-container matColumnDef="nombre">
-                        <th mat-header-cell *matHeaderCellDef>Nombre</th>
-                        <td mat-cell *matCellDef="let universidad">{{ universidad.nombre }}</td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="ciudad">
-                        <th mat-header-cell *matHeaderCellDef>Ciudad</th>
-                        <td mat-cell *matCellDef="let universidad">{{ universidad.ciudad || '—' }}</td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="activo">
-                        <th mat-header-cell *matHeaderCellDef>Estado</th>
-                        <td mat-cell *matCellDef="let universidad">
-                            {{ universidad.activo ? 'Activo' : 'Inactivo' }}
-                        </td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="fechaRegistro">
-                        <th mat-header-cell *matHeaderCellDef>Registrada</th>
-                        <td mat-cell *matCellDef="let universidad">
-                            {{ universidad.fechaRegistro ? (universidad.fechaRegistro | date: 'dd/MM/yyyy HH:mm') : '—' }}
-                        </td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="actions">
-                        <th mat-header-cell *matHeaderCellDef class="w-24 text-right">Acciones</th>
-                        <td mat-cell *matCellDef="let universidad" class="text-right">
-                            <button
-                                mat-icon-button
-                                color="primary"
-                                matTooltip="Editar universidad"
-                                (click)="openUniversidadDialog(universidad)"
-                            >
-                                <mat-icon>edit</mat-icon>
-                            </button>
-                        </td>
-                    </ng-container>
-
-                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-                    <tr class="mat-row" *matNoDataRow>
-                        <td class="p-6 text-center" [attr.colspan]="displayedColumns.length">
-                            No existen universidades registradas.
-                        </td>
-                    </tr>
-                </table>
-            </div>
+          <button mat-stroked-button color="primary" (click)="openUniversidadDialog()">
+            <mat-icon class="mr-2">add</mat-icon>
+            Nueva universidad
+          </button>
         </div>
+
+        @if ((isLoading$ | async)) {
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        }
+        <div class="overflow-x-auto rounded-2xl border border-outline">
+          <table mat-table [dataSource]="dataSource" class="min-w-full">
+            <ng-container matColumnDef="nombre">
+              <th mat-header-cell *matHeaderCellDef>Nombre</th>
+              <td mat-cell *matCellDef="let universidad">{{ universidad.nombre }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="ciudad">
+              <th mat-header-cell *matHeaderCellDef>Ciudad</th>
+              <td mat-cell *matCellDef="let universidad">{{ universidad.ciudad || '—' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="activo">
+              <th mat-header-cell *matHeaderCellDef>Estado</th>
+              <td mat-cell *matCellDef="let universidad">
+                {{ universidad.activo ? 'Activo' : 'Inactivo' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="fechaRegistro">
+              <th mat-header-cell *matHeaderCellDef>Registrada</th>
+              <td mat-cell *matCellDef="let universidad">
+                {{ universidad.fechaRegistro ? (universidad.fechaRegistro | date: 'dd/MM/yyyy HH:mm') : '—' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef class="w-24 text-right">Acciones</th>
+              <td mat-cell *matCellDef="let universidad" class="text-right">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  matTooltip="Editar universidad"
+                  (click)="openUniversidadDialog(universidad)"
+                  >
+                  <mat-icon>edit</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            <tr class="mat-row" *matNoDataRow>
+              <td class="p-6 text-center" [attr.colspan]="displayedColumns.length">
+                No existen universidades registradas.
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
     </div>
-</div>
+  </div>

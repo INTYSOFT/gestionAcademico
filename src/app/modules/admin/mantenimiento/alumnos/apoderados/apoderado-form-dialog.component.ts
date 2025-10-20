@@ -1,4 +1,4 @@
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -65,19 +65,17 @@ export interface ApoderadoFormDialogResult {
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        AsyncPipe,
-        NgIf,
-        NgFor,
-        ReactiveFormsModule,
-        MatDialogModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatSnackBarModule,
-        MatProgressSpinnerModule,
-        MatSelectModule,
-        AgGridAngular,
-    ],
+    AsyncPipe,
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatSnackBarModule,
+    MatProgressSpinnerModule,
+    MatSelectModule,
+    AgGridAngular
+],
 })
 export class ApoderadoFormDialogComponent implements OnInit, OnDestroy {
     protected readonly searchControl = new FormControl('', {

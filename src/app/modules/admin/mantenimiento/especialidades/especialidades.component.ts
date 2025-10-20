@@ -1,4 +1,4 @@
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -35,19 +35,18 @@ import type {
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
     imports: [
-        AsyncPipe,
-        NgIf,
-        ReactiveFormsModule,
-        AgGridAngular,
-        MatButtonModule,
-        MatDialogModule,
-        MatFormFieldModule,
-        MatIconModule,
-        MatInputModule,
-        MatProgressBarModule,
-        MatSnackBarModule,
-        MatTooltipModule,
-    ],
+    AsyncPipe,
+    ReactiveFormsModule,
+    AgGridAngular,
+    MatButtonModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatProgressBarModule,
+    MatSnackBarModule,
+    MatTooltipModule
+],
 })
 export class EspecialidadesComponent implements OnInit, OnDestroy {
     protected readonly searchControl = this.fb.control('', {

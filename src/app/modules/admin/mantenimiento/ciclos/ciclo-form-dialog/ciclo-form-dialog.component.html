@@ -1,109 +1,126 @@
 <h2 mat-dialog-title>
-    {{ data.ciclo ? 'Editar ciclo' : 'Registrar ciclo' }}
+  {{ data.ciclo ? 'Editar ciclo' : 'Registrar ciclo' }}
 </h2>
 
-<mat-progress-bar
-    *ngIf="isSaving$ | async"
+@if (isSaving$ | async) {
+  <mat-progress-bar
     mode="indeterminate"
-    color="primary"></mat-progress-bar>
+  color="primary"></mat-progress-bar>
+}
 
 <mat-dialog-content>
-    <form class="ciclo-form" [formGroup]="form">
-        <div class="ciclo-form__grid">
-            <mat-form-field appearance="outline">
-                <mat-label>Nombre</mat-label>
-                <input matInput formControlName="nombre" autocomplete="off" />
-                <mat-error *ngIf="form.get('nombre')?.hasError('required')">
-                    El nombre es obligatorio.
-                </mat-error>
-                <mat-error *ngIf="form.get('nombre')?.hasError('maxlength')">
-                    No puede superar los 150 caracteres.
-                </mat-error>
-            </mat-form-field>
+  <form class="ciclo-form" [formGroup]="form">
+    <div class="ciclo-form__grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Nombre</mat-label>
+        <input matInput formControlName="nombre" autocomplete="off" />
+        @if (form.get('nombre')?.hasError('required')) {
+          <mat-error>
+            El nombre es obligatorio.
+          </mat-error>
+        }
+        @if (form.get('nombre')?.hasError('maxlength')) {
+          <mat-error>
+            No puede superar los 150 caracteres.
+          </mat-error>
+        }
+      </mat-form-field>
 
-            <mat-form-field appearance="outline">
-                <mat-label>Fecha de inicio</mat-label>
-                <input matInput [matDatepicker]="pickerInicio"
-                    formControlName="fechaInicio" />
-                <mat-datepicker-toggle matSuffix
-                    [for]="pickerInicio"></mat-datepicker-toggle>
-                <mat-datepicker #pickerInicio></mat-datepicker>
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha de inicio</mat-label>
+        <input matInput [matDatepicker]="pickerInicio"
+          formControlName="fechaInicio" />
+          <mat-datepicker-toggle matSuffix
+          [for]="pickerInicio"></mat-datepicker-toggle>
+          <mat-datepicker #pickerInicio></mat-datepicker>
+          @if (form.get('fechaInicio')?.hasError('required')) {
+            <mat-error
+              >
+              La fecha de inicio es obligatoria.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Fecha de fin</mat-label>
+          <input matInput [matDatepicker]="pickerFin"
+            formControlName="fechaFin" />
+            <mat-datepicker-toggle matSuffix
+            [for]="pickerFin"></mat-datepicker-toggle>
+            <mat-datepicker #pickerFin></mat-datepicker>
+            @if (form.get('fechaFin')?.hasError('required')) {
+              <mat-error>
+                La fecha de fin es obligatoria.
+              </mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Fecha apertura inscripción</mat-label>
+            <input
+              matInput
+              [matDatepicker]="pickerApertura"
+              formControlName="fechaAperturaInscripcion" />
+              <mat-datepicker-toggle matSuffix
+              [for]="pickerApertura"></mat-datepicker-toggle>
+              <mat-datepicker #pickerApertura></mat-datepicker>
+              @if (form.get('fechaAperturaInscripcion')?.hasError('required')) {
                 <mat-error
-                    *ngIf="form.get('fechaInicio')?.hasError('required')">
-                    La fecha de inicio es obligatoria.
+                  >
+                  La fecha de apertura de inscripción es obligatoria.
                 </mat-error>
+              }
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-                <mat-label>Fecha de fin</mat-label>
-                <input matInput [matDatepicker]="pickerFin"
-                    formControlName="fechaFin" />
+              <mat-label>Fecha cierre inscripción</mat-label>
+              <input
+                matInput
+                [matDatepicker]="pickerCierre"
+                formControlName="fechaCierreInscripcion" />
                 <mat-datepicker-toggle matSuffix
-                    [for]="pickerFin"></mat-datepicker-toggle>
-                <mat-datepicker #pickerFin></mat-datepicker>
-                <mat-error *ngIf="form.get('fechaFin')?.hasError('required')">
-                    La fecha de fin es obligatoria.
-                </mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-                <mat-label>Fecha apertura inscripción</mat-label>
-                <input
-                    matInput
-                    [matDatepicker]="pickerApertura"
-                    formControlName="fechaAperturaInscripcion" />
-                <mat-datepicker-toggle matSuffix
-                    [for]="pickerApertura"></mat-datepicker-toggle>
-                <mat-datepicker #pickerApertura></mat-datepicker>
-                <mat-error
-                    *ngIf="form.get('fechaAperturaInscripcion')?.hasError('required')">
-                    La fecha de apertura de inscripción es obligatoria.
-                </mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-                <mat-label>Fecha cierre inscripción</mat-label>
-                <input
-                    matInput
-                    [matDatepicker]="pickerCierre"
-                    formControlName="fechaCierreInscripcion" />
-                <mat-datepicker-toggle matSuffix
-                    [for]="pickerCierre"></mat-datepicker-toggle>
+                [for]="pickerCierre"></mat-datepicker-toggle>
                 <mat-datepicker #pickerCierre></mat-datepicker>
-                <mat-error
-                    *ngIf="form.get('fechaCierreInscripcion')?.hasError('required')">
+                @if (form.get('fechaCierreInscripcion')?.hasError('required')) {
+                  <mat-error
+                    >
                     La fecha de cierre de inscripción es obligatoria.
-                </mat-error>
-            </mat-form-field>
+                  </mat-error>
+                }
+              </mat-form-field>
 
-            <mat-form-field appearance="outline">
+              <mat-form-field appearance="outline">
                 <mat-label>Capacidad total</mat-label>
                 <input matInput type="number" formControlName="capacidadTotal"
-                    min="0" />
-                <mat-error *ngIf="form.get('capacidadTotal')?.hasError('min')">
-                    Debe ser un número mayor o igual a 0.
-                </mat-error>
-            </mat-form-field>
-        </div>
+                  min="0" />
+                  @if (form.get('capacidadTotal')?.hasError('min')) {
+                    <mat-error>
+                      Debe ser un número mayor o igual a 0.
+                    </mat-error>
+                  }
+                </mat-form-field>
+              </div>
 
-        <mat-checkbox formControlName="activo">Activo</mat-checkbox>
+              <mat-checkbox formControlName="activo">Activo</mat-checkbox>
 
-        <div class="ciclo-form__date-error" *ngIf="getDateError() as dateError">
-            {{ dateError }}
-        </div>
-    </form>
-</mat-dialog-content>
+              @if (getDateError(); as dateError) {
+                <div class="ciclo-form__date-error">
+                  {{ dateError }}
+                </div>
+              }
+            </form>
+          </mat-dialog-content>
 
-<mat-dialog-actions align="end">
-    <button mat-button type="button" (click)="cancel()">
-        Cancelar
-    </button>
-    <button
-        mat-flat-button
-        color="primary"
-        type="button"
-        (click)="save()"
-        [disabled]="isSaving$ | async">
-        Guardar
-    </button>
-</mat-dialog-actions>
+          <mat-dialog-actions align="end">
+            <button mat-button type="button" (click)="cancel()">
+              Cancelar
+            </button>
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              (click)="save()"
+              [disabled]="isSaving$ | async">
+              Guardar
+            </button>
+          </mat-dialog-actions>

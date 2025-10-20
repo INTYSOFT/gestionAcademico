@@ -1,121 +1,119 @@
 <div mat-dialog-title class="apoderados__header">
-    <h2>Apoderados de {{ data.nombres }} {{ data.apellidos }}</h2>
-    <button
-        mat-icon-button
-        type="button"
-        aria-label="Cerrar"
-        (click)="close()"
+  <h2>Apoderados de {{ data.nombres }} {{ data.apellidos }}</h2>
+  <button
+    mat-icon-button
+    type="button"
+    aria-label="Cerrar"
+    (click)="close()"
     >
-        <mat-icon>close</mat-icon>
-    </button>
+    <mat-icon>close</mat-icon>
+  </button>
 </div>
 
 <mat-dialog-content class="apoderados">
-    <div class="apoderados__toolbar">
-        <button mat-raised-button color="primary" type="button" (click)="addApoderado()">
-            <mat-icon>person_add</mat-icon>
-            Agregar apoderado
-        </button>
-    </div>
+  <div class="apoderados__toolbar">
+    <button mat-raised-button color="primary" type="button" (click)="addApoderado()">
+      <mat-icon>person_add</mat-icon>
+      Agregar apoderado
+    </button>
+  </div>
 
+  @if (isLoading$ | async) {
     <mat-progress-bar
-        *ngIf="isLoading$ | async"
-        mode="indeterminate"
-        color="primary"
+      mode="indeterminate"
+      color="primary"
     ></mat-progress-bar>
+  }
 
+  @if ((relaciones$ | async)?.length || (isLoading$ | async)) {
     <table
-        mat-table
-        [dataSource]="relaciones$ | async"
-        [trackBy]="trackByRelacionId"
-        class="apoderados__table"
-        *ngIf="(relaciones$ | async)?.length || (isLoading$ | async)"
-    >
-        <ng-container matColumnDef="documento">
-            <th mat-header-cell *matHeaderCellDef>Documento</th>
-            <td mat-cell *matCellDef="let relacion">
-                {{ relacion.apoderado?.documento || '—' }}
-            </td>
-        </ng-container>
-
-        <ng-container matColumnDef="apellidos">
-            <th mat-header-cell *matHeaderCellDef>Apellidos</th>
-            <td mat-cell *matCellDef="let relacion">
-                {{ relacion.apoderado?.apellidos || '—' }}
-            </td>
-        </ng-container>
-
-        <ng-container matColumnDef="nombres">
-            <th mat-header-cell *matHeaderCellDef>Nombres</th>
-            <td mat-cell *matCellDef="let relacion">
-                {{ relacion.apoderado?.nombres || '—' }}
-            </td>
-        </ng-container>
-
-        <ng-container matColumnDef="parentesco">
-            <th mat-header-cell *matHeaderCellDef>Parentesco</th>
-            <td mat-cell *matCellDef="let relacion">
-                <mat-form-field appearance="fill">
-                    <mat-select
-                        [value]="relacion.parentescoId"
-                        (selectionChange)="updateParentesco(relacion, $event.value)"
-                        [disabled]="isUpdating(relacion)"
-                    >
-                        <mat-option value="" disabled>Seleccione</mat-option>
-                        <mat-option
-                            *ngFor="let parentesco of parentescos$ | async; trackBy: trackByParentescoId"
-                            [value]="parentesco.id"
-                        >
-                            {{ parentesco.nombre }}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-            </td>
-        </ng-container>
-
-        <ng-container matColumnDef="celular">
-            <th mat-header-cell *matHeaderCellDef>Celular</th>
-            <td mat-cell *matCellDef="let relacion">
-                {{ relacion.apoderado?.celular || '—' }}
-            </td>
-        </ng-container>
-
-        <ng-container matColumnDef="correo">
-            <th mat-header-cell *matHeaderCellDef>Correo</th>
-            <td mat-cell *matCellDef="let relacion">
-                {{ relacion.apoderado?.correo || '—' }}
-            </td>
-        </ng-container>
-
-        <ng-container matColumnDef="acciones">
-            <th mat-header-cell *matHeaderCellDef class="apoderados__actions-header">
-                Acciones
-            </th>
-            <td mat-cell *matCellDef="let relacion">
-                <button
-                    mat-icon-button
-                    color="warn"
-                    type="button"
-                    aria-label="Desvincular apoderado"
-                    (click)="unlink(relacion)"
-                    [disabled]="isUpdating(relacion)"
-                >
-                    <mat-icon>link_off</mat-icon>
-                </button>
-            </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      mat-table
+      [dataSource]="relaciones$ | async"
+      [trackBy]="trackByRelacionId"
+      class="apoderados__table"
+      >
+      <ng-container matColumnDef="documento">
+        <th mat-header-cell *matHeaderCellDef>Documento</th>
+        <td mat-cell *matCellDef="let relacion">
+          {{ relacion.apoderado?.documento || '—' }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="apellidos">
+        <th mat-header-cell *matHeaderCellDef>Apellidos</th>
+        <td mat-cell *matCellDef="let relacion">
+          {{ relacion.apoderado?.apellidos || '—' }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="nombres">
+        <th mat-header-cell *matHeaderCellDef>Nombres</th>
+        <td mat-cell *matCellDef="let relacion">
+          {{ relacion.apoderado?.nombres || '—' }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="parentesco">
+        <th mat-header-cell *matHeaderCellDef>Parentesco</th>
+        <td mat-cell *matCellDef="let relacion">
+          <mat-form-field appearance="fill">
+            <mat-select
+              [value]="relacion.parentescoId"
+              (selectionChange)="updateParentesco(relacion, $event.value)"
+              [disabled]="isUpdating(relacion)"
+              >
+              <mat-option value="" disabled>Seleccione</mat-option>
+              @for (parentesco of parentescos$ | async; track trackByParentescoId($index, parentesco)) {
+                <mat-option
+                  [value]="parentesco.id"
+                  >
+                  {{ parentesco.nombre }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="celular">
+        <th mat-header-cell *matHeaderCellDef>Celular</th>
+        <td mat-cell *matCellDef="let relacion">
+          {{ relacion.apoderado?.celular || '—' }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="correo">
+        <th mat-header-cell *matHeaderCellDef>Correo</th>
+        <td mat-cell *matCellDef="let relacion">
+          {{ relacion.apoderado?.correo || '—' }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef class="apoderados__actions-header">
+          Acciones
+        </th>
+        <td mat-cell *matCellDef="let relacion">
+          <button
+            mat-icon-button
+            color="warn"
+            type="button"
+            aria-label="Desvincular apoderado"
+            (click)="unlink(relacion)"
+            [disabled]="isUpdating(relacion)"
+            >
+            <mat-icon>link_off</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
     </table>
+  }
 
-    <p class="apoderados__empty" *ngIf="!(isLoading$ | async) && !(relaciones$ | async)?.length">
-        No se encontraron apoderados vinculados.
+  @if (!(isLoading$ | async) && !(relaciones$ | async)?.length) {
+    <p class="apoderados__empty">
+      No se encontraron apoderados vinculados.
     </p>
+  }
 </mat-dialog-content>
 
 <mat-dialog-actions align="end" class="apoderados__actions">
-    <button mat-stroked-button type="button" (click)="close()">
-        Cerrar
-    </button>
+  <button mat-stroked-button type="button" (click)="close()">
+    Cerrar
+  </button>
 </mat-dialog-actions>

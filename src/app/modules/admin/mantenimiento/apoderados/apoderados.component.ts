@@ -1,4 +1,4 @@
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -31,18 +31,17 @@ import type { ApoderadoFormDialogResult } from './apoderado-form-dialog/apoderad
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
     imports: [
-        AsyncPipe,
-        NgIf,
-        ReactiveFormsModule,
-        AgGridAngular,
-        MatButtonModule,
-        MatDialogModule,
-        MatFormFieldModule,
-        MatIconModule,
-        MatInputModule,
-        MatProgressBarModule,
-        MatSnackBarModule,
-    ],
+    AsyncPipe,
+    ReactiveFormsModule,
+    AgGridAngular,
+    MatButtonModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatProgressBarModule,
+    MatSnackBarModule
+],
 })
 export class ApoderadosComponent implements OnInit, OnDestroy {
     protected readonly searchControl = this.fb.control('', {

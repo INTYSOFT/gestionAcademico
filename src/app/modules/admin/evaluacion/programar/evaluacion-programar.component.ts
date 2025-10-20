@@ -1,4 +1,4 @@
-import { AsyncPipe, NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+import { AsyncPipe, NgClass } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -124,27 +124,23 @@ function validateDateRange(control: AbstractControl): ValidationErrors | null {
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        AsyncPipe,
-        NgClass,
-        NgFor,
-        NgIf,
-        NgSwitch,
-        NgSwitchCase,
-        ReactiveFormsModule,
-        MatButtonModule,
-        MatButtonToggleModule,
-        MatCardModule,
-        MatDialogModule,
-        MatIconModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatDatepickerModule,
-        MatNativeDateModule,
-        MatProgressSpinnerModule,
-        MatSnackBarModule,
-        MatTooltipModule,
-        MatTreeModule,
-    ],
+    AsyncPipe,
+    NgClass,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatCardModule,
+    MatDialogModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule,
+    MatTooltipModule,
+    MatTreeModule
+],
 })
 export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
     protected readonly filtersForm = this.fb.group({

@@ -1,35 +1,36 @@
 <div class="flex min-w-0 flex-auto flex-col">
-    <div class="flex-auto p-6 sm:p-10">
-        <section class="carreras">
-            <header class="carreras__header">
-                <mat-form-field appearance="outline" class="carreras__search-field">
-                    <mat-label>Buscar carreras</mat-label>
-                    <input
-                        matInput
-                        type="search"
-                        [formControl]="searchControl"
-                        placeholder="Nombre o estado" />
-                </mat-form-field>
-                <button mat-raised-button color="primary" type="button" (click)="createCarrera()">
-                    <mat-icon>add</mat-icon>
-                    Nueva carrera
-                </button>
-            </header>
+  <div class="flex-auto p-6 sm:p-10">
+    <section class="carreras">
+      <header class="carreras__header">
+        <mat-form-field appearance="outline" class="carreras__search-field">
+          <mat-label>Buscar carreras</mat-label>
+          <input
+            matInput
+            type="search"
+            [formControl]="searchControl"
+            placeholder="Nombre o estado" />
+          </mat-form-field>
+          <button mat-raised-button color="primary" type="button" (click)="createCarrera()">
+            <mat-icon>add</mat-icon>
+            Nueva carrera
+          </button>
+        </header>
 
-            <mat-progress-bar
-                *ngIf="isLoading$ | async"
-                mode="indeterminate"
-                color="primary"></mat-progress-bar>
+        @if (isLoading$ | async) {
+          <mat-progress-bar
+            mode="indeterminate"
+          color="primary"></mat-progress-bar>
+        }
 
-            <ag-grid-angular
-                class="ag-theme-material carreras__grid"
-                [theme]="'legacy'"
-                [rowData]="filteredCarreras$ | async"
-                [columnDefs]="columnDefs"
-                [defaultColDef]="defaultColDef"
-                [animateRows]="true"
-                [domLayout]="'autoHeight'"
-                (gridReady)="onGridReady($event)"></ag-grid-angular>
-        </section>
+        <ag-grid-angular
+          class="ag-theme-material carreras__grid"
+          [theme]="'legacy'"
+          [rowData]="filteredCarreras$ | async"
+          [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef"
+          [animateRows]="true"
+          [domLayout]="'autoHeight'"
+        (gridReady)="onGridReady($event)"></ag-grid-angular>
+      </section>
     </div>
-</div>
+  </div>

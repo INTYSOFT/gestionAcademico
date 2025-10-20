@@ -1,58 +1,65 @@
 <h2 mat-dialog-title>
-    {{ data.curso ? 'Editar curso' : 'Registrar curso' }}
+  {{ data.curso ? 'Editar curso' : 'Registrar curso' }}
 </h2>
 
-<mat-progress-bar
-    *ngIf="isSaving$ | async"
+@if (isSaving$ | async) {
+  <mat-progress-bar
     mode="indeterminate"
-    color="primary"></mat-progress-bar>
+  color="primary"></mat-progress-bar>
+}
 
 <mat-dialog-content>
-    <form class="curso-dialog__form" [formGroup]="form">
-        <mat-form-field appearance="outline">
-            <mat-label>Nombre del curso</mat-label>
-            <input
-                matInput
-                type="text"
-                maxlength="150"
-                formControlName="nombre"
-                autocomplete="off" />
-            <mat-error *ngIf="form.get('nombre')?.hasError('required')">
-                El nombre es obligatorio.
-            </mat-error>
-            <mat-error *ngIf="form.get('nombre')?.hasError('maxlength')">
-                El nombre no puede superar los 150 caracteres.
-            </mat-error>
-        </mat-form-field>
+  <form class="curso-dialog__form" [formGroup]="form">
+    <mat-form-field appearance="outline">
+      <mat-label>Nombre del curso</mat-label>
+      <input
+        matInput
+        type="text"
+        maxlength="150"
+        formControlName="nombre"
+        autocomplete="off" />
+        @if (form.get('nombre')?.hasError('required')) {
+          <mat-error>
+            El nombre es obligatorio.
+          </mat-error>
+        }
+        @if (form.get('nombre')?.hasError('maxlength')) {
+          <mat-error>
+            El nombre no puede superar los 150 caracteres.
+          </mat-error>
+        }
+      </mat-form-field>
 
-        <mat-form-field appearance="outline">
-            <mat-label>Descripción</mat-label>
-            <textarea
-                matInput
-                rows="3"
-                maxlength="255"
-                formControlName="descripcion"></textarea>
-            <mat-error *ngIf="form.get('descripcion')?.hasError('maxlength')">
-                La descripción no puede superar los 255 caracteres.
-            </mat-error>
-        </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Descripción</mat-label>
+        <textarea
+          matInput
+          rows="3"
+          maxlength="255"
+        formControlName="descripcion"></textarea>
+        @if (form.get('descripcion')?.hasError('maxlength')) {
+          <mat-error>
+            La descripción no puede superar los 255 caracteres.
+          </mat-error>
+        }
+      </mat-form-field>
 
-        <mat-slide-toggle formControlName="activo">
-            Activo
-        </mat-slide-toggle>
+      <mat-slide-toggle formControlName="activo">
+        Activo
+      </mat-slide-toggle>
     </form>
-</mat-dialog-content>
+  </mat-dialog-content>
 
-<mat-dialog-actions align="end">
+  <mat-dialog-actions align="end">
     <button mat-button type="button" (click)="cancel()">
-        Cancelar
+      Cancelar
     </button>
     <button
-        mat-flat-button
-        color="primary"
-        type="button"
-        (click)="save()"
-        [disabled]="isSaving$ | async">
-        Guardar
+      mat-flat-button
+      color="primary"
+      type="button"
+      (click)="save()"
+      [disabled]="isSaving$ | async">
+      Guardar
     </button>
-</mat-dialog-actions>
+  </mat-dialog-actions>

@@ -1,4 +1,4 @@
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -43,18 +43,16 @@ import { ApoderadoFormDialogComponent, ApoderadoFormDialogResult } from './apode
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        AsyncPipe,
-        NgIf,
-        NgFor,
-        MatDialogModule,
-        MatButtonModule,
-        MatIconModule,
-        MatSnackBarModule,
-        MatTableModule,
-        MatProgressBarModule,
-        MatFormFieldModule,
-        MatSelectModule,
-    ],
+    AsyncPipe,
+    MatDialogModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSnackBarModule,
+    MatTableModule,
+    MatProgressBarModule,
+    MatFormFieldModule,
+    MatSelectModule
+],
 })
 export class AlumnoApoderadosDialogComponent implements OnInit, OnDestroy {
     protected readonly displayedColumns = [

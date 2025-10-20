@@ -1,55 +1,68 @@
 <div class="sede-dialog">
-    <div class="sede-dialog__header">
-        <h2 class="sede-dialog__title">{{ selectedSede ? 'Editar sede' : 'Registrar nueva sede' }}</h2>
-        <button mat-icon-button type="button" (click)="cancel()" aria-label="Cerrar">
-            <mat-icon>close</mat-icon>
+  <div class="sede-dialog__header">
+    <h2 class="sede-dialog__title">{{ selectedSede ? 'Editar sede' : 'Registrar nueva sede' }}</h2>
+    <button mat-icon-button type="button" (click)="cancel()" aria-label="Cerrar">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  @if ((isSaving$ | async)) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="sede-dialog__form">
+    <mat-form-field appearance="fill">
+      <mat-label>Nombre de la sede</mat-label>
+      <input matInput formControlName="nombre" placeholder="Ej. Sede Central" />
+      @if (form.get('nombre')?.hasError('required')) {
+        <mat-error>
+          El nombre es obligatorio.
+        </mat-error>
+      }
+      @if (form.get('nombre')?.hasError('maxlength')) {
+        <mat-error>
+          El nombre supera el máximo permitido.
+        </mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Código de ubigeo</mat-label>
+      <input matInput formControlName="ubigeoCode" placeholder="Ej. 150101" maxlength="6" />
+      @if (form.get('ubigeoCode')?.hasError('required')) {
+        <mat-error>
+          El código de ubigeo es obligatorio.
+        </mat-error>
+      }
+      @if (form.get('ubigeoCode')?.hasError('minlength') || form.get('ubigeoCode')?.hasError('maxlength')) {
+        <mat-error
+          >
+          Debe contener 6 dígitos.
+        </mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Dirección</mat-label>
+      <textarea matInput formControlName="direccion" rows="3" placeholder="Av. Ejemplo 123"></textarea>
+      @if (form.get('direccion')?.hasError('maxlength')) {
+        <mat-error>
+          La dirección supera el máximo permitido.
+        </mat-error>
+      }
+    </mat-form-field>
+
+    <mat-slide-toggle formControlName="activo">Sede activa</mat-slide-toggle>
+
+    <div class="sede-dialog__actions">
+      @if (selectedSede) {
+        <button mat-button type="button" (click)="resetForm()">
+          Reiniciar formulario
         </button>
+      }
+      <button mat-flat-button color="primary" type="submit">
+        {{ selectedSede ? 'Actualizar' : 'Registrar' }}
+      </button>
     </div>
-
-    <mat-progress-bar *ngIf="(isSaving$ | async)" mode="indeterminate"></mat-progress-bar>
-
-    <form [formGroup]="form" (ngSubmit)="submit()" class="sede-dialog__form">
-        <mat-form-field appearance="fill">
-            <mat-label>Nombre de la sede</mat-label>
-            <input matInput formControlName="nombre" placeholder="Ej. Sede Central" />
-            <mat-error *ngIf="form.get('nombre')?.hasError('required')">
-                El nombre es obligatorio.
-            </mat-error>
-            <mat-error *ngIf="form.get('nombre')?.hasError('maxlength')">
-                El nombre supera el máximo permitido.
-            </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="fill">
-            <mat-label>Código de ubigeo</mat-label>
-            <input matInput formControlName="ubigeoCode" placeholder="Ej. 150101" maxlength="6" />
-            <mat-error *ngIf="form.get('ubigeoCode')?.hasError('required')">
-                El código de ubigeo es obligatorio.
-            </mat-error>
-            <mat-error
-                *ngIf="form.get('ubigeoCode')?.hasError('minlength') || form.get('ubigeoCode')?.hasError('maxlength')"
-            >
-                Debe contener 6 dígitos.
-            </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="fill">
-            <mat-label>Dirección</mat-label>
-            <textarea matInput formControlName="direccion" rows="3" placeholder="Av. Ejemplo 123"></textarea>
-            <mat-error *ngIf="form.get('direccion')?.hasError('maxlength')">
-                La dirección supera el máximo permitido.
-            </mat-error>
-        </mat-form-field>
-
-        <mat-slide-toggle formControlName="activo">Sede activa</mat-slide-toggle>
-
-        <div class="sede-dialog__actions">
-            <button mat-button type="button" (click)="resetForm()" *ngIf="selectedSede">
-                Reiniciar formulario
-            </button>
-            <button mat-flat-button color="primary" type="submit">
-                {{ selectedSede ? 'Actualizar' : 'Registrar' }}
-            </button>
-        </div>
-    </form>
+  </form>
 </div>

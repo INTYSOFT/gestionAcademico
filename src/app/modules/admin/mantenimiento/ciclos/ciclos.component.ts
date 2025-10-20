@@ -1,4 +1,4 @@
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -50,21 +50,19 @@ import { AperturaCicloService } from 'app/core/services/centro-estudios/apertura
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        AsyncPipe,
-        NgIf,
-        NgFor,
-        ReactiveFormsModule,
-        AgGridAngular,
-        MatButtonModule,
-        MatDialogModule,
-        MatFormFieldModule,
-        MatIconModule,
-        MatInputModule,
-        MatProgressBarModule,
-        MatSelectModule,
-        MatSnackBarModule,
-        MatTooltipModule,
-    ],
+    AsyncPipe,
+    ReactiveFormsModule,
+    AgGridAngular,
+    MatButtonModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatProgressBarModule,
+    MatSelectModule,
+    MatSnackBarModule,
+    MatTooltipModule
+],
 })
 export class CiclosComponent implements OnInit, OnDestroy {
     protected readonly searchControl = this.fb.control('', {

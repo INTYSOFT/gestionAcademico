@@ -1,4 +1,4 @@
-import { NgFor, NgIf } from '@angular/common';
+
 import {
     ChangeDetectionStrategy,
     Component,
@@ -34,14 +34,12 @@ export type EvaluacionDetalleImportDialogResult =
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        NgFor,
-        NgIf,
-        ReactiveFormsModule,
-        MatDialogModule,
-        MatButtonModule,
-        MatFormFieldModule,
-        MatSelectModule,
-    ],
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatSelectModule
+],
 })
 export class EvaluacionDetalleImportDialogComponent {
     protected readonly form = this.fb.group({

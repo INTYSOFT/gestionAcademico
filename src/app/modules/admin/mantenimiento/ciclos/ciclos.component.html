@@ -1,55 +1,57 @@
 <div class="flex min-w-0 flex-auto flex-col bg-slate-50">
-    <div class="flex-auto p-6 sm:p-10">
-        <section class="ciclos">
-            <header class="ciclos__header">
-                <div class="ciclos__filters">
-                    <mat-form-field appearance="outline" class="ciclos__search-field">
-                        <mat-label>Buscar ciclos</mat-label>
-                        <input
-                            matInput
-                            type="search"
-                            [formControl]="searchControl"
-                            placeholder="Nombre, fecha o capacidad" />
-                    </mat-form-field>
+  <div class="flex-auto p-6 sm:p-10">
+    <section class="ciclos">
+      <header class="ciclos__header">
+        <div class="ciclos__filters">
+          <mat-form-field appearance="outline" class="ciclos__search-field">
+            <mat-label>Buscar ciclos</mat-label>
+            <input
+              matInput
+              type="search"
+              [formControl]="searchControl"
+              placeholder="Nombre, fecha o capacidad" />
+            </mat-form-field>
 
-                    <mat-form-field appearance="outline" class="ciclos__year-field">
-                        <mat-label>Filtrar por año</mat-label>
-                        <mat-select [formControl]="yearFilterControl">
-                            <mat-option [value]="null">Todos</mat-option>
-                            <mat-option
-                                *ngFor="let year of yearOptions$ | async; trackBy: trackByYear"
-                                [value]="year">
-                                {{ year }}
-                            </mat-option>
-                        </mat-select>
-                    </mat-form-field>
-                </div>
+            <mat-form-field appearance="outline" class="ciclos__year-field">
+              <mat-label>Filtrar por año</mat-label>
+              <mat-select [formControl]="yearFilterControl">
+                <mat-option [value]="null">Todos</mat-option>
+                @for (year of yearOptions$ | async; track trackByYear($index, year)) {
+                  <mat-option
+                    [value]="year">
+                    {{ year }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
 
-                <button
-                    mat-raised-button
-                    color="primary"
-                    type="button"
-                    class="ciclos__new-button"
-                    (click)="createCiclo()">
-                    <mat-icon>add</mat-icon>
-                    Nuevo ciclo
-                </button>
-            </header>
+          <button
+            mat-raised-button
+            color="primary"
+            type="button"
+            class="ciclos__new-button"
+            (click)="createCiclo()">
+            <mat-icon>add</mat-icon>
+            Nuevo ciclo
+          </button>
+        </header>
 
-            <mat-progress-bar
-                *ngIf="isLoading$ | async"
-                mode="indeterminate"
-                color="primary"></mat-progress-bar>
+        @if (isLoading$ | async) {
+          <mat-progress-bar
+            mode="indeterminate"
+          color="primary"></mat-progress-bar>
+        }
 
-            <ag-grid-angular
-                class="ag-theme-material ciclos__grid"
-                [theme]="'legacy'"
-                [rowData]="filteredCiclos$ | async"
-                [columnDefs]="columnDefs"
-                [defaultColDef]="defaultColDef"
-                [animateRows]="true"
-                [domLayout]="'autoHeight'"
-                (gridReady)="onGridReady($event)"></ag-grid-angular>
-        </section>
+        <ag-grid-angular
+          class="ag-theme-material ciclos__grid"
+          [theme]="'legacy'"
+          [rowData]="filteredCiclos$ | async"
+          [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef"
+          [animateRows]="true"
+          [domLayout]="'autoHeight'"
+        (gridReady)="onGridReady($event)"></ag-grid-angular>
+      </section>
     </div>
-</div>
+  </div>

@@ -1,4 +1,4 @@
-import { AsyncPipe, CurrencyPipe, DatePipe, DecimalPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -90,26 +90,24 @@ interface MatriculaFormGroup {
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        AsyncPipe,
-        CurrencyPipe,
-        DatePipe,
-        NgFor,
-        NgIf,        
-        ReactiveFormsModule,
-        MatCardModule,
-        MatFormFieldModule,
-        MatSelectModule,
-        MatInputModule,
-        MatButtonModule,
-        MatIconModule,
-        MatTableModule,
-        MatSnackBarModule,
-        MatTooltipModule,
-        MatAutocompleteModule,
-        MatDialogModule,
-        MatDividerModule,
-        MatProgressBarModule        
-    ],
+    AsyncPipe,
+    CurrencyPipe,
+    DatePipe,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTableModule,
+    MatSnackBarModule,
+    MatTooltipModule,
+    MatAutocompleteModule,
+    MatDialogModule,
+    MatDividerModule,
+    MatProgressBarModule
+],
 })
 export class MatriculaRegistroComponent implements OnInit, OnDestroy {
     protected readonly matriculaForm: FormGroup<MatriculaFormGroup> = this.fb.group({

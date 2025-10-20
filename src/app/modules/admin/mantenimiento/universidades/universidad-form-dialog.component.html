@@ -1,44 +1,54 @@
 <div class="universidad-dialog">
-    <div class="universidad-dialog__header">
-        <h2 class="universidad-dialog__title">
-            {{ selectedUniversidad ? 'Editar universidad' : 'Registrar nueva universidad' }}
-        </h2>
-        <button mat-icon-button type="button" (click)="cancel()" aria-label="Cerrar">
-            <mat-icon>close</mat-icon>
+  <div class="universidad-dialog__header">
+    <h2 class="universidad-dialog__title">
+      {{ selectedUniversidad ? 'Editar universidad' : 'Registrar nueva universidad' }}
+    </h2>
+    <button mat-icon-button type="button" (click)="cancel()" aria-label="Cerrar">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  @if ((isSaving$ | async)) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="universidad-dialog__form">
+    <mat-form-field appearance="fill">
+      <mat-label>Nombre de la universidad</mat-label>
+      <input matInput formControlName="nombre" placeholder="Ej. Universidad Central" />
+      @if (form.get('nombre')?.hasError('required')) {
+        <mat-error>
+          El nombre es obligatorio.
+        </mat-error>
+      }
+      @if (form.get('nombre')?.hasError('maxlength')) {
+        <mat-error>
+          El nombre supera el máximo permitido.
+        </mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Ciudad</mat-label>
+      <input matInput formControlName="ciudad" placeholder="Ej. Lima" />
+      @if (form.get('ciudad')?.hasError('maxlength')) {
+        <mat-error>
+          La ciudad supera el máximo permitido.
+        </mat-error>
+      }
+    </mat-form-field>
+
+    <mat-slide-toggle formControlName="activo">Universidad activa</mat-slide-toggle>
+
+    <div class="universidad-dialog__actions">
+      @if (selectedUniversidad) {
+        <button mat-button type="button" (click)="resetForm()">
+          Reiniciar formulario
         </button>
+      }
+      <button mat-flat-button color="primary" type="submit">
+        {{ selectedUniversidad ? 'Actualizar' : 'Registrar' }}
+      </button>
     </div>
-
-    <mat-progress-bar *ngIf="(isSaving$ | async)" mode="indeterminate"></mat-progress-bar>
-
-    <form [formGroup]="form" (ngSubmit)="submit()" class="universidad-dialog__form">
-        <mat-form-field appearance="fill">
-            <mat-label>Nombre de la universidad</mat-label>
-            <input matInput formControlName="nombre" placeholder="Ej. Universidad Central" />
-            <mat-error *ngIf="form.get('nombre')?.hasError('required')">
-                El nombre es obligatorio.
-            </mat-error>
-            <mat-error *ngIf="form.get('nombre')?.hasError('maxlength')">
-                El nombre supera el máximo permitido.
-            </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="fill">
-            <mat-label>Ciudad</mat-label>
-            <input matInput formControlName="ciudad" placeholder="Ej. Lima" />
-            <mat-error *ngIf="form.get('ciudad')?.hasError('maxlength')">
-                La ciudad supera el máximo permitido.
-            </mat-error>
-        </mat-form-field>
-
-        <mat-slide-toggle formControlName="activo">Universidad activa</mat-slide-toggle>
-
-        <div class="universidad-dialog__actions">
-            <button mat-button type="button" (click)="resetForm()" *ngIf="selectedUniversidad">
-                Reiniciar formulario
-            </button>
-            <button mat-flat-button color="primary" type="submit">
-                {{ selectedUniversidad ? 'Actualizar' : 'Registrar' }}
-            </button>
-        </div>
-    </form>
+  </form>
 </div>

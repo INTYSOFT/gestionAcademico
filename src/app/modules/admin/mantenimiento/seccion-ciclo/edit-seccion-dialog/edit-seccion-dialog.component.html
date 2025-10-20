@@ -1,89 +1,107 @@
 <h2 mat-dialog-title>Editar sección del ciclo</h2>
 
-<mat-progress-bar
-    *ngIf="isSaving$ | async"
+@if (isSaving$ | async) {
+  <mat-progress-bar
     mode="indeterminate"
-    color="primary"></mat-progress-bar>
+  color="primary"></mat-progress-bar>
+}
 
 <mat-dialog-content>
-    <ng-container *ngIf="hasAvailableSecciones() && hasAvailableNiveles(); else unavailableMessage">
-        <form class="edit-seccion-dialog__form" [formGroup]="form">
-            <mat-form-field appearance="outline">
-                <mat-label>Sección</mat-label>
-                <mat-select formControlName="seccionId" placeholder="Seleccionar sección">
-                    <mat-option *ngFor="let seccion of availableSecciones" [value]="seccion.id">
-                        {{ seccion.nombre }} (Capacidad: {{ seccion.capacidad }})
-                        <ng-container *ngIf="!seccion.activo"> — Inactiva</ng-container>
-                    </mat-option>
-                </mat-select>
-                <mat-error *ngIf="form.get('seccionId')?.hasError('required')">
-                    Selecciona una sección.
-                </mat-error>
-                <mat-error *ngIf="form.get('seccionId')?.hasError('duplicate')">
-                    La sección seleccionada ya está registrada en este ciclo.
-                </mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-                <mat-label>Nivel</mat-label>
-                <mat-select formControlName="nivelId" placeholder="Seleccionar nivel">
-                    <mat-option *ngFor="let nivel of niveles" [value]="nivel.id">
-                        {{ nivel.nombre }}
-                        <ng-container *ngIf="!nivel.activo"> — Inactivo</ng-container>
-                    </mat-option>
-                </mat-select>
-                <mat-error *ngIf="form.get('nivelId')?.hasError('required')">
-                    Selecciona un nivel.
-                </mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-                <mat-label>Capacidad</mat-label>
-                <input
-                    matInput
-                    type="number"
-                    min="0"
-                    formControlName="capacidad"
-                    placeholder="Capacidad de la sección" />
-                <mat-error *ngIf="form.get('capacidad')?.hasError('required')">
-                    La capacidad es obligatoria.
-                </mat-error>
-                <mat-error *ngIf="form.get('capacidad')?.hasError('min')">
-                    La capacidad no puede ser negativa.
-                </mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-                <mat-label>Precio</mat-label>
-                <input
-                    matInput
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    formControlName="precio"
-                    placeholder="Precio de la sección" />
-                <mat-error *ngIf="form.get('precio')?.hasError('required')">
-                    El precio es obligatorio.
-                </mat-error>
-                <mat-error *ngIf="form.get('precio')?.hasError('min')">
-                    El precio no puede ser negativo.
-                </mat-error>
-            </mat-form-field>
-
-            <mat-slide-toggle formControlName="activo">Sección activa</mat-slide-toggle>
+  @if (hasAvailableSecciones() && hasAvailableNiveles()) {
+    <form class="edit-seccion-dialog__form" [formGroup]="form">
+      <mat-form-field appearance="outline">
+        <mat-label>Sección</mat-label>
+        <mat-select formControlName="seccionId" placeholder="Seleccionar sección">
+          @for (seccion of availableSecciones; track seccion) {
+            <mat-option [value]="seccion.id">
+              {{ seccion.nombre }} (Capacidad: {{ seccion.capacidad }})
+              @if (!seccion.activo) {
+                — Inactiva
+              }
+            </mat-option>
+          }
+        </mat-select>
+        @if (form.get('seccionId')?.hasError('required')) {
+          <mat-error>
+            Selecciona una sección.
+          </mat-error>
+        }
+        @if (form.get('seccionId')?.hasError('duplicate')) {
+          <mat-error>
+            La sección seleccionada ya está registrada en este ciclo.
+          </mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Nivel</mat-label>
+        <mat-select formControlName="nivelId" placeholder="Seleccionar nivel">
+          @for (nivel of niveles; track nivel) {
+            <mat-option [value]="nivel.id">
+              {{ nivel.nombre }}
+              @if (!nivel.activo) {
+                — Inactivo
+              }
+            </mat-option>
+          }
+        </mat-select>
+        @if (form.get('nivelId')?.hasError('required')) {
+          <mat-error>
+            Selecciona un nivel.
+          </mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Capacidad</mat-label>
+        <input
+          matInput
+          type="number"
+          min="0"
+          formControlName="capacidad"
+          placeholder="Capacidad de la sección" />
+          @if (form.get('capacidad')?.hasError('required')) {
+            <mat-error>
+              La capacidad es obligatoria.
+            </mat-error>
+          }
+          @if (form.get('capacidad')?.hasError('min')) {
+            <mat-error>
+              La capacidad no puede ser negativa.
+            </mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Precio</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0"
+            step="0.01"
+            formControlName="precio"
+            placeholder="Precio de la sección" />
+            @if (form.get('precio')?.hasError('required')) {
+              <mat-error>
+                El precio es obligatorio.
+              </mat-error>
+            }
+            @if (form.get('precio')?.hasError('min')) {
+              <mat-error>
+                El precio no puede ser negativo.
+              </mat-error>
+            }
+          </mat-form-field>
+          <mat-slide-toggle formControlName="activo">Sección activa</mat-slide-toggle>
         </form>
-    </ng-container>
-
-    <ng-template #unavailableMessage>
+      } @else {
         <p class="edit-seccion-dialog__empty">
-            No hay secciones o niveles disponibles para actualizar.
+          No hay secciones o niveles disponibles para actualizar.
         </p>
-    </ng-template>
-</mat-dialog-content>
+      }
 
-<mat-dialog-actions align="end">
-    <button mat-button type="button" (click)="cancel()">Cancelar</button>
-    <button
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button mat-button type="button" (click)="cancel()">Cancelar</button>
+      <button
         mat-flat-button
         color="primary"
         type="button"
@@ -95,5 +113,5 @@
             (isSaving$ | async)
         ">
         Guardar
-    </button>
-</mat-dialog-actions>
+      </button>
+    </mat-dialog-actions>

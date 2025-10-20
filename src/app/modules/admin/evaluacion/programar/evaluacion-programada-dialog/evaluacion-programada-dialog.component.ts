@@ -1,4 +1,4 @@
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -99,22 +99,20 @@ interface SeccionOption {
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        AsyncPipe,
-        NgFor,
-        NgIf,
-        ReactiveFormsModule,
-        MatButtonModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatSelectModule,
-        MatDialogModule,
-        MatDatepickerModule,
-        MatNativeDateModule,
-        MatSlideToggleModule,
-        MatProgressSpinnerModule,
-        MatDividerModule,
-        MatSnackBarModule,
-    ],
+    AsyncPipe,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatDialogModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatSlideToggleModule,
+    MatProgressSpinnerModule,
+    MatDividerModule,
+    MatSnackBarModule
+],
 })
 export class EvaluacionProgramadaDialogComponent implements OnInit {
     protected readonly form: FormGroup;

@@ -1,4 +1,4 @@
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -70,19 +70,17 @@ interface SeccionCicloViewModel extends SeccionCiclo {
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        AsyncPipe,
-        NgIf,
-        NgFor,
-        ReactiveFormsModule,
-        MatButtonModule,
-        MatDialogModule,
-        MatFormFieldModule,
-        MatIconModule,
-        MatProgressBarModule,
-        MatSelectModule,
-        MatSnackBarModule,
-        AgGridAngular,
-    ],
+    AsyncPipe,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatProgressBarModule,
+    MatSelectModule,
+    MatSnackBarModule,
+    AgGridAngular
+],
 })
 export class SeccionCicloComponent implements OnInit, OnDestroy {
     protected readonly sedes$ = new BehaviorSubject<Sede[]>([]);

@@ -1,4 +1,4 @@
-import { AsyncPipe, DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, DecimalPipe, NgClass } from '@angular/common';
 import {
     AfterViewInit,
     ChangeDetectionStrategy,
@@ -70,26 +70,24 @@ interface EvaluacionSeccionTabView {
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        AsyncPipe,
-        DecimalPipe,
-        NgClass,
-        NgFor,
-        NgIf,
-        ReactiveFormsModule,
-        MatButtonModule,
-        MatDatepickerModule,
-        MatNativeDateModule,
-        MatIconModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatListModule,
-        MatTabsModule,
-        MatProgressSpinnerModule,
-        MatDialogModule,
-        MatSnackBarModule,
-        MatTooltipModule,
-        MatDividerModule,
-    ],
+    AsyncPipe,
+    DecimalPipe,
+    NgClass,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatListModule,
+    MatTabsModule,
+    MatProgressSpinnerModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    MatTooltipModule,
+    MatDividerModule
+],
 })
 export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     protected readonly dateControl = this.fb.control<Date | null>(new Date(), {

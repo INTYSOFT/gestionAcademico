@@ -1,324 +1,323 @@
 <div class="flex min-h-0 min-w-0 flex-auto flex-col">
-    <div class="flex min-h-0 flex-auto flex-col p-6 sm:p-10">
-        <div
-            class="flex min-h-[400px] flex-col rounded-2xl border-2 border-dashed border-gray-300 bg-white p-6"
-        >
-            <div class="flex min-h-0 flex-col gap-6 lg:flex-row lg:items-start">
-                <div class="flex w-full max-w-full flex-col gap-4 lg:w-80 lg:min-h-0">
-                    <div class="flex items-center justify-between gap-2">
+  <div class="flex min-h-0 flex-auto flex-col p-6 sm:p-10">
+    <div
+      class="flex min-h-[400px] flex-col rounded-2xl border-2 border-dashed border-gray-300 bg-white p-6"
+      >
+      <div class="flex min-h-0 flex-col gap-6 lg:flex-row lg:items-start">
+        <div class="flex w-full max-w-full flex-col gap-4 lg:w-80 lg:min-h-0">
+          <div class="flex items-center justify-between gap-2">
+            <button
+              mat-icon-button
+              type="button"
+              aria-label="Día anterior"
+              (click)="goToPreviousDay()"
+              >
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            <button mat-stroked-button type="button" (click)="goToToday()">
+              Hoy
+            </button>
+            <button
+              mat-icon-button
+              type="button"
+              aria-label="Día siguiente"
+              (click)="goToNextDay()"
+              >
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+          </div>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Fecha</mat-label>
+            <input
+              matInput
+              [matDatepicker]="fechaPicker"
+              [formControl]="dateControl"
+              placeholder="Selecciona una fecha"
+              />
+              <mat-datepicker-toggle matIconSuffix [for]="fechaPicker"></mat-datepicker-toggle>
+              <mat-datepicker #fechaPicker startView="month"></mat-datepicker>
+            </mat-form-field>
+
+            <div
+              #evaluacionesListContainer
+              class="relative flex min-h-[200px] flex-1 flex-col overflow-hidden rounded-xl border border-gray-200"
+              >
+              @if (isLoadingEvaluaciones$ | async) {
+                <div
+                  class="absolute inset-0 z-10 flex items-center justify-center bg-white/80"
+                  >
+                  <mat-progress-spinner diameter="32" mode="indeterminate"></mat-progress-spinner>
+                </div>
+              }
+
+              @if (evaluaciones$ | async; as evaluaciones) {
+                @if (evaluaciones.length > 0) {
+                  @if (selectedEvaluacion$ | async; as selectedEvaluacion) {
+                    <mat-nav-list
+                      #evaluacionesList
+                      class="flex-1 overflow-y-auto"
+                      [style.maxHeight.px]="evaluacionesListMaxHeight() ?? null"
+                      >
+                      @for (evaluacion of evaluaciones; track trackByEvaluacion($index, evaluacion)) {
                         <button
-                            mat-icon-button
-                            type="button"
-                            aria-label="Día anterior"
-                            (click)="goToPreviousDay()"
-                        >
-                            <mat-icon>chevron_left</mat-icon>
-                        </button>
-                        <button mat-stroked-button type="button" (click)="goToToday()">
-                            Hoy
-                        </button>
-                        <button
-                            mat-icon-button
-                            type="button"
-                            aria-label="Día siguiente"
-                            (click)="goToNextDay()"
-                        >
-                            <mat-icon>chevron_right</mat-icon>
-                        </button>
-                    </div>
-
-                    <mat-form-field appearance="outline">
-                        <mat-label>Fecha</mat-label>
-                        <input
-                            matInput
-                            [matDatepicker]="fechaPicker"
-                            [formControl]="dateControl"
-                            placeholder="Selecciona una fecha"
-                        />
-                        <mat-datepicker-toggle matIconSuffix [for]="fechaPicker"></mat-datepicker-toggle>
-                        <mat-datepicker #fechaPicker startView="month"></mat-datepicker>
-                    </mat-form-field>
-
-                    <div
-                        #evaluacionesListContainer
-                        class="relative flex min-h-[200px] flex-1 flex-col overflow-hidden rounded-xl border border-gray-200"
-                    >
-                        <div
-                            *ngIf="isLoadingEvaluaciones$ | async"
-                            class="absolute inset-0 z-10 flex items-center justify-center bg-white/80"
-                        >
-                            <mat-progress-spinner diameter="32" mode="indeterminate"></mat-progress-spinner>
-                        </div>
-
-                        <ng-container *ngIf="evaluaciones$ | async as evaluaciones">
-                            <ng-container *ngIf="evaluaciones.length > 0; else sinEvaluaciones">
-                                <ng-container *ngIf="selectedEvaluacion$ | async as selectedEvaluacion">
-                                    <mat-nav-list
-                                        #evaluacionesList
-                                        class="flex-1 overflow-y-auto"
-                                        [style.maxHeight.px]="evaluacionesListMaxHeight() ?? null"
-                                    >
-                                        <button
-                                            mat-list-item
-                                            type="button"
-                                            *ngFor="let evaluacion of evaluaciones; trackBy: trackByEvaluacion"
-                                            (click)="selectEvaluacion(evaluacion)"
+                          mat-list-item
+                          type="button"
+                          (click)="selectEvaluacion(evaluacion)"
                                             [ngClass]="{
                                                 'bg-primary-50 text-primary-700': isSelectedEvaluacion(
                                                     evaluacion,
                                                     selectedEvaluacion
                                                 )
                                             }"
-                                        >
-                                            <div class="flex flex-col">
-                                                <span class="font-medium">{{ evaluacion.nombre }}</span>
-                                                <span class="text-xs text-gray-500">
-                                                    {{ buildHorarioLabel(evaluacion) }} ·
-                                                    {{ formatFecha(evaluacion.fechaInicio) }}
-                                                </span>
-                                                <span class="text-xs text-gray-500">
-                                                    {{ buildUbicacionLabel(evaluacion) }}
-                                                </span>
-                                            </div>
-                                        </button>
-                                    </mat-nav-list>
-                                </ng-container>
-                            </ng-container>
-                        </ng-container>
+                          >
+                          <div class="flex flex-col">
+                            <span class="font-medium">{{ evaluacion.nombre }}</span>
+                            <span class="text-xs text-gray-500">
+                              {{ buildHorarioLabel(evaluacion) }} ·
+                              {{ formatFecha(evaluacion.fechaInicio) }}
+                            </span>
+                            <span class="text-xs text-gray-500">
+                              {{ buildUbicacionLabel(evaluacion) }}
+                            </span>
+                          </div>
+                        </button>
+                      }
+                    </mat-nav-list>
+                  }
+                } @else {
+                  <div class="flex flex-1 items-center justify-center p-6 text-center text-sm text-gray-500">
+                    No se encontraron evaluaciones programadas para la fecha
+                    seleccionada.
+                  </div>
+                }
+              }
 
-                        <ng-template #sinEvaluaciones>
-                            <div class="flex flex-1 items-center justify-center p-6 text-center text-sm text-gray-500">
-                                No se encontraron evaluaciones programadas para la fecha
-                                seleccionada.
-                            </div>
-                        </ng-template>
+            </div>
+          </div>
+
+          <div
+            class="flex min-h-[320px] flex-1 flex-col gap-4 overflow-hidden rounded-xl border border-gray-200 bg-white p-6"
+            >
+            @if (selectedEvaluacion$ | async; as evaluacion) {
+              <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <h2 class="text-lg font-semibold leading-tight text-gray-900">
+                      {{ evaluacion.nombre }}
+                    </h2>
+                    <div class="mt-1 space-y-1 text-sm text-gray-600">
+                      <div>
+                        <span class="font-medium text-gray-700">Fecha:</span>
+                        {{ formatFecha(evaluacion.fechaInicio) }}
+                      </div>
+                      <div>
+                        <span class="font-medium text-gray-700">Horario:</span>
+                        {{ buildHorarioLabel(evaluacion) }}
+                      </div>
+                      <div>
+                        <span class="font-medium text-gray-700">Sede:</span>
+                        {{ getSedeLabel(evaluacion) }}
+                      </div>
+                      <div>
+                        <span class="font-medium text-gray-700">Ciclo:</span>
+                        {{ getCicloLabel(evaluacion) }}
+                      </div>
                     </div>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex items-center gap-2">
+                      @if (isLoadingTipoEvaluacion$ | async) {
+                        <mat-progress-spinner
+                          diameter="24"
+                          mode="indeterminate"
+                        ></mat-progress-spinner>
+                      } @else {
+                        @if (tipoEvaluacion$ | async; as tipoEvaluacion) {
+                          <span
+                            class="rounded-full bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700"
+                            >
+                            {{ tipoEvaluacion.nombre }}
+                          </span>
+                        } @else {
+                          <span class="text-sm text-gray-500">Tipo de evaluación no disponible.</span>
+                        }
+                      }
+                    </div>
+                  </div>
                 </div>
-
-                <div
-                    class="flex min-h-[320px] flex-1 flex-col gap-4 overflow-hidden rounded-xl border border-gray-200 bg-white p-6"
-                >
-                    <ng-container *ngIf="selectedEvaluacion$ | async as evaluacion; else seleccionaEvaluacion">
-                        <div class="flex flex-col gap-4">
-                            <div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                                <div>
-                                    <h2 class="text-lg font-semibold leading-tight text-gray-900">
-                                        {{ evaluacion.nombre }}
-                                    </h2>
-                                    <div class="mt-1 space-y-1 text-sm text-gray-600">
-                                        <div>
-                                            <span class="font-medium text-gray-700">Fecha:</span>
-                                            {{ formatFecha(evaluacion.fechaInicio) }}
-                                        </div>
-                                        <div>
-                                            <span class="font-medium text-gray-700">Horario:</span>
-                                            {{ buildHorarioLabel(evaluacion) }}
-                                        </div>
-                                        <div>
-                                            <span class="font-medium text-gray-700">Sede:</span>
-                                            {{ getSedeLabel(evaluacion) }}
-                                        </div>
-                                        <div>
-                                            <span class="font-medium text-gray-700">Ciclo:</span>
-                                            {{ getCicloLabel(evaluacion) }}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <div class="flex items-center gap-2">
-                                        <ng-container *ngIf="isLoadingTipoEvaluacion$ | async; else tipoEvaluacionInfo">
-                                            <mat-progress-spinner
-                                                diameter="24"
-                                                mode="indeterminate"
-                                            ></mat-progress-spinner>
-                                        </ng-container>
-                                        <ng-template #tipoEvaluacionInfo>
-                                            <ng-container *ngIf="tipoEvaluacion$ | async as tipoEvaluacion; else tipoEvaluacionNoDisponible">
-                                                <span
-                                                    class="rounded-full bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700"
-                                                >
-                                                    {{ tipoEvaluacion.nombre }}
-                                                </span>
-                                            </ng-container>
-                                        </ng-template>
-                                        <ng-template #tipoEvaluacionNoDisponible>
-                                            <span class="text-sm text-gray-500">Tipo de evaluación no disponible.</span>
-                                        </ng-template>
-                                    </div>
-                                </div>
-                            </div>
-                            <mat-divider></mat-divider>
-                            <div class="flex min-h-0 flex-1 flex-col gap-4">
-                                <div class="flex items-center justify-between gap-2">
-                                    <h3 class="text-base font-semibold text-gray-900">
-                                        Detalles de evaluación
-                                    </h3>
-                                </div>
-                                <div class="relative flex-1 overflow-hidden">
-                                    <div
-                                        *ngIf="(isLoadingSecciones$ | async) || (isLoadingDetalles$ | async)"
-                                        class="absolute inset-0 z-10 flex items-center justify-center bg-white/80"
+                <mat-divider></mat-divider>
+                <div class="flex min-h-0 flex-1 flex-col gap-4">
+                  <div class="flex items-center justify-between gap-2">
+                    <h3 class="text-base font-semibold text-gray-900">
+                      Detalles de evaluación
+                    </h3>
+                  </div>
+                  <div class="relative flex-1 overflow-hidden">
+                    @if ((isLoadingSecciones$ | async) || (isLoadingDetalles$ | async)) {
+                      <div
+                        class="absolute inset-0 z-10 flex items-center justify-center bg-white/80"
+                        >
+                        <mat-progress-spinner
+                          diameter="36"
+                          mode="indeterminate"
+                        ></mat-progress-spinner>
+                      </div>
+                    }
+                    @if (seccionTabs$ | async; as seccionTabs) {
+                      @if (seccionTabs.length > 0) {
+                        <mat-tab-group
+                          class="evaluacion-puntuacion__tabs"
+                          animationDuration="200ms"
+                          [dynamicHeight]="true"
+                          >
+                          @for (tab of seccionTabs; track trackByTab($index, tab)) {
+                            <mat-tab
+                              [label]="tab.label"
+                              >
+                              <div class="mt-4 flex flex-col gap-4">
+                                <div class="flex flex-wrap justify-end gap-2">
+                                  <button
+                                    mat-stroked-button
+                                    type="button"
+                                    (click)="openDetalleImportDialog(tab)"
+                                    [disabled]="!canImportDetalles(tab)"
                                     >
-                                        <mat-progress-spinner
-                                            diameter="36"
-                                            mode="indeterminate"
-                                        ></mat-progress-spinner>
-                                    </div>
-                                    <ng-container *ngIf="seccionTabs$ | async as seccionTabs">
-                                        <ng-container *ngIf="seccionTabs.length > 0; else sinSecciones">
-                                            <mat-tab-group
-                                                class="evaluacion-puntuacion__tabs"
-                                                animationDuration="200ms"
-                                                [dynamicHeight]="true"
+                                    Importar detalles
+                                  </button>
+                                  <button
+                                    mat-stroked-button
+                                    color="primary"
+                                    type="button"
+                                    (click)="openDetalleDialogForCreate(tab)"
+                                    >
+                                    Agregar detalle
+                                  </button>
+                                </div>
+                                @if (tab.detalles.length > 0) {
+                                  <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                      <thead class="bg-gray-50">
+                                        <tr>
+                                          <th class="px-4 py-3 text-left font-medium text-gray-600">
+                                            Rango
+                                          </th>
+                                          <th class="px-4 py-3 text-left font-medium text-gray-600">
+                                            Valor correcta
+                                          </th>
+                                          <th class="px-4 py-3 text-left font-medium text-gray-600">
+                                            Valor incorrecta
+                                          </th>
+                                          <th class="px-4 py-3 text-left font-medium text-gray-600">
+                                            Valor en blanco
+                                          </th>
+                                          <th class="px-4 py-3 text-left font-medium text-gray-600">
+                                            Observación
+                                          </th>
+                                          <th class="px-4 py-3 text-center font-medium text-gray-600">
+                                            Estado
+                                          </th>
+                                          <th class="px-4 py-3 text-right font-medium text-gray-600">
+                                            Acciones
+                                          </th>
+                                        </tr>
+                                      </thead>
+                                      <tbody class="divide-y divide-gray-100">
+                                        @for (detalle of tab.detalles; track trackByDetalle($index, detalle)) {
+                                          <tr
+                                            class="hover:bg-gray-50"
                                             >
-                                                <mat-tab
-                                                    *ngFor="let tab of seccionTabs; trackBy: trackByTab"
-                                                    [label]="tab.label"
-                                                >
-                                                    <div class="mt-4 flex flex-col gap-4">
-                                                        <div class="flex flex-wrap justify-end gap-2">
-                                                            <button
-                                                                mat-stroked-button
-                                                                type="button"
-                                                                (click)="openDetalleImportDialog(tab)"
-                                                                [disabled]="!canImportDetalles(tab)"
-                                                            >
-                                                                Importar detalles
-                                                            </button>
-                                                            <button
-                                                                mat-stroked-button
-                                                                color="primary"
-                                                                type="button"
-                                                                (click)="openDetalleDialogForCreate(tab)"
-                                                            >
-                                                                Agregar detalle
-                                                            </button>
-                                                        </div>
-                                                        <ng-container *ngIf="tab.detalles.length > 0; else sinDetalles">
-                                                            <div class="overflow-x-auto">
-                                                                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                                                                    <thead class="bg-gray-50">
-                                                                        <tr>
-                                                                            <th class="px-4 py-3 text-left font-medium text-gray-600">
-                                                                                Rango
-                                                                            </th>
-                                                                            <th class="px-4 py-3 text-left font-medium text-gray-600">
-                                                                                Valor correcta
-                                                                            </th>
-                                                                            <th class="px-4 py-3 text-left font-medium text-gray-600">
-                                                                                Valor incorrecta
-                                                                            </th>
-                                                                            <th class="px-4 py-3 text-left font-medium text-gray-600">
-                                                                                Valor en blanco
-                                                                            </th>
-                                                                            <th class="px-4 py-3 text-left font-medium text-gray-600">
-                                                                                Observación
-                                                                            </th>
-                                                                            <th class="px-4 py-3 text-center font-medium text-gray-600">
-                                                                                Estado
-                                                                            </th>
-                                                                            <th class="px-4 py-3 text-right font-medium text-gray-600">
-                                                                                Acciones
-                                                                            </th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody class="divide-y divide-gray-100">
-                                                                        <tr
-                                                                            *ngFor="let detalle of tab.detalles; trackBy: trackByDetalle"
-                                                                            class="hover:bg-gray-50"
-                                                                        >
-                                                                            <td class="px-4 py-3">
-                                                                                <div class="font-medium text-gray-900">
-                                                                                    {{ detalle.rangoInicio }} -
-                                                                                    {{ detalle.rangoFin }}
-                                                                                </div>
-                                                                            </td>
-                                                                            <td class="px-4 py-3">
-                                                                                {{ detalle.valorBuena | number: '1.2-2' }}
-                                                                            </td>
-                                                                            <td class="px-4 py-3">
-                                                                                {{ detalle.valorMala | number: '1.2-2' }}
-                                                                            </td>
-                                                                            <td class="px-4 py-3">
-                                                                                {{ detalle.valorBlanca | number: '1.2-2' }}
-                                                                            </td>
-                                                                            <td class="px-4 py-3">
-                                                                                <span
-                                                                                    class="line-clamp-2 text-sm text-gray-600"
-                                                                                    [matTooltip]="detalle.observacion || ''"
-                                                                                    matTooltipShowDelay="500"
-                                                                                    *ngIf="detalle.observacion; else sinObservacion"
-                                                                                >
-                                                                                    {{ detalle.observacion }}
-                                                                                </span>
-                                                                                <ng-template #sinObservacion>
-                                                                                    <span class="text-sm text-gray-400">
-                                                                                        Sin observación
-                                                                                    </span>
-                                                                                </ng-template>
-                                                                            </td>
-                                                                            <td class="px-4 py-3 text-center">
-                                                                                <span
-                                                                                    class="inline-flex items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold"
+                                            <td class="px-4 py-3">
+                                              <div class="font-medium text-gray-900">
+                                                {{ detalle.rangoInicio }} -
+                                                {{ detalle.rangoFin }}
+                                              </div>
+                                            </td>
+                                            <td class="px-4 py-3">
+                                              {{ detalle.valorBuena | number: '1.2-2' }}
+                                            </td>
+                                            <td class="px-4 py-3">
+                                              {{ detalle.valorMala | number: '1.2-2' }}
+                                            </td>
+                                            <td class="px-4 py-3">
+                                              {{ detalle.valorBlanca | number: '1.2-2' }}
+                                            </td>
+                                            <td class="px-4 py-3">
+                                              @if (detalle.observacion) {
+                                                <span
+                                                  class="line-clamp-2 text-sm text-gray-600"
+                                                  [matTooltip]="detalle.observacion || ''"
+                                                  matTooltipShowDelay="500"
+                                                  >
+                                                  {{ detalle.observacion }}
+                                                </span>
+                                              } @else {
+                                                <span class="text-sm text-gray-400">
+                                                  Sin observación
+                                                </span>
+                                              }
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                              <span
+                                                class="inline-flex items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold"
                                                                                     [ngClass]="{
                                                                                         'bg-emerald-100 text-emerald-700': detalle.activo,
                                                                                         'bg-gray-200 text-gray-600': !detalle.activo
                                                                                     }"
-                                                                                >
-                                                                                    {{ detalle.activo ? 'Activo' : 'Inactivo' }}
-                                                                                </span>
-                                                                            </td>
-                                                                            <td class="px-4 py-3 text-right">
-                                                                                <button
-                                                                                    mat-icon-button
-                                                                                    type="button"
-                                                                                    matTooltip="Editar detalle"
-                                                                                    (click)="openDetalleDialogForEdit(detalle)"
-                                                                                >
-                                                                                    <mat-icon>edit</mat-icon>
-                                                                                </button>
-                                                                                <button
-                                                                                    mat-icon-button
-                                                                                    type="button"
-                                                                                    color="warn"
-                                                                                    matTooltip="Eliminar detalle"
-                                                                                    (click)="confirmDeleteDetalle(detalle)"
-                                                                                    [disabled]="isLoadingDetalles$ | async"
-                                                                                >
-                                                                                    <mat-icon>delete</mat-icon>
-                                                                                </button>
-                                                                            </td>
-                                                                        </tr>
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
-                                                        </ng-container>
-                                                        <ng-template #sinDetalles>
-                                                            <div class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6 text-sm text-gray-500">
-                                                                No hay detalles registrados para esta sección.
-                                                            </div>
-                                                        </ng-template>
-                                                    </div>
-                                                </mat-tab>
-                                            </mat-tab-group>
-                                        </ng-container>
-                                    </ng-container>
-                                    <ng-template #sinSecciones>
-                                        <div class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6 text-sm text-gray-500">
-                                            No hay secciones programadas para esta evaluación.
-                                        </div>
-                                    </ng-template>
-                                </div>
-                            </div>
+                                                >
+                                                {{ detalle.activo ? 'Activo' : 'Inactivo' }}
+                                              </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-right">
+                                              <button
+                                                mat-icon-button
+                                                type="button"
+                                                matTooltip="Editar detalle"
+                                                (click)="openDetalleDialogForEdit(detalle)"
+                                                >
+                                                <mat-icon>edit</mat-icon>
+                                              </button>
+                                              <button
+                                                mat-icon-button
+                                                type="button"
+                                                color="warn"
+                                                matTooltip="Eliminar detalle"
+                                                (click)="confirmDeleteDetalle(detalle)"
+                                                [disabled]="isLoadingDetalles$ | async"
+                                                >
+                                                <mat-icon>delete</mat-icon>
+                                              </button>
+                                            </td>
+                                          </tr>
+                                        }
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                } @else {
+                                  <div class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6 text-sm text-gray-500">
+                                    No hay detalles registrados para esta sección.
+                                  </div>
+                                }
+                              </div>
+                            </mat-tab>
+                          }
+                        </mat-tab-group>
+                      } @else {
+                        <div class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6 text-sm text-gray-500">
+                          No hay secciones programadas para esta evaluación.
                         </div>
-                    </ng-container>
-                    <ng-template #seleccionaEvaluacion>
-                        <div class="flex flex-1 items-center justify-center text-center text-sm text-gray-500">
-                            Selecciona una evaluación para visualizar sus detalles.
-                        </div>
-                    </ng-template>
+                      }
+                    }
+                  </div>
                 </div>
-            </div>
+              </div>
+            } @else {
+              <div class="flex flex-1 items-center justify-center text-center text-sm text-gray-500">
+                Selecciona una evaluación para visualizar sus detalles.
+              </div>
+            }
+          </div>
         </div>
+      </div>
     </div>
-</div>
+  </div>

@@ -1,4 +1,4 @@
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -37,19 +37,17 @@ import type { AlumnoFormDialogResult } from './alumno-form-dialog/alumno-form-di
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
     imports: [
-        AsyncPipe,
-        NgIf,
-        ReactiveFormsModule,
-        AgGridAngular,
-        MatButtonModule,
-        MatDialogModule,
-        MatFormFieldModule,
-        MatIconModule,
-        MatInputModule,
-        MatProgressBarModule,
-        MatSnackBarModule
-        
-    ],
+    AsyncPipe,
+    ReactiveFormsModule,
+    AgGridAngular,
+    MatButtonModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatProgressBarModule,
+    MatSnackBarModule
+],
 })
 export class AlumnosComponent implements OnInit, OnDestroy {
     protected readonly searchControl = this.fb.control('', {

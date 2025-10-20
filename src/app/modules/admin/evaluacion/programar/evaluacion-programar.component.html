@@ -1,219 +1,238 @@
 <div class="flex min-w-0 flex-auto flex-col">
-    <!-- Main -->
-    <div class="flex-auto p-6 sm:p-10">
-        <div class="h-400 max-h-400 min-h-400 rounded-2xl border-2 border-dashed border-gray-300">
-            <div class="evaluacion-programar">
-                <div class="header">
-                    <div class="header__titles">
-                        <h1 class="header__title">Evaluación programada</h1>
-                        <p class="header__subtitle">
-                            Gestiona las evaluaciones programadas filtrándolas por fecha de inicio.
-                        </p>
-                    </div>
-                    <button mat-flat-button color="primary" class="header__action" (click)="createProgramacion()">
-                        <mat-icon>add</mat-icon>
-                        Nueva programación
-                    </button>
-                </div>
-
-                <mat-card class="content">
-                    <form class="filters" [formGroup]="filtersForm" (submit)="$event.preventDefault()">
-                        <div class="filters__mode">
-                            <span class="filters__mode-label">Buscar por:</span>
-                            <mat-button-toggle-group formControlName="mode">
-                                <mat-button-toggle [value]="SearchMode.Range">Rango de fechas</mat-button-toggle>
-                                <mat-button-toggle [value]="SearchMode.Date">Fecha específica</mat-button-toggle>
-                            </mat-button-toggle-group>
-                        </div>
-
-                        <ng-container [ngSwitch]="filtersForm.controls.mode.value">
-                            <div *ngSwitchCase="SearchMode.Range" class="filters__controls" formGroupName="range">
-                                <mat-form-field appearance="outline" class="filters__field">
-                                    <mat-label>Fecha de inicio desde</mat-label>
-                                    <input
-                                        matInput
-                                        [matDatepicker]="startPicker"
-                                        formControlName="start"
-                                        placeholder="Selecciona la fecha inicial"
-                                    />
-                                    <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
-                                    <mat-datepicker #startPicker></mat-datepicker>
-                                    <mat-error *ngIf="filtersForm.controls.range.controls.start.hasError('required')">
-                                        La fecha inicial es obligatoria.
-                                    </mat-error>
-                                </mat-form-field>
-
-                                <mat-form-field appearance="outline" class="filters__field">
-                                    <mat-label>Fecha de inicio hasta</mat-label>
-                                    <input
-                                        matInput
-                                        [matDatepicker]="endPicker"
-                                        formControlName="end"
-                                        placeholder="Selecciona la fecha final"
-                                    />
-                                    <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
-                                    <mat-datepicker #endPicker></mat-datepicker>
-                                    <mat-error *ngIf="filtersForm.controls.range.controls.end.hasError('required')">
-                                        La fecha final es obligatoria.
-                                    </mat-error>
-                                </mat-form-field>
-                            </div>
-
-                            <div *ngSwitchCase="SearchMode.Date" class="filters__controls">
-                                <mat-form-field appearance="outline" class="filters__field filters__field--single">
-                                    <mat-label>Fecha de inicio</mat-label>
-                                    <input
-                                        matInput
-                                        [matDatepicker]="singleDatePicker"
-                                        formControlName="date"
-                                        placeholder="Selecciona la fecha"
-                                    />
-                                    <mat-datepicker-toggle matIconSuffix [for]="singleDatePicker"></mat-datepicker-toggle>
-                                    <mat-datepicker #singleDatePicker></mat-datepicker>
-                                    <mat-error *ngIf="filtersForm.controls.date.hasError('required')">
-                                        La fecha es obligatoria para la búsqueda.
-                                    </mat-error>
-                                </mat-form-field>
-                            </div>
-                        </ng-container>
-
-                        <mat-error
-                            class="filters__error"
-                            *ngIf="
-                                filtersForm.controls.mode.value === SearchMode.Range &&
-                                filtersForm.controls.range.hasError('invalidDateRange')
-                            "
-                        >
-                            La fecha final debe ser igual o posterior a la fecha inicial.
-                        </mat-error>
-                    </form>
-
-                    <section class="schedule">
-                        <header class="schedule__header">
-                            <h2 class="schedule__title">
-                                <ng-container [ngSwitch]="filtersForm.controls.mode.value">
-                                    <ng-container *ngSwitchCase="SearchMode.Range">
-                                        <ng-container
-                                            *ngIf="
-                                                filtersForm.controls.range.valid &&
-                                                filtersForm.controls.range.controls.start.value &&
-                                                filtersForm.controls.range.controls.end.value;
-                                                else noFilters
-                                            "
-                                        >
-                                            Programaciones del
-                                            {{ formatDateControlValue(filtersForm.controls.range.controls.start.value) }}
-                                            al
-                                            {{ formatDateControlValue(filtersForm.controls.range.controls.end.value) }}
-                                        </ng-container>
-                                    </ng-container>
-                                    <ng-container *ngSwitchCase="SearchMode.Date">
-                                        <ng-container *ngIf="filtersForm.controls.date.value; else noFilters">
-                                            Programaciones del
-                                            {{ formatDateControlValue(filtersForm.controls.date.value) }}
-                                        </ng-container>
-                                    </ng-container>
-                                </ng-container>
-                                <ng-template #noFilters>
-                                    Selecciona un criterio de búsqueda para visualizar las programaciones.
-                                </ng-template>
-                            </h2>
-                        </header>
-
-                        <div class="schedule__body">
-                            <div class="schedule__loading" *ngIf="isLoadingEvaluaciones$ | async">
-                                <mat-progress-spinner diameter="56" mode="indeterminate"></mat-progress-spinner>
-                            </div>
-
-                            <ng-container *ngIf="!(isLoadingEvaluaciones$ | async)">
-                                <mat-tree [dataSource]="treeDataSource" [treeControl]="treeControl" class="program-tree">
-                                    <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
-                                        <div class="tree-node tree-node--parent" matTreeNodePadding>
-                                            <button
-                                                mat-icon-button
-                                                matTreeNodeToggle
-                                                [attr.aria-label]="'Alternar ' + node.title"
-                                            >
-                                                <mat-icon>
-                                                    {{ treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
-                                                </mat-icon>
-                                            </button>
-                                            <div class="tree-node__content">
-                                                <div class="tree-node__header">
-                                                    <span class="tree-node__title">{{ node.title }}</span>
-                                                    <div class="tree-node__actions" *ngIf="node.evaluacionId">
-                                                        <button
-                                                            mat-icon-button
-                                                            matTooltip="Editar programación"
-                                                            (click)="editProgramacion(node.evaluacionId)"
-                                                        >
-                                                            <mat-icon>edit</mat-icon>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div class="tree-node__metadata" *ngIf="node.details?.length; else subtitleLines">
-                                                    <div class="tree-node__metadata-item" *ngFor="let detail of node.details">
-                                                        <span class="tree-node__metadata-label">{{ detail.label }}</span>
-                                                        <span class="tree-node__metadata-value">{{ detail.value }}</span>
-                                                    </div>
-                                                </div>
-                                                <ng-template #subtitleLines>
-                                                    <div class="tree-node__subtitle" *ngFor="let line of node.subtitleLines">
-                                                        {{ line }}
-                                                    </div>
-                                                </ng-template>
-                                            </div>
-                                        </div>
-                                        <div class="tree-node__children">
-                                            <ng-container matTreeNodeOutlet></ng-container>
-                                        </div>
-                                    </mat-nested-tree-node>
-
-                                    <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
-                                        <div
-                                            class="tree-node tree-node--child"
-                                            [ngClass]="{ 'tree-node--info': node.status === 'info' }"
-                                        >
-                                            <mat-icon
-                                                *ngIf="node.leadingIcon"
-                                                class="tree-node__bullet"
-                                                [ngClass]="node.leadingIcon.classes ?? []"
-                                                [matTooltip]="node.leadingIcon.tooltip ?? ''"
-                                                [matTooltipDisabled]="!node.leadingIcon.tooltip"
-                                                [attr.aria-label]="node.leadingIcon.ariaLabel ?? null"
-                                            >
-                                                {{ node.leadingIcon.name }}
-                                            </mat-icon>
-                                            <div class="tree-node__content">
-                                                <div class="tree-node__title-row">
-                                                    <span class="tree-node__title">{{ node.title }}</span>
-                                                    <mat-icon
-                                                        *ngIf="node.trailingIcon"
-                                                        class="tree-node__status-icon"
-                                                        [ngClass]="node.trailingIcon.classes ?? []"
-                                                        [matTooltip]="node.trailingIcon.tooltip ?? ''"
-                                                        [matTooltipDisabled]="!node.trailingIcon.tooltip"
-                                                        [attr.aria-label]="node.trailingIcon.ariaLabel ?? null"
-                                                    >
-                                                        {{ node.trailingIcon.name }}
-                                                    </mat-icon>
-                                                </div>
-                                                <div class="tree-node__subtitle" *ngFor="let line of node.subtitleLines">
-                                                    {{ line }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </mat-tree-node>
-                                </mat-tree>
-
-                                <div *ngIf="!treeDataSource.data.length" class="schedule__empty">
-                                    No hay programaciones registradas para el criterio seleccionado.
-                                </div>
-                            </ng-container>
-                        </div>
-                    </section>
-                </mat-card>
-            </div>
+  <!-- Main -->
+  <div class="flex-auto p-6 sm:p-10">
+    <div class="h-400 max-h-400 min-h-400 rounded-2xl border-2 border-dashed border-gray-300">
+      <div class="evaluacion-programar">
+        <div class="header">
+          <div class="header__titles">
+            <h1 class="header__title">Evaluación programada</h1>
+            <p class="header__subtitle">
+              Gestiona las evaluaciones programadas filtrándolas por fecha de inicio.
+            </p>
+          </div>
+          <button mat-flat-button color="primary" class="header__action" (click)="createProgramacion()">
+            <mat-icon>add</mat-icon>
+            Nueva programación
+          </button>
         </div>
-    </div>
-</div>
+
+        <mat-card class="content">
+          <form class="filters" [formGroup]="filtersForm" (submit)="$event.preventDefault()">
+            <div class="filters__mode">
+              <span class="filters__mode-label">Buscar por:</span>
+              <mat-button-toggle-group formControlName="mode">
+                <mat-button-toggle [value]="SearchMode.Range">Rango de fechas</mat-button-toggle>
+                <mat-button-toggle [value]="SearchMode.Date">Fecha específica</mat-button-toggle>
+              </mat-button-toggle-group>
+            </div>
+
+            @switch (filtersForm.controls.mode.value) {
+              @case (SearchMode.Range) {
+                <div class="filters__controls" formGroupName="range">
+                  <mat-form-field appearance="outline" class="filters__field">
+                    <mat-label>Fecha de inicio desde</mat-label>
+                    <input
+                      matInput
+                      [matDatepicker]="startPicker"
+                      formControlName="start"
+                      placeholder="Selecciona la fecha inicial"
+                      />
+                      <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+                      <mat-datepicker #startPicker></mat-datepicker>
+                      @if (filtersForm.controls.range.controls.start.hasError('required')) {
+                        <mat-error>
+                          La fecha inicial es obligatoria.
+                        </mat-error>
+                      }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="filters__field">
+                      <mat-label>Fecha de inicio hasta</mat-label>
+                      <input
+                        matInput
+                        [matDatepicker]="endPicker"
+                        formControlName="end"
+                        placeholder="Selecciona la fecha final"
+                        />
+                        <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+                        <mat-datepicker #endPicker></mat-datepicker>
+                        @if (filtersForm.controls.range.controls.end.hasError('required')) {
+                          <mat-error>
+                            La fecha final es obligatoria.
+                          </mat-error>
+                        }
+                      </mat-form-field>
+                    </div>
+                  }
+                  @case (SearchMode.Date) {
+                    <div class="filters__controls">
+                      <mat-form-field appearance="outline" class="filters__field filters__field--single">
+                        <mat-label>Fecha de inicio</mat-label>
+                        <input
+                          matInput
+                          [matDatepicker]="singleDatePicker"
+                          formControlName="date"
+                          placeholder="Selecciona la fecha"
+                          />
+                          <mat-datepicker-toggle matIconSuffix [for]="singleDatePicker"></mat-datepicker-toggle>
+                          <mat-datepicker #singleDatePicker></mat-datepicker>
+                          @if (filtersForm.controls.date.hasError('required')) {
+                            <mat-error>
+                              La fecha es obligatoria para la búsqueda.
+                            </mat-error>
+                          }
+                        </mat-form-field>
+                      </div>
+                    }
+                  }
+
+                  @if (
+                    filtersForm.controls.mode.value === SearchMode.Range &&
+                    filtersForm.controls.range.hasError('invalidDateRange')
+                    ) {
+                    <mat-error
+                      class="filters__error"
+                      >
+                      La fecha final debe ser igual o posterior a la fecha inicial.
+                    </mat-error>
+                  }
+                </form>
+
+                <section class="schedule">
+                  <header class="schedule__header">
+                    <h2 class="schedule__title">
+                      @switch (filtersForm.controls.mode.value) {
+                        @case (SearchMode.Range) {
+                          @if (
+                            filtersForm.controls.range.valid &&
+                            filtersForm.controls.range.controls.start.value &&
+                            filtersForm.controls.range.controls.end.value) {
+                            Programaciones del
+                            {{ formatDateControlValue(filtersForm.controls.range.controls.start.value) }}
+                            al
+                            {{ formatDateControlValue(filtersForm.controls.range.controls.end.value) }}
+                          } @else {
+                            Selecciona un criterio de búsqueda para visualizar las programaciones.
+                          }
+                        }
+                        @case (SearchMode.Date) {
+                          @if (filtersForm.controls.date.value) {
+                            Programaciones del
+                            {{ formatDateControlValue(filtersForm.controls.date.value) }}
+                          } @else {
+                            Selecciona un criterio de búsqueda para visualizar las programaciones.
+                          }
+                        }
+                      }
+                    </h2>
+                  </header>
+
+                  <div class="schedule__body">
+                    @if (isLoadingEvaluaciones$ | async) {
+                      <div class="schedule__loading">
+                        <mat-progress-spinner diameter="56" mode="indeterminate"></mat-progress-spinner>
+                      </div>
+                    }
+
+                    @if (!(isLoadingEvaluaciones$ | async)) {
+                      <mat-tree [dataSource]="treeDataSource" [treeControl]="treeControl" class="program-tree">
+                        <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
+                          <div class="tree-node tree-node--parent" matTreeNodePadding>
+                            <button
+                              mat-icon-button
+                              matTreeNodeToggle
+                              [attr.aria-label]="'Alternar ' + node.title"
+                              >
+                              <mat-icon>
+                                {{ treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
+                              </mat-icon>
+                            </button>
+                            <div class="tree-node__content">
+                              <div class="tree-node__header">
+                                <span class="tree-node__title">{{ node.title }}</span>
+                                @if (node.evaluacionId) {
+                                  <div class="tree-node__actions">
+                                    <button
+                                      mat-icon-button
+                                      matTooltip="Editar programación"
+                                      (click)="editProgramacion(node.evaluacionId)"
+                                      >
+                                      <mat-icon>edit</mat-icon>
+                                    </button>
+                                  </div>
+                                }
+                              </div>
+                              @if (node.details?.length) {
+                                <div class="tree-node__metadata">
+                                  @for (detail of node.details; track detail) {
+                                    <div class="tree-node__metadata-item">
+                                      <span class="tree-node__metadata-label">{{ detail.label }}</span>
+                                      <span class="tree-node__metadata-value">{{ detail.value }}</span>
+                                    </div>
+                                  }
+                                </div>
+                              } @else {
+                                @for (line of node.subtitleLines; track line) {
+                                  <div class="tree-node__subtitle">
+                                    {{ line }}
+                                  </div>
+                                }
+                              }
+                            </div>
+                          </div>
+                          <div class="tree-node__children">
+                            <ng-container matTreeNodeOutlet></ng-container>
+                          </div>
+                        </mat-nested-tree-node>
+                        <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+                          <div
+                            class="tree-node tree-node--child"
+                            [ngClass]="{ 'tree-node--info': node.status === 'info' }"
+                            >
+                            @if (node.leadingIcon) {
+                              <mat-icon
+                                class="tree-node__bullet"
+                                [ngClass]="node.leadingIcon.classes ?? []"
+                                [matTooltip]="node.leadingIcon.tooltip ?? ''"
+                                [matTooltipDisabled]="!node.leadingIcon.tooltip"
+                                [attr.aria-label]="node.leadingIcon.ariaLabel ?? null"
+                                >
+                                {{ node.leadingIcon.name }}
+                              </mat-icon>
+                            }
+                            <div class="tree-node__content">
+                              <div class="tree-node__title-row">
+                                <span class="tree-node__title">{{ node.title }}</span>
+                                @if (node.trailingIcon) {
+                                  <mat-icon
+                                    class="tree-node__status-icon"
+                                    [ngClass]="node.trailingIcon.classes ?? []"
+                                    [matTooltip]="node.trailingIcon.tooltip ?? ''"
+                                    [matTooltipDisabled]="!node.trailingIcon.tooltip"
+                                    [attr.aria-label]="node.trailingIcon.ariaLabel ?? null"
+                                    >
+                                    {{ node.trailingIcon.name }}
+                                  </mat-icon>
+                                }
+                              </div>
+                              @for (line of node.subtitleLines; track line) {
+                                <div class="tree-node__subtitle">
+                                  {{ line }}
+                                </div>
+                              }
+                            </div>
+                          </div>
+                        </mat-tree-node>
+                      </mat-tree>
+                      @if (!treeDataSource.data.length) {
+                        <div class="schedule__empty">
+                          No hay programaciones registradas para el criterio seleccionado.
+                        </div>
+                      }
+                    }
+                  </div>
+                </section>
+              </mat-card>
+            </div>
+          </div>
+        </div>
+      </div>

@@ -1,46 +1,58 @@
 <div class="colegio-dialog">
-    <div class="colegio-dialog__header">
-        <h2 class="colegio-dialog__title">{{ selectedColegio ? 'Editar colegio' : 'Registrar nuevo colegio' }}</h2>
-        <button mat-icon-button type="button" (click)="cancel()" aria-label="Cerrar">
-            <mat-icon>close</mat-icon>
+  <div class="colegio-dialog__header">
+    <h2 class="colegio-dialog__title">{{ selectedColegio ? 'Editar colegio' : 'Registrar nuevo colegio' }}</h2>
+    <button mat-icon-button type="button" (click)="cancel()" aria-label="Cerrar">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  @if ((isSaving$ | async)) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="colegio-dialog__form">
+    <mat-form-field appearance="fill">
+      <mat-label>Nombre del colegio</mat-label>
+      <input matInput formControlName="nombre" placeholder="Ej. Colegio Nacional" />
+      @if (form.get('nombre')?.hasError('required')) {
+        <mat-error>
+          El nombre es obligatorio.
+        </mat-error>
+      }
+      @if (form.get('nombre')?.hasError('maxlength')) {
+        <mat-error>
+          El nombre supera el máximo permitido.
+        </mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Código de ubigeo</mat-label>
+      <input matInput formControlName="ubigeoCode" placeholder="Ej. 150101" maxlength="6" />
+      @if (form.get('ubigeoCode')?.hasError('maxlength')) {
+        <mat-error>
+          Debe contener como máximo 6 dígitos.
+        </mat-error>
+      }
+      @if (form.get('ubigeoCode')?.hasError('pattern')) {
+        <mat-error>
+          Debe contener exactamente 6 dígitos o estar vacío.
+        </mat-error>
+      }
+    </mat-form-field>
+
+    <mat-slide-toggle formControlName="esPrivado">Colegio privado</mat-slide-toggle>
+    <mat-slide-toggle formControlName="activo">Colegio activo</mat-slide-toggle>
+
+    <div class="colegio-dialog__actions">
+      @if (selectedColegio) {
+        <button mat-button type="button" (click)="resetForm()">
+          Reiniciar formulario
         </button>
+      }
+      <button mat-flat-button color="primary" type="submit">
+        {{ selectedColegio ? 'Actualizar' : 'Registrar' }}
+      </button>
     </div>
-
-    <mat-progress-bar *ngIf="(isSaving$ | async)" mode="indeterminate"></mat-progress-bar>
-
-    <form [formGroup]="form" (ngSubmit)="submit()" class="colegio-dialog__form">
-        <mat-form-field appearance="fill">
-            <mat-label>Nombre del colegio</mat-label>
-            <input matInput formControlName="nombre" placeholder="Ej. Colegio Nacional" />
-            <mat-error *ngIf="form.get('nombre')?.hasError('required')">
-                El nombre es obligatorio.
-            </mat-error>
-            <mat-error *ngIf="form.get('nombre')?.hasError('maxlength')">
-                El nombre supera el máximo permitido.
-            </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="fill">
-            <mat-label>Código de ubigeo</mat-label>
-            <input matInput formControlName="ubigeoCode" placeholder="Ej. 150101" maxlength="6" />
-            <mat-error *ngIf="form.get('ubigeoCode')?.hasError('maxlength')">
-                Debe contener como máximo 6 dígitos.
-            </mat-error>
-            <mat-error *ngIf="form.get('ubigeoCode')?.hasError('pattern')">
-                Debe contener exactamente 6 dígitos o estar vacío.
-            </mat-error>
-        </mat-form-field>
-
-        <mat-slide-toggle formControlName="esPrivado">Colegio privado</mat-slide-toggle>
-        <mat-slide-toggle formControlName="activo">Colegio activo</mat-slide-toggle>
-
-        <div class="colegio-dialog__actions">
-            <button mat-button type="button" (click)="resetForm()" *ngIf="selectedColegio">
-                Reiniciar formulario
-            </button>
-            <button mat-flat-button color="primary" type="submit">
-                {{ selectedColegio ? 'Actualizar' : 'Registrar' }}
-            </button>
-        </div>
-    </form>
+  </form>
 </div>
