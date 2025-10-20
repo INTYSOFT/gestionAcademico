@@ -1,0 +1,66 @@
+<h2 mat-dialog-title>
+  {{
+    data.evaluacionTipoPregunta
+      ? 'Editar competencia de pregunta'
+      : 'Registrar competencia de pregunta'
+  }}
+</h2>
+
+<mat-dialog-content class="competencias-preguntas-form">
+  <form
+    [formGroup]="form"
+    (ngSubmit)="save()"
+    class="competencias-preguntas-form__form"
+    id="competenciasPreguntasForm">
+    <mat-form-field appearance="outline">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="nombre" maxlength="150" required />
+      <mat-hint align="end">{{ form.get('nombre')?.value?.length || 0 }}/150</mat-hint>
+      @if (form.get('nombre')?.hasError('required') && form.get('nombre')?.touched) {
+        <mat-error>El nombre es obligatorio.</mat-error>
+      }
+      @if (form.get('nombre')?.hasError('maxlength')) {
+        <mat-error>El nombre no puede superar los 150 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Código</mat-label>
+      <input matInput formControlName="codigo" maxlength="50" required />
+      <mat-hint align="end">{{ form.get('codigo')?.value?.length || 0 }}/50</mat-hint>
+      @if (form.get('codigo')?.hasError('required') && form.get('codigo')?.touched) {
+        <mat-error>El código es obligatorio.</mat-error>
+      }
+      @if (form.get('codigo')?.hasError('maxlength')) {
+        <mat-error>El código no puede superar los 50 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Descripción</mat-label>
+      <textarea matInput formControlName="descripcion" rows="3" maxlength="300"></textarea>
+      <mat-hint align="end">{{ form.get('descripcion')?.value?.length || 0 }}/300</mat-hint>
+      @if (form.get('descripcion')?.hasError('maxlength')) {
+        <mat-error>La descripción no puede superar los 300 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-slide-toggle formControlName="activo">Activo</mat-slide-toggle>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()" [disabled]="isSaving$ | async">Cancelar</button>
+  <button
+    mat-raised-button
+    color="primary"
+    type="submit"
+    form="competenciasPreguntasForm"
+    [disabled]="isSaving$ | async">
+    Guardar
+  </button>
+</mat-dialog-actions>
+
+@if (isSaving$ | async) {
+  <mat-progress-bar mode="indeterminate" color="primary"></mat-progress-bar>
+}

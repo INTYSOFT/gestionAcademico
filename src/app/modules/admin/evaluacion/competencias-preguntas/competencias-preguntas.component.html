@@ -1,0 +1,38 @@
+<div class="flex min-w-0 flex-auto flex-col">
+  <div class="flex-auto p-6 sm:p-10">
+    <section class="competencias-preguntas">
+      <header class="competencias-preguntas__header">
+        <mat-form-field appearance="outline" class="competencias-preguntas__search-field">
+          <mat-label>Buscar competencias de preguntas</mat-label>
+          <input
+            matInput
+            type="search"
+            [formControl]="searchControl"
+            placeholder="Nombre, código, descripción o estado" />
+        </mat-form-field>
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          (click)="createEvaluacionTipoPregunta()">
+          <mat-icon>add</mat-icon>
+          Nueva competencia de pregunta
+        </button>
+      </header>
+
+      @if (isLoading$ | async) {
+        <mat-progress-bar mode="indeterminate" color="primary"></mat-progress-bar>
+      }
+
+      <ag-grid-angular
+        class="ag-theme-material competencias-preguntas__grid"
+        [theme]="'legacy'"
+        [rowData]="filteredEvaluacionTipoPreguntas$ | async"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        [animateRows]="true"
+        [domLayout]="'autoHeight'"
+        (gridReady)="onGridReady($event)"></ag-grid-angular>
+    </section>
+  </div>
+</div>

@@ -103,7 +103,14 @@ export const appRoutes: Route[] = [
                                 'app/modules/admin/evaluacion/tipo-evaluacion/tipo-evaluacion.routes'
                             ),
                     },
-              
+                    {
+                        path: 'competencias-preguntas',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/evaluacion/competencias-preguntas/competencias-preguntas.routes'
+                            ),
+                    },
+
                     { path: '', pathMatch: 'full', redirectTo: 'programar' },
                 ],
             },

@@ -35,6 +35,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:check-circle',
                 link : '/evaluacion/tipo-evaluacion'
+            },
+            {
+                id   : 'evaluacion.competencias-preguntas',
+                title: 'Competencias preguntas',
+                type : 'basic',
+                icon : 'heroicons_outline:question-mark-circle',
+                link : '/evaluacion/competencias-preguntas'
             }
         ]
     },
@@ -311,6 +318,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:check-circle',
                 link : '/evaluacion/tipo-evaluacion'
+            },
+            {
+                id   : 'evaluacion.competencias-preguntas',
+                title: 'Competencias preguntas',
+                type : 'basic',
+                icon : 'heroicons_outline:question-mark-circle',
+                link : '/evaluacion/competencias-preguntas'
             }
         ]
     },
