@@ -28,7 +28,10 @@
             [rowHeight]="48"
             [headerHeight]="44"
             [stopEditingWhenCellsLoseFocus]="true"
-            [suppressDragLeaveHidesColumns]="true"></ag-grid-angular>
+            [suppressDragLeaveHidesColumns]="true"
+            (gridReady)="onGridReady($event)"
+            (firstDataRendered)="onFirstDataRendered($event)"
+            (cellFocused)="onCellFocused($event)"></ag-grid-angular>
 
           <ng-container *ngIf="false">
             <!-- Mantiene el renderer de acciones disponible para ag-grid -->

@@ -27,6 +27,7 @@ import { AgGridAngular } from 'ag-grid-angular';
 import {
     CellClassParams,
     CellClassRules,
+    CellFocusedEvent,
     ColDef,
     FirstDataRenderedEvent,
     GridApi,
@@ -46,11 +47,12 @@ import {
     EvaluacionClaveActionsCellComponent,
     EvaluacionClaveActionsCellParams,
 } from './evaluacion-clave-actions-cell.component';
-import { EvaluacionClaveRespuestaCellEditorComponent } from './evaluacion-clave-respuesta-cell-editor.component';
 
 interface ClaveGridRow {
     formGroup: EvaluacionClaveFormGroup;
 }
+
+type InvalidRespuesta = { type: 'pregunta' | 'registro'; value: number };
 
 export interface EvaluacionClavesDialogData {
     evaluacion: EvaluacionProgramada;
@@ -112,7 +114,6 @@ interface EvaluacionClaveFormValue {
         MatProgressBarModule,
         AgGridAngular,
         EvaluacionClaveActionsCellComponent,
-        EvaluacionClaveRespuestaCellEditorComponent,
     ],
 })
 export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
@@ -158,12 +159,13 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
             colId: 'respuesta',
             minWidth: 160,
             valueGetter: (params) => this.getStringValue(params, 'respuesta'),
-            valueSetter: (params) => this.setSelectValue(params, 'respuesta'),
+            valueSetter: (params) => this.setRespuestaValue(params),
             editable: true,
-            cellEditor: EvaluacionClaveRespuestaCellEditorComponent,
-            cellEditorParams: () => ({
-                values: this.respuestas,
-            }),
+            cellEditor: 'agTextCellEditor',
+            cellEditorParams: {
+                maxLength: 1,
+            },
+            cellDataType: 'text',
             cellClassRules: this.createInvalidCellClassRules('respuesta'),
         },
         {
@@ -297,6 +299,15 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
         }
 
         this.clavesForm.controls.forEach((control) => control.markAllAsTouched());
+        this.ensureRespuestasUppercase();
+
+        const invalidRespuestas = this.findInvalidRespuestas();
+        if (invalidRespuestas.length > 0) {
+            const message = this.formatInvalidRespuestasMessage(invalidRespuestas);
+            this.snackBar.open(message, 'Cerrar', { duration: 6000 });
+            return;
+        }
+
         if (this.clavesForm.invalid) {
             return;
         }
@@ -395,6 +406,39 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
         // Solo utilidades. Nada de setRowData ni cambios estructurales.
         this.autoSizeColumns();
         this.updateNoRowsOverlay();
+    }
+
+    protected onCellFocused(event: CellFocusedEvent<ClaveGridRow>): void {
+        if (!event.api || event.rowIndex === undefined || event.rowIndex === null) {
+            return;
+        }
+
+        if (event.rowIndex < 0) {
+            return;
+        }
+
+        const columnId =
+            typeof event.column === 'string' ? event.column : event.column?.getColId();
+        if (columnId !== 'respuesta') {
+            return;
+        }
+
+        const isEditing = event.api
+            .getEditingCells()
+            .some(
+                (cell) =>
+                    cell.rowIndex === event.rowIndex &&
+                    cell.column.getColId() === columnId
+            );
+
+        if (isEditing) {
+            return;
+        }
+
+        event.api.startEditingCell({
+            rowIndex: event.rowIndex,
+            colKey: columnId,
+        });
     }
 
 
@@ -633,12 +677,94 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
         this.rowDataSubject.next(rows);
     }
 
+    private ensureRespuestasUppercase(): void {
+        this.clavesForm.controls.forEach((control) => {
+            const respuestaControl = control.controls.respuesta;
+            const normalized = (respuestaControl.value ?? '')
+                .toString()
+                .trim()
+                .toUpperCase();
+            const current = (respuestaControl.value ?? '').toString();
+
+            if (current !== normalized) {
+                respuestaControl.setValue(normalized, { emitEvent: false });
+                respuestaControl.markAsDirty();
+            }
+
+            respuestaControl.markAsTouched();
+            respuestaControl.updateValueAndValidity({ emitEvent: false });
+        });
+
+        this.refreshRespuestaColumn();
+    }
+
+    private findInvalidRespuestas(): InvalidRespuesta[] {
+        const invalid: InvalidRespuesta[] = [];
+
+        this.clavesForm.controls.forEach((control, index) => {
+            const value = (control.controls.respuesta.value ?? '')
+                .toString()
+                .trim()
+                .toUpperCase();
+
+            if (this.respuestas.includes(value)) {
+                return;
+            }
+
+            const preguntaOrden = Number(control.controls.preguntaOrden.value);
+            if (Number.isFinite(preguntaOrden)) {
+                invalid.push({ type: 'pregunta', value: preguntaOrden });
+                return;
+            }
+
+            invalid.push({ type: 'registro', value: index + 1 });
+        });
+
+        return invalid;
+    }
+
+    private formatInvalidRespuestasMessage(invalid: InvalidRespuesta[]): string {
+        const preguntas = invalid
+            .filter((item) => item.type === 'pregunta')
+            .map((item) => item.value)
+            .sort((a, b) => a - b);
+        const registros = invalid
+            .filter((item) => item.type === 'registro')
+            .map((item) => item.value)
+            .sort((a, b) => a - b);
+
+        const messages: string[] = [];
+
+        if (preguntas.length > 0) {
+            const label = preguntas.length === 1 ? 'La respuesta de la pregunta' : 'Las respuestas de las preguntas';
+            messages.push(`${label} ${preguntas.join(', ')} deben estar entre A y H.`);
+        }
+
+        if (registros.length > 0) {
+            const label = registros.length === 1 ? 'La respuesta del registro' : 'Las respuestas de los registros';
+            messages.push(`${label} ${registros.join(', ')} deben estar entre A y H.`);
+        }
+
+        if (messages.length === 0) {
+            return 'Verifica que todas las respuestas tengan un valor entre A y H.';
+        }
+
+        return messages.join(' ');
+    }
+
     private getNumericValue(
         params: ValueGetterParams<ClaveGridRow>,
         control: 'preguntaOrden'
     ): number | null {
         const value = params.data?.formGroup.controls[control].value;
         return value ?? null;
+    }
+
+    private refreshRespuestaColumn(): void {
+        this.gridApi?.refreshCells({
+            columns: ['respuesta'],
+            force: true,
+        });
     }
 
     private getStringValue(
@@ -683,25 +809,22 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
         return true;
     }
 
-    private setSelectValue(
-        params: ValueSetterParams<ClaveGridRow>,
-        control: 'respuesta'
-    ): boolean {
+    private setRespuestaValue(params: ValueSetterParams<ClaveGridRow>): boolean {
         const group = params.data?.formGroup;
         if (!group) {
             return false;
         }
 
-        const formControl = group.controls[control];
-        const value = (params.newValue ?? '').toString().trim().toUpperCase();
+        const formControl = group.controls.respuesta;
+        const normalized = (params.newValue ?? '').toString().trim().toUpperCase();
+        const nextValue = normalized.substring(0, 1);
+        const currentValue = (formControl.value ?? '').toString();
 
-        if (!this.respuestas.includes(value)) {
-            return false;
-        }
-
-        formControl.setValue(value, { emitEvent: false });
+        formControl.setValue(nextValue, { emitEvent: false });
         formControl.markAsTouched();
-        formControl.markAsDirty();
+        if (currentValue !== nextValue) {
+            formControl.markAsDirty();
+        }
         formControl.updateValueAndValidity({ emitEvent: false });
         this.refreshCell(params);
         return true;
