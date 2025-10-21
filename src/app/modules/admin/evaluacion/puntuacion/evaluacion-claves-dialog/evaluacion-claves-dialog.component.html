@@ -31,7 +31,8 @@
             [suppressDragLeaveHidesColumns]="true"
             (gridReady)="onGridReady($event)"
             (firstDataRendered)="onFirstDataRendered($event)"
-            (cellFocused)="onCellFocused($event)"></ag-grid-angular>
+            (cellFocused)="onCellFocused($event)"
+            (cellKeyDown)="onCellKeyDown($event)"></ag-grid-angular>
 
           <ng-container *ngIf="false">
             <!-- Mantiene el renderer de acciones disponible para ag-grid -->
