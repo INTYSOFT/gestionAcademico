@@ -82,22 +82,22 @@ interface DetalleImportContext {
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-    AsyncPipe,
-    DecimalPipe,
-    NgClass,
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatIconModule,
-    MatListModule,
-    MatTabsModule,
-    MatProgressSpinnerModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatTooltipModule,
-    MatDividerModule
-],
+        AsyncPipe,
+        DecimalPipe,
+        NgClass,
+        ReactiveFormsModule,
+        MatButtonModule,
+        MatDatepickerModule,
+        MatNativeDateModule,
+        MatIconModule,
+        MatListModule,
+        MatTabsModule,
+        MatProgressSpinnerModule,
+        MatDialogModule,
+        MatSnackBarModule,
+        MatTooltipModule,
+        MatDividerModule
+    ],
 })
 export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     protected readonly dateControl = this.fb.control<Date | null>(new Date(), {
@@ -199,7 +199,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     private currentCalendarMonthKey: string | null = null;
     private readonly calendarProgramacionesCache = new Map<string, EvaluacionProgramada[]>();
     private calendarMarkedDateKeys = new Set<string>();
-    private pendingCalendarActiveDate: Date | null = null;
+    //private pendingCalendarActiveDate: Date | null = null;
 
     private readonly destroyRef = inject(DestroyRef);
 
@@ -218,27 +218,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         private readonly dialog: MatDialog,
         private readonly confirmationService: FuseConfirmationService
     ) {
-        this.dateControl.valueChanges
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe((value) => {
-                const normalizedDate = this.normalizeDateInput(value);
 
-                if (normalizedDate) {
-                    if (this.shouldReplaceControlValue(value, normalizedDate)) {
-                        this.dateControl.setValue(normalizedDate, {
-                            emitEvent: false,
-                        });
-                    }
-
-                    this.scheduleCalendarActiveDate(normalizedDate);
-                    this.loadEvaluaciones(normalizedDate);
-                    this.loadEvaluacionesForMonth(normalizedDate);
-                } else {
-                    this.scheduleCalendarActiveDate(null);
-                    this.clearEvaluaciones();
-                    this.clearCalendarMarkedDates();
-                }
-            });
 
         combineLatest([
             this.seccionesEvaluacionSubject,
@@ -264,8 +244,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         this.loadEvaluacionTipoPreguntas();
 
         const initialDate = this.normalizeDateInput(this.dateControl.value) ?? new Date();
-        this.dateControl.setValue(initialDate, { emitEvent: false });
-        this.scheduleCalendarActiveDate(initialDate);
+        this.dateControl.setValue(initialDate, { emitEvent: false });        
         this.loadEvaluaciones(initialDate);
         this.loadEvaluacionesForMonth(initialDate);
     }
@@ -288,16 +267,18 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
     protected onCalendarDateSelected(date: Date | null): void {
         const normalizedDate = this.normalizeDateInput(date);
+        if (!normalizedDate) return;
 
-        if (!normalizedDate) {
-            return;
-        }
+        // Actualiza el control visual
+        this.dateControl.setValue(normalizedDate, { emitEvent: false });
 
-        const current = this.normalizeDateInput(this.dateControl.value);
-        if (!current || current.getTime() !== normalizedDate.getTime()) {
-            this.dateControl.setValue(normalizedDate);
-        }
+        // 🔥 Carga directa, sin esperar `stateChanges` ni `calendar.activeDate`
+        this.loadEvaluaciones(normalizedDate);
+        this.loadEvaluacionesForMonth(normalizedDate);
     }
+
+
+
 
     protected selectEvaluacion(evaluacion: EvaluacionProgramada): void {
         this.setSelectedEvaluacion(evaluacion);
@@ -471,7 +452,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
     private registerCalendarStateChanges(calendar: MatCalendar<Date>): void {
         if (this.monitoredCalendar === calendar) {
-            this.applyPendingCalendarActiveDate();
+            
             return;
         }
 
@@ -481,24 +462,13 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             this.handleCalendarStateChange(calendar)
         );
 
-        this.applyPendingCalendarActiveDate();
+        
         this.handleCalendarStateChange(calendar);
     }
 
-    private scheduleCalendarActiveDate(date: Date | null): void {
-        this.pendingCalendarActiveDate = date;
-        this.applyPendingCalendarActiveDate();
-    }
+   
 
-    private applyPendingCalendarActiveDate(): void {
-        if (!this.monitoredCalendar || !this.pendingCalendarActiveDate) {
-            return;
-        }
 
-        const target = this.pendingCalendarActiveDate;
-        this.pendingCalendarActiveDate = null;
-        this.monitoredCalendar.activeDate = target;
-    }
 
     private handleCalendarStateChange(calendar: MatCalendar<Date>): void {
         const activeDate = this.normalizeDateInput(calendar.activeDate);
@@ -545,7 +515,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 error: (error) => {
                     this.showError(
                         error.message ??
-                            'No fue posible obtener las evaluaciones programadas del mes.'
+                        'No fue posible obtener las evaluaciones programadas del mes.'
                     );
                     this.calendarProgramacionesCache.set(monthKey, []);
                     this.applyCalendarMarkedDates(monthKey, []);
@@ -973,7 +943,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             error: (error) => {
                 this.showError(
                     error.message ??
-                        'No fue posible obtener los tipos de pregunta de evaluación disponibles.'
+                    'No fue posible obtener los tipos de pregunta de evaluación disponibles.'
                 );
                 this.evaluacionTipoPreguntasSubject.next([]);
                 this.evaluacionTipoPreguntaNombreMap.clear();
@@ -1172,7 +1142,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 error: (error) => {
                     this.showError(
                         error.message ??
-                            'No fue posible importar los detalles seleccionados.'
+                        'No fue posible importar los detalles seleccionados.'
                     );
                 },
             });
@@ -1382,13 +1352,12 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             return null;
         }
 
-        const normalized = DateTime.fromJSDate(normalizedDate).startOf('day');
-        if (!normalized.isValid) {
-            return null;
-        }
-
-        return normalized.toISODate();
+        // ⚠️ ✅ IMPORTANTE: Siempre usar zona local, sin desplazamiento a UTC
+        return DateTime.fromJSDate(normalizedDate)
+            .setZone('local') // <<< esto garantiza que no pase a UTC
+            .toFormat('yyyy-MM-dd'); // evita usar toISODate() que arrastra la Z (zona)
     }
+
 
     private formatTime(value: string | null | undefined): string | null {
         if (!value) {
