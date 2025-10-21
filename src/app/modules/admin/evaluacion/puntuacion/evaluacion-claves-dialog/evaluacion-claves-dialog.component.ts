@@ -454,12 +454,16 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
             return;
         }
 
+
         const keyboardEvent = event.event as KeyboardEvent | undefined;
         if (!keyboardEvent?.key) {
             return;
         }
 
         const { key } = keyboardEvent;
+
+        const key = event.event.key;
+
         if (key !== 'ArrowDown' && key !== 'ArrowUp') {
             return;
         }
@@ -482,8 +486,13 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
             return;
         }
 
+
         keyboardEvent.preventDefault();
         keyboardEvent.stopPropagation();
+
+        event.event.preventDefault();
+        event.event.stopPropagation();
+
 
         event.api.stopEditing(false);
 
