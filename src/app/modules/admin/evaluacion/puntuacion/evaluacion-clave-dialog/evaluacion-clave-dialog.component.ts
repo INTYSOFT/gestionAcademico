@@ -196,7 +196,9 @@ export class EvaluacionClaveDialogComponent implements OnInit, AfterViewInit {
 
     protected onGridReady(event: GridReadyEvent<EvaluacionClaveRow>): void {
         this.gridApi = event.api;
+
         this.syncGridRows();
+
         if (this.shouldAutoSizeColumns) {
             this.autoSizeColumns();
         }
@@ -236,13 +238,21 @@ export class EvaluacionClaveDialogComponent implements OnInit, AfterViewInit {
             }),
         ];
 
+
         this.setRows(nextRows);
+
+        this.rows.set(nextRows);
+
         this.autoSizeColumns();
     }
 
     protected removeRow(row: EvaluacionClaveRow): void {
         const nextRows = this.rows().filter((item) => item.tempId !== row.tempId);
+
         this.setRows(nextRows);
+
+        this.rows.set(nextRows);
+
 
         if (row.id !== null) {
             this.deletedClaveIds.update((ids) =>
@@ -320,7 +330,11 @@ export class EvaluacionClaveDialogComponent implements OnInit, AfterViewInit {
             .subscribe({
                 next: (claves) => {
                     if (claves.length > 0) {
+
                         this.setRows(claves.map((clave) => this.mapClaveToRow(clave)));
+
+                        this.rows.set(claves.map((clave) => this.mapClaveToRow(clave)));
+
                         this.deletedClaveIds.set([]);
                     } else {
                         this.initializeRowsFromDetalle();
@@ -332,9 +346,13 @@ export class EvaluacionClaveDialogComponent implements OnInit, AfterViewInit {
                         error?.message ??
                             'No fue posible obtener las claves registradas para este detalle.'
                     );
+
                     this.setRows([]);
                     this.deletedClaveIds.set([]);
                     this.autoSizeColumns();
+
+                    this.rows.set([]);
+                    this.deletedClaveIds.set([]);
                 },
             });
     }
@@ -345,6 +363,10 @@ export class EvaluacionClaveDialogComponent implements OnInit, AfterViewInit {
 
         const rows: EvaluacionClaveRow[] = [];
         if (Number.isFinite(inicio) && Number.isFinite(fin) && fin >= inicio) {
+
+        if (Number.isFinite(inicio) && Number.isFinite(fin) && fin >= inicio) {
+            const rows: EvaluacionClaveRow[] = [];
+
             for (let pregunta = inicio; pregunta <= fin; pregunta += 1) {
                 rows.push(
                     this.createRow({
@@ -354,9 +376,16 @@ export class EvaluacionClaveDialogComponent implements OnInit, AfterViewInit {
                     })
                 );
             }
+
         }
 
         this.setRows(rows);
+
+            this.rows.set(rows);
+        } else {
+            this.rows.set([]);
+        }
+
         this.deletedClaveIds.set([]);
     }
 
@@ -392,6 +421,7 @@ export class EvaluacionClaveDialogComponent implements OnInit, AfterViewInit {
             activo: partial.activo ?? true,
         };
     }
+
 
     private setRows(rows: EvaluacionClaveRow[]): void {
         this.rows.set(rows);
