@@ -36,7 +36,11 @@
               placeholder="Selecciona una fecha"
               />
               <mat-datepicker-toggle matIconSuffix [for]="fechaPicker"></mat-datepicker-toggle>
-              <mat-datepicker #fechaPicker startView="month"></mat-datepicker>
+              <mat-datepicker
+                #fechaPicker
+                startView="month"
+                [dateClass]="dateClass"
+              ></mat-datepicker>
             </mat-form-field>
 
             <div              

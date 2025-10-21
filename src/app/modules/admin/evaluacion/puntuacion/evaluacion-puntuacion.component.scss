@@ -52,3 +52,13 @@ mat-nav-list {
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+.mat-calendar-body-cell.evaluacion-puntuacion__calendar-has-evaluacion
+    .mat-calendar-body-cell-content {
+    background-color: var(--mat-sys-primary-container, #e8def8);
+    border: 1px solid var(--mat-sys-primary, #6750a4);
+    border-radius: 9999px;
+    color: var(--mat-sys-on-primary-container, #1d192b);
+    font-weight: 600;
+    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+}

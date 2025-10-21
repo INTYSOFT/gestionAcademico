@@ -3,6 +3,7 @@ import {
     AfterViewInit,
     ChangeDetectionStrategy,
     Component,
+    ComponentRef,
     DestroyRef,
     ElementRef,
     OnInit,
@@ -14,7 +15,13 @@ import {
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDatepickerModule } from '@angular/material/datepicker';
+import {
+    MatCalendar,
+    MatCalendarCellClassFunction,
+    MatDatepicker,
+    MatDatepickerContent,
+    MatDatepickerModule,
+} from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -27,7 +34,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatNativeDateModule } from '@angular/material/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { BehaviorSubject, Observable, combineLatest, forkJoin, fromEvent, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, combineLatest, forkJoin, fromEvent, of } from 'rxjs';
 import { finalize, map, switchMap } from 'rxjs/operators';
 import { DateTime } from 'luxon';
 import { EvaluacionProgramada } from 'app/core/models/centro-estudios/evaluacion-programada.model';
@@ -142,6 +149,9 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     private readonly cicloNombreMap = new Map<number, string>();
     private readonly evaluacionTipoPreguntaNombreMap = new Map<number, string>();
 
+    @ViewChild('fechaPicker')
+    private readonly fechaPicker?: MatDatepicker<Date>;
+
     @ViewChild('evaluacionesListContainer', { static: true })
     private readonly evaluacionesListContainer?: ElementRef<HTMLDivElement>;
 
@@ -176,6 +186,19 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     protected readonly isLoadingDetalles$ = this.isLoadingDetallesSubject.asObservable();
     protected readonly isLoadingTipoEvaluacion$ = this.isLoadingTipoEvaluacionSubject.asObservable();
 
+    protected readonly dateClass: MatCalendarCellClassFunction<Date> = (date) =>
+        this.calendarMarkedDateKeys.has(this.buildDateKey(date))
+            ? 'evaluacion-puntuacion__calendar-has-evaluacion'
+            : '';
+
+    private calendarStateChangesSubscription?: Subscription;
+    private monthEvaluacionesSubscription?: Subscription;
+    private monitoredCalendar?: MatCalendar<Date>;
+    private pendingMonthKey: string | null = null;
+    private currentCalendarMonthKey: string | null = null;
+    private readonly calendarProgramacionesCache = new Map<string, EvaluacionProgramada[]>();
+    private calendarMarkedDateKeys = new Set<string>();
+
     private readonly destroyRef = inject(DestroyRef);
 
     constructor(
@@ -198,8 +221,10 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             .subscribe((value) => {
                 if (value) {
                     this.loadEvaluaciones(value);
+                    this.loadEvaluacionesForMonth(value);
                 } else {
                     this.clearEvaluaciones();
+                    this.clearCalendarMarkedDates();
                 }
             });
 
@@ -213,6 +238,11 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 const tabs = this.buildSeccionTabs(secciones, detalles, catalog);
                 this.seccionTabsSubject.next(tabs);
             });
+
+        this.destroyRef.onDestroy(() => {
+            this.calendarStateChangesSubscription?.unsubscribe();
+            this.monthEvaluacionesSubscription?.unsubscribe();
+        });
     }
 
     ngOnInit(): void {
@@ -224,10 +254,12 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         const initialDate = this.dateControl.value ?? new Date();
         this.dateControl.setValue(initialDate, { emitEvent: false });
         this.loadEvaluaciones(initialDate);
+        this.loadEvaluacionesForMonth(initialDate);
     }
 
     ngAfterViewInit(): void {
         this.initializeEvaluacionesListSizing();
+        this.initializeDatepickerMonitoring();
     }
 
     protected goToPreviousDay(): void {
@@ -331,6 +363,194 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
         const parsed = Number.parseFloat(value);
         return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    private initializeDatepickerMonitoring(): void {
+        const datepicker = this.fechaPicker;
+
+        if (!datepicker) {
+            return;
+        }
+
+        datepicker.openedStream
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => this.handleDatepickerOpened());
+
+        datepicker.closedStream
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => this.handleDatepickerClosed());
+    }
+
+    private handleDatepickerOpened(): void {
+        setTimeout(() => {
+            const calendar = this.resolveCalendarInstance();
+
+            if (!calendar) {
+                return;
+            }
+
+            this.registerCalendarStateChanges(calendar);
+            this.loadEvaluacionesForMonth(calendar.activeDate);
+        });
+    }
+
+    private handleDatepickerClosed(): void {
+        this.calendarStateChangesSubscription?.unsubscribe();
+        this.calendarStateChangesSubscription = undefined;
+        this.monitoredCalendar = undefined;
+    }
+
+    private resolveCalendarInstance(): MatCalendar<Date> | null {
+        const datepicker = this.fechaPicker as
+            | (MatDatepicker<Date> & {
+                  _componentRef?: ComponentRef<
+                      MatDatepickerContent<Date | null, Date>
+                  > | null;
+              })
+            | undefined;
+
+        const componentRef = datepicker?._componentRef ?? null;
+        return componentRef?.instance?._calendar ?? null;
+    }
+
+    private registerCalendarStateChanges(calendar: MatCalendar<Date>): void {
+        if (this.monitoredCalendar === calendar) {
+            return;
+        }
+
+        this.calendarStateChangesSubscription?.unsubscribe();
+        this.monitoredCalendar = calendar;
+        this.calendarStateChangesSubscription = calendar.stateChanges.subscribe(() =>
+            this.handleCalendarStateChange(calendar)
+        );
+
+        this.handleCalendarStateChange(calendar);
+    }
+
+    private handleCalendarStateChange(calendar: MatCalendar<Date>): void {
+        this.loadEvaluacionesForMonth(calendar.activeDate);
+    }
+
+    private loadEvaluacionesForMonth(date: Date): void {
+        const monthKey = this.buildMonthKey(date);
+
+        if (!monthKey) {
+            return;
+        }
+
+        const cached = this.calendarProgramacionesCache.get(monthKey);
+
+        if (cached) {
+            this.applyCalendarMarkedDates(monthKey, cached);
+            return;
+        }
+
+        const { year, month } = this.extractYearMonth(date);
+
+        this.monthEvaluacionesSubscription?.unsubscribe();
+        this.pendingMonthKey = monthKey;
+
+        this.monthEvaluacionesSubscription = this.evaluacionProgramadasService
+            .listActivasByAnioMes(year, month)
+            .pipe(
+                finalize(() => {
+                    if (this.pendingMonthKey === monthKey) {
+                        this.pendingMonthKey = null;
+                        this.monthEvaluacionesSubscription = undefined;
+                    }
+                })
+            )
+            .subscribe({
+                next: (evaluaciones) => {
+                    this.calendarProgramacionesCache.set(monthKey, evaluaciones);
+                    this.applyCalendarMarkedDates(monthKey, evaluaciones);
+                },
+                error: (error) => {
+                    this.showError(
+                        error.message ??
+                            'No fue posible obtener las evaluaciones programadas del mes.'
+                    );
+                    this.calendarProgramacionesCache.set(monthKey, []);
+                    this.applyCalendarMarkedDates(monthKey, []);
+                },
+            });
+    }
+
+    private applyCalendarMarkedDates(
+        monthKey: string,
+        evaluaciones: EvaluacionProgramada[]
+    ): void {
+        const nextMarkedDates = new Set<string>();
+
+        for (const evaluacion of evaluaciones) {
+            const isoDate = this.normalizeEvaluacionFecha(evaluacion.fechaInicio);
+
+            if (isoDate) {
+                nextMarkedDates.add(isoDate);
+            }
+        }
+
+        this.calendarMarkedDateKeys = nextMarkedDates;
+        this.currentCalendarMonthKey = monthKey;
+        this.refreshCalendarView();
+    }
+
+    private refreshCalendarView(): void {
+        this.monitoredCalendar?.updateTodaysDate();
+    }
+
+    private clearCalendarMarkedDates(): void {
+        this.calendarMarkedDateKeys = new Set<string>();
+        this.currentCalendarMonthKey = null;
+        this.refreshCalendarView();
+    }
+
+    private buildMonthKey(date: Date | null | undefined): string | null {
+        if (!date) {
+            return null;
+        }
+
+        const normalized = DateTime.fromJSDate(date).startOf('month');
+
+        if (!normalized.isValid) {
+            return null;
+        }
+
+        return normalized.toFormat('yyyy-MM');
+    }
+
+    private extractYearMonth(date: Date): { year: number; month: number } {
+        const normalized = DateTime.fromJSDate(date);
+
+        if (normalized.isValid) {
+            return { year: normalized.year, month: normalized.month };
+        }
+
+        return { year: date.getFullYear(), month: date.getMonth() + 1 };
+    }
+
+    private buildDateKey(date: Date): string {
+        const normalized = DateTime.fromJSDate(date).startOf('day');
+
+        if (normalized.isValid) {
+            return normalized.toISODate() ?? '';
+        }
+
+        return date.toISOString().slice(0, 10);
+    }
+
+    private normalizeEvaluacionFecha(fecha: string | null | undefined): string | null {
+        if (!fecha) {
+            return null;
+        }
+
+        const normalized = DateTime.fromISO(fecha).startOf('day');
+
+        if (normalized.isValid) {
+            return normalized.toISODate();
+        }
+
+        return null;
     }
 
     protected buildHorarioLabel(evaluacion: EvaluacionProgramada): string {
