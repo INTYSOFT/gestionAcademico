@@ -422,18 +422,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
               })
             | undefined;
 
-        return contentInstance?._calendar ?? null;
-
-        const datepicker = this.fechaPicker as
-            | (MatDatepicker<Date> & {
-                  _componentRef?: ComponentRef<
-                      MatDatepickerContent<Date | null, Date>
-                  > | null;
-              })
-            | undefined;
-
-        const componentRef = datepicker?._componentRef ?? null;
-        return componentRef?.instance?._calendar ?? null;
+        return contentInstance?._calendar ?? null;      
 
     }
 
