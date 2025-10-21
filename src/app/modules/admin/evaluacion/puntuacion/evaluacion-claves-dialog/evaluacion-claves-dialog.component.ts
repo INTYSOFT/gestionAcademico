@@ -28,6 +28,7 @@ import {
     CellClassParams,
     CellClassRules,
     CellFocusedEvent,
+    CellKeyDownEvent,
     ColDef,
     FirstDataRenderedEvent,
     GridApi,
@@ -47,6 +48,7 @@ import {
     EvaluacionClaveActionsCellComponent,
     EvaluacionClaveActionsCellParams,
 } from './evaluacion-clave-actions-cell.component';
+import { EvaluacionClaveRespuestaCellEditorComponent } from './evaluacion-clave-respuesta-cell-editor.component';
 
 interface ClaveGridRow {
     formGroup: EvaluacionClaveFormGroup;
@@ -114,6 +116,7 @@ interface EvaluacionClaveFormValue {
         MatProgressBarModule,
         AgGridAngular,
         EvaluacionClaveActionsCellComponent,
+        EvaluacionClaveRespuestaCellEditorComponent,
     ],
 })
 export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
@@ -161,9 +164,9 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
             valueGetter: (params) => this.getStringValue(params, 'respuesta'),
             valueSetter: (params) => this.setRespuestaValue(params),
             editable: true,
-            cellEditor: 'agTextCellEditor',
+            cellEditor: EvaluacionClaveRespuestaCellEditorComponent,
             cellEditorParams: {
-                maxLength: 1,
+                values: this.respuestas,
             },
             cellDataType: 'text',
             cellClassRules: this.createInvalidCellClassRules('respuesta'),
@@ -438,6 +441,59 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
         event.api.startEditingCell({
             rowIndex: event.rowIndex,
             colKey: columnId,
+        });
+    }
+
+    protected onCellKeyDown(event: CellKeyDownEvent<ClaveGridRow>): void {
+        if (!event.api || !event.column || event.rowIndex === undefined || event.rowIndex === null) {
+            return;
+        }
+
+        const columnId = event.column.getColId();
+        if (columnId !== 'respuesta') {
+            return;
+        }
+
+        const keyboardEvent = event.event as KeyboardEvent | undefined;
+        if (!keyboardEvent?.key) {
+            return;
+        }
+
+        const { key } = keyboardEvent;
+        if (key !== 'ArrowDown' && key !== 'ArrowUp') {
+            return;
+        }
+
+        const isEditingRespuesta = event.api
+            .getEditingCells()
+            .some(
+                (cell) =>
+                    cell.rowIndex === event.rowIndex && cell.column.getColId() === columnId
+            );
+
+        if (!isEditingRespuesta) {
+            return;
+        }
+
+        const direction = key === 'ArrowDown' ? 1 : -1;
+        const targetRowIndex = event.rowIndex + direction;
+
+        if (targetRowIndex < 0 || targetRowIndex >= this.clavesForm.length) {
+            return;
+        }
+
+        keyboardEvent.preventDefault();
+        keyboardEvent.stopPropagation();
+
+        event.api.stopEditing(false);
+
+        queueMicrotask(() => {
+            event.api.ensureIndexVisible(targetRowIndex, direction > 0 ? 'bottom' : 'top');
+            event.api.setFocusedCell(targetRowIndex, columnId);
+            event.api.startEditingCell({
+                rowIndex: targetRowIndex,
+                colKey: columnId,
+            });
         });
     }
 
