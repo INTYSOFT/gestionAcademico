@@ -51,6 +51,10 @@ import {
     EvaluacionDetalleImportDialogComponent,
     EvaluacionDetalleImportDialogResult,
 } from './evaluacion-detalle-import-dialog/evaluacion-detalle-import-dialog.component';
+import {
+    EvaluacionClaveDialogComponent,
+    EvaluacionClaveDialogResult,
+} from './evaluacion-clave-dialog/evaluacion-clave-dialog.component';
 
 import { FuseConfirmationService } from '@fuse/services/confirmation';
 import { Sede } from 'app/core/models/centro-estudios/sede.model';
@@ -519,6 +523,38 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         dialogRef.afterClosed().subscribe((result) => {
             if (result?.action === 'updated') {
                 this.reloadDetalles();
+            }
+        });
+    }
+
+    protected openDetalleClavesDialog(detalle: EvaluacionDetalle): void {
+        const evaluacion = this.selectedEvaluacionSubject.value;
+        if (!evaluacion) {
+            return;
+        }
+
+        const dialogRef = this.dialog.open<
+            EvaluacionClaveDialogComponent,
+            { evaluacion: EvaluacionProgramada; detalle: EvaluacionDetalle },
+            EvaluacionClaveDialogResult
+        >(EvaluacionClaveDialogComponent, {
+            width: '860px',
+            maxHeight: '90vh',
+            data: {
+                evaluacion,
+                detalle,
+            },
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+            if (result?.action === 'saved') {
+                this.snackBar.open(
+                    'Claves de evaluación actualizadas correctamente.',
+                    'Cerrar',
+                    {
+                        duration: 4000,
+                    }
+                );
             }
         });
     }
