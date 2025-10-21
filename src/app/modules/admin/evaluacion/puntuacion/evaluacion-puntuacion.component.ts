@@ -186,7 +186,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     protected readonly isLoadingDetalles$ = this.isLoadingDetallesSubject.asObservable();
     protected readonly isLoadingTipoEvaluacion$ = this.isLoadingTipoEvaluacionSubject.asObservable();
 
-    protected readonly dateClass: MatCalendarCellClassFunction<Date> = (date) =>
+    protected readonly dateClass: MatCalendarCellClassFunction<unknown> = (date) =>
         this.calendarMarkedDateKeys.has(this.buildDateKey(date))
             ? 'evaluacion-puntuacion__calendar-has-evaluacion'
             : '';
@@ -219,9 +219,17 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         this.dateControl.valueChanges
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe((value) => {
-                if (value) {
-                    this.loadEvaluaciones(value);
-                    this.loadEvaluacionesForMonth(value);
+                const normalizedDate = this.normalizeDateInput(value);
+
+                if (normalizedDate) {
+                    if (this.shouldReplaceControlValue(value, normalizedDate)) {
+                        this.dateControl.setValue(normalizedDate, {
+                            emitEvent: false,
+                        });
+                    }
+
+                    this.loadEvaluaciones(normalizedDate);
+                    this.loadEvaluacionesForMonth(normalizedDate);
                 } else {
                     this.clearEvaluaciones();
                     this.clearCalendarMarkedDates();
@@ -251,7 +259,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         this.loadCiclosCatalog();
         this.loadEvaluacionTipoPreguntas();
 
-        const initialDate = this.dateControl.value ?? new Date();
+        const initialDate = this.normalizeDateInput(this.dateControl.value) ?? new Date();
         this.dateControl.setValue(initialDate, { emitEvent: false });
         this.loadEvaluaciones(initialDate);
         this.loadEvaluacionesForMonth(initialDate);
@@ -365,6 +373,85 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         return Number.isFinite(parsed) ? parsed : 0;
     }
 
+    private normalizeDateInput(value: unknown): Date | null {
+        if (value === null || value === undefined) {
+            return null;
+        }
+
+        if (value instanceof Date) {
+            return Number.isNaN(value.getTime()) ? null : value;
+        }
+
+        if (this.isLuxonDateTime(value)) {
+            const jsDate = value.toJSDate();
+            return Number.isNaN(jsDate.getTime()) ? null : jsDate;
+        }
+
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+
+            if (!trimmed) {
+                return null;
+            }
+
+            const isoParsed = DateTime.fromISO(trimmed);
+            if (isoParsed.isValid) {
+                const jsDate = isoParsed.toJSDate();
+                return Number.isNaN(jsDate.getTime()) ? null : jsDate;
+            }
+
+            const nativeParsed = new Date(trimmed);
+            return Number.isNaN(nativeParsed.getTime()) ? null : nativeParsed;
+        }
+
+        if (typeof value === 'number') {
+            if (!Number.isFinite(value)) {
+                return null;
+            }
+
+            const fromMillis = DateTime.fromMillis(value);
+            if (fromMillis.isValid) {
+                const jsDate = fromMillis.toJSDate();
+                return Number.isNaN(jsDate.getTime()) ? null : jsDate;
+            }
+
+            const nativeParsed = new Date(value);
+            return Number.isNaN(nativeParsed.getTime()) ? null : nativeParsed;
+        }
+
+        return null;
+    }
+
+    private shouldReplaceControlValue(original: unknown, normalized: Date): boolean {
+        if (original instanceof Date) {
+            return Number.isNaN(original.getTime()) || original.getTime() !== normalized.getTime();
+        }
+
+        if (this.isLuxonDateTime(original)) {
+            const originalDate = original.toJSDate();
+            return (
+                Number.isNaN(originalDate.getTime()) ||
+                originalDate.getTime() !== normalized.getTime()
+            );
+        }
+
+        if (original === null || original === undefined) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private isLuxonDateTime(value: unknown): value is DateTime {
+        return (
+            value instanceof DateTime ||
+            (!!value &&
+                typeof value === 'object' &&
+                'isValid' in value &&
+                typeof (value as DateTime).toJSDate === 'function')
+        );
+    }
+
     private initializeDatepickerMonitoring(): void {
         const datepicker = this.fechaPicker;
 
@@ -390,7 +477,11 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             }
 
             this.registerCalendarStateChanges(calendar);
-            this.loadEvaluacionesForMonth(calendar.activeDate);
+
+            const activeDate = this.normalizeDateInput(calendar.activeDate);
+            if (activeDate) {
+                this.loadEvaluacionesForMonth(activeDate);
+            }
         });
     }
 
@@ -441,7 +532,11 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     }
 
     private handleCalendarStateChange(calendar: MatCalendar<Date>): void {
-        this.loadEvaluacionesForMonth(calendar.activeDate);
+        const activeDate = this.normalizeDateInput(calendar.activeDate);
+
+        if (activeDate) {
+            this.loadEvaluacionesForMonth(activeDate);
+        }
     }
 
     private loadEvaluacionesForMonth(date: Date): void {
@@ -518,12 +613,14 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         this.refreshCalendarView();
     }
 
-    private buildMonthKey(date: Date | null | undefined): string | null {
-        if (!date) {
+    private buildMonthKey(date: unknown): string | null {
+        const normalizedDate = this.normalizeDateInput(date);
+
+        if (!normalizedDate) {
             return null;
         }
 
-        const normalized = DateTime.fromJSDate(date).startOf('month');
+        const normalized = DateTime.fromJSDate(normalizedDate).startOf('month');
 
         if (!normalized.isValid) {
             return null;
@@ -532,24 +629,40 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         return normalized.toFormat('yyyy-MM');
     }
 
-    private extractYearMonth(date: Date): { year: number; month: number } {
-        const normalized = DateTime.fromJSDate(date);
+    private extractYearMonth(date: unknown): { year: number; month: number } {
+        const normalizedDate = this.normalizeDateInput(date);
 
-        if (normalized.isValid) {
-            return { year: normalized.year, month: normalized.month };
+        if (normalizedDate) {
+            const normalized = DateTime.fromJSDate(normalizedDate);
+
+            if (normalized.isValid) {
+                return { year: normalized.year, month: normalized.month };
+            }
+
+            return {
+                year: normalizedDate.getFullYear(),
+                month: normalizedDate.getMonth() + 1,
+            };
         }
 
-        return { year: date.getFullYear(), month: date.getMonth() + 1 };
+        const today = new Date();
+        return { year: today.getFullYear(), month: today.getMonth() + 1 };
     }
 
-    private buildDateKey(date: Date): string {
-        const normalized = DateTime.fromJSDate(date).startOf('day');
+    private buildDateKey(date: unknown): string {
+        const normalizedDate = this.normalizeDateInput(date);
+
+        if (!normalizedDate) {
+            return '';
+        }
+
+        const normalized = DateTime.fromJSDate(normalizedDate).startOf('day');
 
         if (normalized.isValid) {
             return normalized.toISODate() ?? '';
         }
 
-        return date.toISOString().slice(0, 10);
+        return normalizedDate.toISOString().slice(0, 10);
     }
 
     private normalizeEvaluacionFecha(fecha: string | null | undefined): string | null {
@@ -827,7 +940,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     }
 
     private shiftSelectedDateBy(days: number): void {
-        const current = this.dateControl.value ?? new Date();
+        const current = this.normalizeDateInput(this.dateControl.value) ?? new Date();
         const updated = DateTime.fromJSDate(current).plus({ days });
         if (!updated.isValid) {
             return;
@@ -1221,8 +1334,14 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         return tabs;
     }
 
-    private formatDateForApi(date: Date): string | null {
-        const normalized = DateTime.fromJSDate(date).startOf('day');
+    private formatDateForApi(date: unknown): string | null {
+        const normalizedDate = this.normalizeDateInput(date);
+
+        if (!normalizedDate) {
+            return null;
+        }
+
+        const normalized = DateTime.fromJSDate(normalizedDate).startOf('day');
         if (!normalized.isValid) {
             return null;
         }
