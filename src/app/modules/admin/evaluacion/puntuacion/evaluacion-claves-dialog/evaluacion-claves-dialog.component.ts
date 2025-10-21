@@ -112,6 +112,7 @@ interface EvaluacionClaveFormValue {
         MatProgressBarModule,
         AgGridAngular,
         EvaluacionClaveActionsCellComponent,
+        EvaluacionClaveRespuestaCellEditorComponent,
     ],
 })
 export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {

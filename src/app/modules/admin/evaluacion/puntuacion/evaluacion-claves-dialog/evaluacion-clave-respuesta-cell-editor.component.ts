@@ -13,7 +13,9 @@ import { ICellEditorParams } from 'ag-grid-community';
 interface EvaluacionClaveRespuestaCellEditorParams
     extends ICellEditorParams {
     values?: string[];
+
     charPress?: string | null;
+
 }
 
 @Component({
