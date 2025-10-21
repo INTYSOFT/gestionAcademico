@@ -46,6 +46,7 @@ import {
     EvaluacionClaveActionsCellComponent,
     EvaluacionClaveActionsCellParams,
 } from './evaluacion-clave-actions-cell.component';
+import { EvaluacionClaveRespuestaCellEditorComponent } from './evaluacion-clave-respuesta-cell-editor.component';
 
 interface ClaveGridRow {
     formGroup: EvaluacionClaveFormGroup;
@@ -111,6 +112,7 @@ interface EvaluacionClaveFormValue {
         MatProgressBarModule,
         AgGridAngular,
         EvaluacionClaveActionsCellComponent,
+        EvaluacionClaveRespuestaCellEditorComponent,
     ],
 })
 export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
@@ -158,7 +160,7 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
             valueGetter: (params) => this.getStringValue(params, 'respuesta'),
             valueSetter: (params) => this.setSelectValue(params, 'respuesta'),
             editable: true,
-            cellEditor: 'agSelectCellEditor',
+            cellEditor: EvaluacionClaveRespuestaCellEditorComponent,
             cellEditorParams: () => ({
                 values: this.respuestas,
             }),
