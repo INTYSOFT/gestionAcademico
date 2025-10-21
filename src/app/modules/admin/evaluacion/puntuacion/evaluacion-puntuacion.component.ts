@@ -3,7 +3,6 @@ import {
     AfterViewInit,
     ChangeDetectionStrategy,
     Component,
-    ComponentRef,
     DestroyRef,
     ElementRef,
     OnInit,
@@ -15,16 +14,8 @@ import {
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import {
-    MatCalendar,
-    MatCalendarCellClassFunction,
-    MatDatepicker,
-    MatDatepickerContent,
-    MatDatepickerModule,
-} from '@angular/material/datepicker';
+import { MatCalendar, MatCalendarCellClassFunction, MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -99,8 +90,6 @@ interface DetalleImportContext {
     MatDatepickerModule,
     MatNativeDateModule,
     MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatListModule,
     MatTabsModule,
     MatProgressSpinnerModule,
@@ -149,8 +138,20 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     private readonly cicloNombreMap = new Map<number, string>();
     private readonly evaluacionTipoPreguntaNombreMap = new Map<number, string>();
 
-    @ViewChild('fechaPicker')
-    private readonly fechaPicker?: MatDatepicker<Date>;
+    @ViewChild('inlineCalendar')
+    private set inlineCalendar(calendar: MatCalendar<Date> | undefined) {
+        if (!calendar) {
+            if (this.monitoredCalendar) {
+                this.calendarStateChangesSubscription?.unsubscribe();
+                this.calendarStateChangesSubscription = undefined;
+            }
+
+            this.monitoredCalendar = null;
+            return;
+        }
+
+        this.registerCalendarStateChanges(calendar);
+    }
 
     @ViewChild('evaluacionesListContainer', { static: true })
     private readonly evaluacionesListContainer?: ElementRef<HTMLDivElement>;
@@ -193,11 +194,12 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
     private calendarStateChangesSubscription?: Subscription;
     private monthEvaluacionesSubscription?: Subscription;
-    private monitoredCalendar?: MatCalendar<Date>;
+    private monitoredCalendar: MatCalendar<Date> | null = null;
     private pendingMonthKey: string | null = null;
     private currentCalendarMonthKey: string | null = null;
     private readonly calendarProgramacionesCache = new Map<string, EvaluacionProgramada[]>();
     private calendarMarkedDateKeys = new Set<string>();
+    private pendingCalendarActiveDate: Date | null = null;
 
     private readonly destroyRef = inject(DestroyRef);
 
@@ -228,9 +230,11 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                         });
                     }
 
+                    this.scheduleCalendarActiveDate(normalizedDate);
                     this.loadEvaluaciones(normalizedDate);
                     this.loadEvaluacionesForMonth(normalizedDate);
                 } else {
+                    this.scheduleCalendarActiveDate(null);
                     this.clearEvaluaciones();
                     this.clearCalendarMarkedDates();
                 }
@@ -261,13 +265,13 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
         const initialDate = this.normalizeDateInput(this.dateControl.value) ?? new Date();
         this.dateControl.setValue(initialDate, { emitEvent: false });
+        this.scheduleCalendarActiveDate(initialDate);
         this.loadEvaluaciones(initialDate);
         this.loadEvaluacionesForMonth(initialDate);
     }
 
     ngAfterViewInit(): void {
         this.initializeEvaluacionesListSizing();
-        this.initializeDatepickerMonitoring();
     }
 
     protected goToPreviousDay(): void {
@@ -280,6 +284,19 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
     protected goToToday(): void {
         this.dateControl.setValue(new Date());
+    }
+
+    protected onCalendarDateSelected(date: Date | null): void {
+        const normalizedDate = this.normalizeDateInput(date);
+
+        if (!normalizedDate) {
+            return;
+        }
+
+        const current = this.normalizeDateInput(this.dateControl.value);
+        if (!current || current.getTime() !== normalizedDate.getTime()) {
+            this.dateControl.setValue(normalizedDate);
+        }
     }
 
     protected selectEvaluacion(evaluacion: EvaluacionProgramada): void {
@@ -452,73 +469,9 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         );
     }
 
-    private initializeDatepickerMonitoring(): void {
-        const datepicker = this.fechaPicker;
-
-        if (!datepicker) {
-            return;
-        }
-
-        datepicker.openedStream
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(() => this.handleDatepickerOpened());
-
-        datepicker.closedStream
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(() => this.handleDatepickerClosed());
-    }
-
-    private handleDatepickerOpened(): void {
-        setTimeout(() => {
-            const calendar = this.resolveCalendarInstance();
-
-            if (!calendar) {
-                return;
-            }
-
-            this.registerCalendarStateChanges(calendar);
-
-            const activeDate = this.normalizeDateInput(calendar.activeDate);
-            if (activeDate) {
-                this.loadEvaluacionesForMonth(activeDate);
-            }
-        });
-    }
-
-    private handleDatepickerClosed(): void {
-        this.calendarStateChangesSubscription?.unsubscribe();
-        this.calendarStateChangesSubscription = undefined;
-        this.monitoredCalendar = undefined;
-    }
-
-    private resolveCalendarInstance(): MatCalendar<Date> | null {
-
-        const datepicker = this.fechaPicker;
-
-        if (!datepicker) {
-            return null;
-        }
-
-        const pickerWithComponentRef = datepicker as unknown as {
-            _componentRef?: ComponentRef<
-                MatDatepickerContent<Date | null, Date>
-            > | null;
-        };
-
-        const componentRef = pickerWithComponentRef._componentRef ?? null;
-
-        const contentInstance = componentRef?.instance as
-            | (MatDatepickerContent<Date | null, Date> & {
-                  _calendar?: MatCalendar<Date> | null;
-              })
-            | undefined;
-
-        return contentInstance?._calendar ?? null;      
-
-    }
-
     private registerCalendarStateChanges(calendar: MatCalendar<Date>): void {
         if (this.monitoredCalendar === calendar) {
+            this.applyPendingCalendarActiveDate();
             return;
         }
 
@@ -528,7 +481,23 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             this.handleCalendarStateChange(calendar)
         );
 
+        this.applyPendingCalendarActiveDate();
         this.handleCalendarStateChange(calendar);
+    }
+
+    private scheduleCalendarActiveDate(date: Date | null): void {
+        this.pendingCalendarActiveDate = date;
+        this.applyPendingCalendarActiveDate();
+    }
+
+    private applyPendingCalendarActiveDate(): void {
+        if (!this.monitoredCalendar || !this.pendingCalendarActiveDate) {
+            return;
+        }
+
+        const target = this.pendingCalendarActiveDate;
+        this.pendingCalendarActiveDate = null;
+        this.monitoredCalendar.activeDate = target;
     }
 
     private handleCalendarStateChange(calendar: MatCalendar<Date>): void {
@@ -1288,6 +1257,20 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             seccionNombreMap.set(seccion.id, seccion.nombre);
         });
 
+        const sortedDetalles = this.sortDetalles(detalles);
+
+        const detallesPorSeccion = new Map<number | null, EvaluacionDetalle[]>();
+        for (const detalle of sortedDetalles) {
+            const key = detalle.seccionId ?? null;
+            const agrupados = detallesPorSeccion.get(key);
+
+            if (agrupados) {
+                agrupados.push(detalle);
+            } else {
+                detallesPorSeccion.set(key, [detalle]);
+            }
+        }
+
         const tabs = secciones.map<EvaluacionSeccionTabView>((seccion) => {
             const seccionId = seccion.seccionId ?? null;
             const label =
@@ -1295,9 +1278,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                     ? seccionNombreMap.get(seccionId) ?? `Sección ${seccionId}`
                     : 'Sin sección asignada';
 
-            const detallesAsociados = detalles.filter(
-                (detalle) => detalle.seccionId === seccionId
-            );
+            const detallesAsociados = detallesPorSeccion.get(seccionId) ?? [];
 
             return {
                 key: `seccion-${seccion.id}`,
@@ -1309,7 +1290,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         });
 
         const tieneTabGeneral = tabs.some((tab) => tab.seccionId === null);
-        const detallesGenerales = detalles.filter((detalle) => detalle.seccionId === null);
+        const detallesGenerales = detallesPorSeccion.get(null) ?? [];
 
         if (!tieneTabGeneral && detallesGenerales.length > 0) {
             tabs.push({
@@ -1321,17 +1302,77 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             });
         }
 
-        if (tabs.length === 0 && detallesGenerales.length === 0 && detalles.length > 0) {
+        if (
+            tabs.length === 0 &&
+            detallesGenerales.length === 0 &&
+            sortedDetalles.length > 0
+        ) {
             tabs.push({
                 key: 'seccion-todos',
                 label: 'Detalles',
                 seccionId: null,
                 evaluacionSeccion: null,
-                detalles,
+                detalles: sortedDetalles,
             });
         }
 
         return tabs;
+    }
+
+    private sortDetalles(detalles: EvaluacionDetalle[]): EvaluacionDetalle[] {
+        return [...detalles].sort((a, b) => {
+            const rangoInicioDiff = this.compareNullableNumbers(
+                a.rangoInicio,
+                b.rangoInicio
+            );
+
+            if (rangoInicioDiff !== 0) {
+                return rangoInicioDiff;
+            }
+
+            const rangoFinDiff = this.compareNullableNumbers(a.rangoFin, b.rangoFin);
+            if (rangoFinDiff !== 0) {
+                return rangoFinDiff;
+            }
+
+            if (
+                a.id !== null &&
+                a.id !== undefined &&
+                b.id !== null &&
+                b.id !== undefined
+            ) {
+                return a.id - b.id;
+            }
+
+            return 0;
+        });
+    }
+
+    private compareNullableNumbers(
+        a: number | null | undefined,
+        b: number | null | undefined
+    ): number {
+        if (a === null || a === undefined) {
+            if (b === null || b === undefined) {
+                return 0;
+            }
+
+            return 1;
+        }
+
+        if (b === null || b === undefined) {
+            return -1;
+        }
+
+        if (a < b) {
+            return -1;
+        }
+
+        if (a > b) {
+            return 1;
+        }
+
+        return 0;
     }
 
     private formatDateForApi(date: unknown): string | null {

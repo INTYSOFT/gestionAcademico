@@ -27,23 +27,19 @@
             </button>
           </div>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Fecha</mat-label>
-            <input
-              matInput
-              [matDatepicker]="fechaPicker"
-              [formControl]="dateControl"
-              placeholder="Selecciona una fecha"
-              />
-              <mat-datepicker-toggle matIconSuffix [for]="fechaPicker"></mat-datepicker-toggle>
-              <mat-datepicker
-                #fechaPicker
-                startView="month"
-                [dateClass]="dateClass"
-              ></mat-datepicker>
-            </mat-form-field>
+          <div
+            class="evaluacion-puntuacion__calendar-container overflow-hidden rounded-xl border border-gray-200 bg-white p-2"
+          >
+            <mat-calendar
+              #inlineCalendar
+              class="evaluacion-puntuacion__calendar"
+              [selected]="dateControl.value ?? null"
+              [dateClass]="dateClass"
+              (selectedChange)="onCalendarDateSelected($event)"
+            ></mat-calendar>
+          </div>
 
-            <div              
+            <div
               #evaluacionesListContainer
               class="relative flex min-h-[200px] flex-1 flex-col overflow-hidden rounded-xl border border-gray-200"
               >
