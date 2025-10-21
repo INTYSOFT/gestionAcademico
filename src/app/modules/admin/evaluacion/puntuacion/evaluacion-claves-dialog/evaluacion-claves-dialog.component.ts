@@ -454,15 +454,12 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
             return;
         }
 
-
-        const keyboardEvent = event.event as KeyboardEvent | undefined;
-        if (!keyboardEvent?.key) {
+        const keyboardEvent = event.event;
+        if (!this.isKeyboardEvent(keyboardEvent)) {
             return;
         }
 
         const { key } = keyboardEvent;
-
-        const key = event.event.key;
 
         if (key !== 'ArrowDown' && key !== 'ArrowUp') {
             return;
@@ -490,10 +487,6 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
         keyboardEvent.preventDefault();
         keyboardEvent.stopPropagation();
 
-        event.event.preventDefault();
-        event.event.stopPropagation();
-
-
         event.api.stopEditing(false);
 
         queueMicrotask(() => {
@@ -504,6 +497,12 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
                 colKey: columnId,
             });
         });
+    }
+
+    private isKeyboardEvent(
+        event: Event | undefined | null
+    ): event is KeyboardEvent {
+        return !!event && 'key' in event;
     }
 
 
