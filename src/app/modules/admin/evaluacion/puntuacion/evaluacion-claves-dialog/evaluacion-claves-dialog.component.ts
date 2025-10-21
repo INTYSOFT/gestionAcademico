@@ -28,6 +28,7 @@ import {
     CellClassParams,
     CellClassRules,
     CellFocusedEvent,
+    CellKeyDownEvent,
     ColDef,
     FirstDataRenderedEvent,
     GridApi,
@@ -438,6 +439,54 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
         event.api.startEditingCell({
             rowIndex: event.rowIndex,
             colKey: columnId,
+        });
+    }
+
+    protected onCellKeyDown(event: CellKeyDownEvent<ClaveGridRow>): void {
+        if (!event.api || !event.column || event.rowIndex === undefined || event.rowIndex === null) {
+            return;
+        }
+
+        const columnId = event.column.getColId();
+        if (columnId !== 'respuesta') {
+            return;
+        }
+
+        const key = event.event.key;
+        if (key !== 'ArrowDown' && key !== 'ArrowUp') {
+            return;
+        }
+
+        const isEditingRespuesta = event.api
+            .getEditingCells()
+            .some(
+                (cell) =>
+                    cell.rowIndex === event.rowIndex && cell.column.getColId() === columnId
+            );
+
+        if (!isEditingRespuesta) {
+            return;
+        }
+
+        const direction = key === 'ArrowDown' ? 1 : -1;
+        const targetRowIndex = event.rowIndex + direction;
+
+        if (targetRowIndex < 0 || targetRowIndex >= this.clavesForm.length) {
+            return;
+        }
+
+        event.event.preventDefault();
+        event.event.stopPropagation();
+
+        event.api.stopEditing(false);
+
+        queueMicrotask(() => {
+            event.api.ensureIndexVisible(targetRowIndex, direction > 0 ? 'bottom' : 'top');
+            event.api.setFocusedCell(targetRowIndex, columnId);
+            event.api.startEditingCell({
+                rowIndex: targetRowIndex,
+                colKey: columnId,
+            });
         });
     }
 
