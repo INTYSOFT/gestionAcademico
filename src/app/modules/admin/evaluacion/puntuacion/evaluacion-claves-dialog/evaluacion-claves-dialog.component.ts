@@ -1,3 +1,4 @@
+import { combineLatest } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
@@ -113,6 +114,8 @@ interface EvaluacionClaveFormValue {
     ],
 })
 export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
+    private readonly gridReady$ = new BehaviorSubject<boolean>(false);
+
     protected readonly detalle = this.data.detalle;
     protected readonly evaluacion = this.data.evaluacion;
 
@@ -213,6 +216,22 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.loadClaves();
+
+        // Cuando el grid esté listo y rowData cambie, refresca utilidades.
+        this.subscriptions.add(
+            combineLatest([this.gridReady$, this.rowData$]).subscribe(([ready, rows]) => {
+                if (!ready || !this.gridApi) return;
+
+                // Da un microtick para que el DOM/virtual rows se asienten
+                queueMicrotask(() => {
+                    this.updateNoRowsOverlay();
+                    // Solo autosize si hay columnas y alguna fila (evita saltos innecesarios)
+                    if (rows?.length > 0) {
+                        this.autoSizeColumns();
+                    }
+                });
+            })
+        );
     }
 
     ngOnDestroy(): void {
@@ -355,22 +374,29 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
 
     protected onGridReady(event: GridReadyEvent<ClaveGridRow>): void {
         this.gridApi = event.api;
-        this.gridApi.setGridOption('overlayNoRowsTemplate', this.noRowsOverlayTemplate);
 
-        this.gridApi.setGridOption('rowData', this.rowDataSubject.value);
+        // Si ya pasas el template por Input, no lo vuelvas a setear por API.
+        // this.gridApi.setGridOption('overlayNoRowsTemplate', this.noRowsOverlayTemplate);
 
+        // Primer ajuste visual mínimo; el sizing real lo haremos
+        // sincronizado a rowData$ (ver punto 2).
+        queueMicrotask(() => {
+            this.updateNoRowsOverlay();
+            this.autoSizeColumns();
+        });
 
-        this.updateNoRowsOverlay();
-        this.autoSizeColumns();
+        // Marca el grid como listo (ver punto 2)
+        this.gridReady$.next(true);
     }
 
     protected onFirstDataRendered(event: FirstDataRenderedEvent<ClaveGridRow>): void {
-        if (event?.api !== this.gridApi) {
-            this.gridApi = event.api;
-        }
+        // Solo utilidades. Nada de setRowData ni cambios estructurales.
         this.autoSizeColumns();
         this.updateNoRowsOverlay();
     }
+
+
+
 
     private loadClaves(): void {
         this.isLoading$.next(true);
@@ -603,11 +629,6 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
     private syncGridRows(): void {
         const rows = this.clavesForm.controls.map((formGroup) => ({ formGroup }));
         this.rowDataSubject.next(rows);
-
-        this.gridApi?.setGridOption('rowData', rows);
-
-        this.updateNoRowsOverlay();
-        this.autoSizeColumns();
     }
 
     private getNumericValue(
@@ -701,26 +722,17 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
     }
 
     private autoSizeColumns(): void {
-        if (!this.gridApi) {
-            return;
-        }
-
+        if (!this.gridApi) return;
         const columns = this.gridApi.getColumns();
-        if (!columns?.length) {
-            return;
-        }
-
-        const columnIds = columns.map((column) => column.getId()).filter(Boolean) as string[];
-        if (columnIds.length > 0) {
-            this.gridApi.autoSizeColumns(columnIds, false);
+        if (!columns?.length) return;
+        const ids = columns.map(c => c.getId()).filter(Boolean) as string[];
+        if (ids.length > 0) {
+            this.gridApi.autoSizeColumns(ids, false);
         }
     }
 
     private updateNoRowsOverlay(): void {
-        if (!this.gridApi) {
-            return;
-        }
-
+        if (!this.gridApi) return;
         if (this.clavesForm.length === 0) {
             this.gridApi.showNoRowsOverlay();
         } else {

@@ -10,35 +10,34 @@
     </div>
 
     @if (isLoading$ | async) {
-      <div class="flex justify-center py-6">
-        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-      </div>
+    <div class="flex justify-center py-6">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </div>
     } @else {
-      <form [formGroup]="form" class="space-y-4">
-        <div formArrayName="claves">
-          <div class="ag-theme-quartz h-[24rem] w-full">
-            <ag-grid-angular
-              [rowData]="rowData$ | async"
-              [columnDefs]="columnDefs"
-              [defaultColDef]="defaultColDef"
-              [domLayout]="'normal'"
-              [rowHeight]="48"
-              [headerHeight]="44"
-              [stopEditingWhenCellsLoseFocus]="true"
-              [suppressDragLeaveHidesColumns]="true"
-              [overlayNoRowsTemplate]="noRowsOverlayTemplate"
-              class="w-full"
-              (gridReady)="onGridReady($event)"
-              (firstDataRendered)="onFirstDataRendered($event)"
-            ></ag-grid-angular>
-            <ng-container *ngIf="false">
-              <!-- Mantiene el renderer de acciones disponible para ag-grid -->
-              <app-evaluacion-clave-actions-cell></app-evaluacion-clave-actions-cell>
-            </ng-container>
-          </div>
+    <form [formGroup]="form" class="space-y-4">
+      <div formArrayName="claves">
+        <div class="ag-theme-quartz h-[24rem] w-full">
+          <ag-grid-angular
+            [theme]="'legacy'"
+            [rowData]="rowData$ | async"
+            [columnDefs]="columnDefs"
+            [defaultColDef]="defaultColDef"
+            [getRowId]="getRowId"
+            [animateRows]="true"
+            [domLayout]="'autoHeight'"
+            [rowHeight]="48"
+            [headerHeight]="44"
+            [stopEditingWhenCellsLoseFocus]="true"
+            [suppressDragLeaveHidesColumns]="true"></ag-grid-angular>
+
+          <ng-container *ngIf="false">
+            <!-- Mantiene el renderer de acciones disponible para ag-grid -->
+            <app-evaluacion-clave-actions-cell></app-evaluacion-clave-actions-cell>
+          </ng-container>
         </div>
-      </form>
-      }
+      </div>
+    </form>
+    }
   </div>
 </mat-dialog-content>
 
@@ -53,8 +52,7 @@
     color="primary"
     type="button"
     (click)="save()"
-    [disabled]="isSaving$ | async"
-  >
+    [disabled]="isSaving$ | async">
     Guardar
   </button>
 </mat-dialog-actions>
