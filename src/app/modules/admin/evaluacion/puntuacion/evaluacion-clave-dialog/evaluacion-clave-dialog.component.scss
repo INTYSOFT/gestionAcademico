@@ -1,0 +1,89 @@
+:host {
+    display: block;
+    min-width: 720px;
+}
+
+.dialog-grid-container {
+    position: relative;
+    min-height: 320px;
+}
+
+.dialog-grid {
+    width: 100%;
+    border-radius: 1rem;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background-color: #ffffff;
+    transition: opacity 150ms ease;
+}
+
+.dialog-grid--disabled {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.dialog-grid__overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.85);
+    z-index: 10;
+}
+
+.dialog-grid__empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1.5rem;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.ag-grid-cell {
+    font-size: 0.9rem;
+    color: #0f172a;
+}
+
+.ag-grid-cell--number {
+    text-align: right;
+}
+
+.ag-grid-cell--actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ag-grid-action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(248, 113, 113, 0.35);
+    background-color: rgba(254, 226, 226, 0.6);
+    color: #b91c1c;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.ag-grid-action-button:hover {
+    background-color: rgba(248, 113, 113, 0.15);
+    border-color: rgba(248, 113, 113, 0.45);
+}
+
+.mat-mdc-dialog-content {
+    max-height: 70vh;
+}
+
+.mat-mdc-dialog-actions {
+    padding: 1.5rem 0 0 0;
+}

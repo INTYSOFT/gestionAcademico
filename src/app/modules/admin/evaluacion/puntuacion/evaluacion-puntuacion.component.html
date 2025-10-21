@@ -289,7 +289,17 @@
                                                 >
                                                 <mat-icon>edit</mat-icon>
                                               </button>
-                                          
+
+                                              <button
+                                                mat-icon-button
+                                                type="button"
+                                                matTooltip="Gestionar claves"
+                                                (click)="openDetalleClavesDialog(detalle)"
+                                                [disabled]="isLoadingDetalles$ | async"
+                                                >
+                                                <mat-icon>key</mat-icon>
+                                              </button>
+
                                               <button
                                                 mat-icon-button
                                                 type="button"
