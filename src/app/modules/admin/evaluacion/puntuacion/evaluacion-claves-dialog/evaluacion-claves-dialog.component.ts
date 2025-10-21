@@ -116,7 +116,9 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
     protected readonly detalle = this.data.detalle;
     protected readonly evaluacion = this.data.evaluacion;
 
-    protected readonly respuestas = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    private readonly respuestaOptions = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] as const;
+    protected readonly respuestas = [...this.respuestaOptions];
+    private readonly respuestaSet = new Set<string>(this.respuestas);
 
     private readonly formArray = this.fb.array<EvaluacionClaveFormGroup>([]);
 
@@ -516,10 +518,13 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
 
     private normalizeFormValue(value: EvaluacionClaveFormValue): EvaluacionClaveFormValue {
         const respuesta = (value.respuesta ?? '').toString().trim().toUpperCase();
+        const respuestaValida = this.respuestaSet.has(respuesta)
+            ? respuesta
+            : this.respuestas[0];
         return {
             ...value,
             preguntaOrden: Number(value.preguntaOrden),
-            respuesta,
+            respuesta: respuestaValida,
             ponderacion:
                 value.ponderacion === null || value.ponderacion === undefined
                     ? null
@@ -672,7 +677,7 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
         const formControl = group.controls[control];
         const value = (params.newValue ?? '').toString().trim().toUpperCase();
 
-        if (!this.respuestas.includes(value)) {
+        if (!this.respuestaSet.has(value)) {
             return false;
         }
 
