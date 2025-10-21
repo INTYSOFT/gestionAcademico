@@ -27,8 +27,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatNativeDateModule } from '@angular/material/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { BehaviorSubject, combineLatest, forkJoin, fromEvent } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { BehaviorSubject, Observable, combineLatest, forkJoin, fromEvent, of } from 'rxjs';
+import { finalize, map, switchMap } from 'rxjs/operators';
 import { DateTime } from 'luxon';
 import { EvaluacionProgramada } from 'app/core/models/centro-estudios/evaluacion-programada.model';
 import { EvaluacionProgramadaSeccion } from 'app/core/models/centro-estudios/evaluacion-programada-seccion.model';
@@ -60,6 +60,8 @@ import { Sede } from 'app/core/models/centro-estudios/sede.model';
 import { SedeService } from 'app/core/services/centro-estudios/sede.service';
 import { Ciclo } from 'app/core/models/centro-estudios/ciclo.model';
 import { CiclosService } from 'app/core/services/centro-estudios/ciclos.service';
+import { EvaluacionClavesService } from 'app/core/services/centro-estudios/evaluacion-claves.service';
+import type { CreateEvaluacionClavePayload } from 'app/core/models/centro-estudios/evaluacion-clave.model';
 
 interface EvaluacionSeccionTabView {
     key: string;
@@ -67,6 +69,11 @@ interface EvaluacionSeccionTabView {
     seccionId: number | null;
     evaluacionSeccion: EvaluacionProgramadaSeccion | null;
     detalles: EvaluacionDetalle[];
+}
+
+interface DetalleImportContext {
+    sourceDetalle: EvaluacionDetalle;
+    payload: CreateEvaluacionDetallePayload;
 }
 
 @Component({
@@ -176,6 +183,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         private readonly evaluacionProgramadasService: EvaluacionProgramadasService,
         private readonly evaluacionProgramadaSeccionesService: EvaluacionProgramadaSeccionesService,
         private readonly evaluacionDetallesService: EvaluacionDetallesService,
+        private readonly evaluacionClavesService: EvaluacionClavesService,
         private readonly evaluacionTipoPreguntasService: EvaluacionTipoPreguntasService,
         private readonly seccionesService: SeccionesService,
         private readonly tipoEvaluacionesService: TipoEvaluacionesService,
@@ -481,7 +489,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                     return;
                 }
 
-                this.importDetallesFromTab(targetTab, sourceTab, evaluacion.id);
+                this.importDetallesFromTab(targetTab, sourceTab, evaluacion);
             }
         });
     }
@@ -756,7 +764,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     private importDetallesFromTab(
         targetTab: EvaluacionSeccionTabView,
         sourceTab: EvaluacionSeccionTabView,
-        evaluacionProgramadaId: number
+        evaluacion: EvaluacionProgramada
     ): void {
         const existingRangeKeys = new Set(
             targetTab.detalles.map((detalle) =>
@@ -764,29 +772,34 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             )
         );
 
-        const payloads: CreateEvaluacionDetallePayload[] = [];
+        const contexts: DetalleImportContext[] = [];
         const duplicatedRanges: string[] = [];
 
         for (const detalle of sourceTab.detalles) {
             const rangeKey = this.buildDetalleRangeKey(detalle.rangoInicio, detalle.rangoFin);
 
             if (existingRangeKeys.has(rangeKey)) {
-                duplicatedRanges.push(this.formatDetalleRangeLabel(detalle.rangoInicio, detalle.rangoFin));
+                duplicatedRanges.push(
+                    this.formatDetalleRangeLabel(detalle.rangoInicio, detalle.rangoFin)
+                );
                 continue;
             }
 
             existingRangeKeys.add(rangeKey);
-            payloads.push({
-                evaluacionProgramadaId,
-                seccionId: targetTab.seccionId,
-                evaluacionTipoPreguntaId: detalle.evaluacionTipoPreguntaId ?? null,
-                rangoInicio: detalle.rangoInicio,
-                rangoFin: detalle.rangoFin,
-                valorBuena: detalle.valorBuena,
-                valorMala: detalle.valorMala,
-                valorBlanca: detalle.valorBlanca,
-                observacion: detalle.observacion,
-                activo: detalle.activo,
+            contexts.push({
+                sourceDetalle: detalle,
+                payload: {
+                    evaluacionProgramadaId: evaluacion.id,
+                    seccionId: targetTab.seccionId,
+                    evaluacionTipoPreguntaId: detalle.evaluacionTipoPreguntaId ?? null,
+                    rangoInicio: detalle.rangoInicio,
+                    rangoFin: detalle.rangoFin,
+                    valorBuena: detalle.valorBuena,
+                    valorMala: detalle.valorMala,
+                    valorBlanca: detalle.valorBlanca,
+                    observacion: detalle.observacion,
+                    activo: detalle.activo,
+                },
             });
         }
 
@@ -797,7 +810,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                     : `Los rangos ${duplicatedRanges.join(', ')} ya existen en la sección seleccionada y no se importaron.`
                 : null;
 
-        if (payloads.length === 0) {
+        if (contexts.length === 0) {
             this.snackBar.open(
                 duplicateMessage ?? 'No hay detalles para importar.',
                 'Cerrar',
@@ -810,12 +823,24 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
         this.isLoadingDetallesSubject.next(true);
 
-        forkJoin(payloads.map((payload) => this.evaluacionDetallesService.create(payload)))
+        forkJoin(
+            contexts.map(({ sourceDetalle, payload }) =>
+                this.evaluacionDetallesService.create(payload).pipe(
+                    switchMap((createdDetalle) =>
+                        this.importClavesForDetalle({
+                            sourceDetalle,
+                            targetDetalle: createdDetalle,
+                            evaluacion,
+                        })
+                    )
+                )
+            )
+        )
             .pipe(finalize(() => this.isLoadingDetallesSubject.next(false)))
             .subscribe({
                 next: () => {
                     const messageParts = [
-                        payloads.length === 1
+                        contexts.length === 1
                             ? 'Detalle importado correctamente.'
                             : 'Detalles importados correctamente.',
                     ];
@@ -836,6 +861,49 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                     );
                 },
             });
+    }
+
+    private importClavesForDetalle({
+        sourceDetalle,
+        targetDetalle,
+        evaluacion,
+    }: {
+        sourceDetalle: EvaluacionDetalle;
+        targetDetalle: EvaluacionDetalle;
+        evaluacion: EvaluacionProgramada;
+    }): Observable<void> {
+        return this.evaluacionClavesService
+            .listByEvaluacionDetalle(sourceDetalle.id)
+            .pipe(
+                switchMap((claves) => {
+                    if (!claves || claves.length === 0) {
+                        return of(void 0);
+                    }
+
+                    const payloads: CreateEvaluacionClavePayload[] = claves.map((clave) => ({
+                        evaluacionProgramadaId: targetDetalle.evaluacionProgramadaId,
+                        evaluacionDetalleId: targetDetalle.id,
+                        preguntaOrden: clave.preguntaOrden,
+                        respuesta: clave.respuesta,
+                        ponderacion: clave.ponderacion,
+                        version: clave.version,
+                        vigente: clave.vigente,
+                        observacion: clave.observacion,
+                        activo: clave.activo,
+                        sedeId: clave.sedeId ?? evaluacion.sedeId ?? null,
+                        cicloId: clave.cicloId ?? evaluacion.cicloId ?? null,
+                        seccionId: targetDetalle.seccionId ?? null,
+                    }));
+
+                    if (payloads.length === 0) {
+                        return of(void 0);
+                    }
+
+                    return forkJoin(
+                        payloads.map((payload) => this.evaluacionClavesService.create(payload))
+                    ).pipe(map(() => void 0));
+                })
+            );
     }
 
     private buildDetalleRangeKey(rangoInicio: number, rangoFin: number): string {
