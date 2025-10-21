@@ -51,10 +51,7 @@ import {
     EvaluacionDetalleImportDialogComponent,
     EvaluacionDetalleImportDialogResult,
 } from './evaluacion-detalle-import-dialog/evaluacion-detalle-import-dialog.component';
-import {
-    EvaluacionClavesDialogComponent,
-    EvaluacionClavesDialogResult,
-} from './evaluacion-claves-dialog/evaluacion-claves-dialog.component';
+
 import { FuseConfirmationService } from '@fuse/services/confirmation';
 import { Sede } from 'app/core/models/centro-estudios/sede.model';
 import { SedeService } from 'app/core/services/centro-estudios/sede.service';
@@ -77,24 +74,24 @@ interface EvaluacionSeccionTabView {
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-    AsyncPipe,
-    DecimalPipe,
-    NgClass,
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatListModule,
-    MatTabsModule,
-    MatProgressSpinnerModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatTooltipModule,
-    MatDividerModule
-],
+        AsyncPipe,
+        DecimalPipe,
+        NgClass,
+        ReactiveFormsModule,
+        MatButtonModule,
+        MatDatepickerModule,
+        MatNativeDateModule,
+        MatIconModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatListModule,
+        MatTabsModule,
+        MatProgressSpinnerModule,
+        MatDialogModule,
+        MatSnackBarModule,
+        MatTooltipModule,
+        MatDividerModule
+    ],
 })
 export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     protected readonly dateControl = this.fb.control<Date | null>(new Date(), {
@@ -526,31 +523,6 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         });
     }
 
-    protected openDetalleClavesDialog(detalle: EvaluacionDetalle): void {
-        const evaluacion = this.selectedEvaluacionSubject.value;
-        if (!evaluacion) {
-            return;
-        }
-
-        const dialogRef = this.dialog.open<
-            EvaluacionClavesDialogComponent,
-            { evaluacion: EvaluacionProgramada; detalle: EvaluacionDetalle },
-            EvaluacionClavesDialogResult | undefined
-        >(EvaluacionClavesDialogComponent, {
-            width: '720px',
-            data: {
-                evaluacion,
-                detalle,
-            },
-        });
-
-        dialogRef.afterClosed().subscribe((result) => {
-            if (result?.action === 'saved') {
-                this.reloadDetalles();
-            }
-        });
-    }
-
     protected confirmDeleteDetalle(detalle: EvaluacionDetalle): void {
         const rangeLabel = this.formatDetalleRangeLabel(
             detalle.rangoInicio,
@@ -650,7 +622,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             error: (error) => {
                 this.showError(
                     error.message ??
-                        'No fue posible obtener los tipos de pregunta de evaluación disponibles.'
+                    'No fue posible obtener los tipos de pregunta de evaluación disponibles.'
                 );
                 this.evaluacionTipoPreguntasSubject.next([]);
                 this.evaluacionTipoPreguntaNombreMap.clear();
@@ -832,7 +804,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 error: (error) => {
                     this.showError(
                         error.message ??
-                            'No fue posible importar los detalles seleccionados.'
+                        'No fue posible importar los detalles seleccionados.'
                     );
                 },
             });
