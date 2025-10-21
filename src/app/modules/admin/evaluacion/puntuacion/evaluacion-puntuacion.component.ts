@@ -401,6 +401,29 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     }
 
     private resolveCalendarInstance(): MatCalendar<Date> | null {
+
+        const datepicker = this.fechaPicker;
+
+        if (!datepicker) {
+            return null;
+        }
+
+        const pickerWithComponentRef = datepicker as unknown as {
+            _componentRef?: ComponentRef<
+                MatDatepickerContent<Date | null, Date>
+            > | null;
+        };
+
+        const componentRef = pickerWithComponentRef._componentRef ?? null;
+
+        const contentInstance = componentRef?.instance as
+            | (MatDatepickerContent<Date | null, Date> & {
+                  _calendar?: MatCalendar<Date> | null;
+              })
+            | undefined;
+
+        return contentInstance?._calendar ?? null;
+
         const datepicker = this.fechaPicker as
             | (MatDatepicker<Date> & {
                   _componentRef?: ComponentRef<
@@ -411,6 +434,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
         const componentRef = datepicker?._componentRef ?? null;
         return componentRef?.instance?._calendar ?? null;
+
     }
 
     private registerCalendarStateChanges(calendar: MatCalendar<Date>): void {
