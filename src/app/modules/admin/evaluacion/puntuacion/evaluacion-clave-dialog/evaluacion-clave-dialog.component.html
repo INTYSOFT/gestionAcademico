@@ -1,0 +1,92 @@
+<h2 mat-dialog-title class="flex flex-col gap-1">
+  <span>Claves de respuestas</span>
+  <span class="text-sm font-normal text-gray-500">
+    Rango de preguntas {{ data.detalle.rangoInicio }} – {{ data.detalle.rangoFin }} ·
+    {{ rows().length }} registros
+  </span>
+</h2>
+
+<mat-dialog-content class="flex flex-col gap-4 p-0">
+  <p class="text-sm text-gray-600">
+    Gestiona las claves de respuesta para la evaluación
+    <strong>{{ data.evaluacion.nombre }}</strong>. Ajusta el número de
+    pregunta, selecciona la alternativa correspondiente y, si lo necesitas,
+    agrega ponderaciones u observaciones.
+  </p>
+
+  <div class="flex items-center justify-between gap-2">
+    <span class="text-sm text-gray-500">
+      Preguntas activas: {{ rows().length }}
+    </span>
+    <button
+      mat-stroked-button
+      color="primary"
+      type="button"
+      (click)="addRow()"
+      [disabled]="isLoading() || isSaving()"
+    >
+      <mat-icon>add</mat-icon>
+      Agregar registro
+    </button>
+  </div>
+
+  <div class="dialog-grid-container">
+    @if (isLoading()) {
+      <div class="dialog-grid__overlay">
+        <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+      </div>
+    }
+
+    @if (!isLoading() && rows().length === 0) {
+      <div class="dialog-grid__empty">No hay registros para este detalle.</div>
+    }
+
+    <div
+      class="ag-theme-quartz dialog-grid"
+      [style.height.px]="gridHeight()"
+      [class.dialog-grid--disabled]="isSaving()"
+    >
+      <ag-grid-angular
+        [rowData]="rows()"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        [getRowId]="getRowId"
+        [rowSelection]="'single'"
+        [suppressScrollOnNewData]="true"
+        [stopEditingWhenCellsLoseFocus]="true"
+        [animateRows]="true"
+        (gridReady)="onGridReady($event)"
+        (cellValueChanged)="onCellValueChanged($event)"
+      ></ag-grid-angular>
+    </div>
+
+    @if (isSaving()) {
+      <div class="dialog-grid__overlay">
+        <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+      </div>
+    }
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="gap-2">
+  <button mat-button type="button" (click)="close()" [disabled]="isSaving()">
+    Cancelar
+  </button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    (click)="save()"
+    [disabled]="isSaving() || isLoading()"
+  >
+    @if (isSaving()) {
+      <mat-progress-spinner
+        diameter="18"
+        mode="indeterminate"
+        strokeWidth="3"
+      ></mat-progress-spinner>
+    } @else {
+      Guardar cambios
+    }
+  </button>
+</mat-dialog-actions>
