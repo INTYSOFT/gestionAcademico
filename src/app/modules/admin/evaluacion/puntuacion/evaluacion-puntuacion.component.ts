@@ -25,8 +25,17 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatNativeDateModule } from '@angular/material/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { BehaviorSubject, Observable, Subscription, combineLatest, forkJoin, fromEvent, of } from 'rxjs';
-import { finalize, map, switchMap } from 'rxjs/operators';
+import {
+    BehaviorSubject,
+    Observable,
+    Subscription,
+    combineLatest,
+    forkJoin,
+    from,
+    fromEvent,
+    of,
+} from 'rxjs';
+import { catchError, concatMap, finalize, map, reduce, switchMap } from 'rxjs/operators';
 import { DateTime } from 'luxon';
 import { EvaluacionProgramada } from 'app/core/models/centro-estudios/evaluacion-programada.model';
 import { EvaluacionProgramadaSeccion } from 'app/core/models/centro-estudios/evaluacion-programada-seccion.model';
@@ -60,6 +69,9 @@ import { Ciclo } from 'app/core/models/centro-estudios/ciclo.model';
 import { CiclosService } from 'app/core/services/centro-estudios/ciclos.service';
 import { EvaluacionClavesService } from 'app/core/services/centro-estudios/evaluacion-claves.service';
 import type { CreateEvaluacionClavePayload } from 'app/core/models/centro-estudios/evaluacion-clave.model';
+import { MatriculasService } from 'app/core/services/centro-estudios/matriculas.service';
+import { Matricula } from 'app/core/models/centro-estudios/matricula.model';
+import { EvaluacionesService } from 'app/core/services/centro-estudios/evaluaciones.service';
 
 interface EvaluacionSeccionTabView {
     key: string;
@@ -67,6 +79,7 @@ interface EvaluacionSeccionTabView {
     seccionId: number | null;
     evaluacionSeccion: EvaluacionProgramadaSeccion | null;
     detalles: EvaluacionDetalle[];
+    hasClaves: boolean;
 }
 
 interface DetalleImportContext {
@@ -124,11 +137,13 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     private readonly evaluacionTipoPreguntasSubject = new BehaviorSubject<
         EvaluacionTipoPregunta[]
     >([]);
+    private readonly detalleClaveCountsSubject = new BehaviorSubject<Map<number, number>>(new Map());
 
     private readonly isLoadingEvaluacionesSubject = new BehaviorSubject<boolean>(false);
     private readonly isLoadingSeccionesSubject = new BehaviorSubject<boolean>(false);
     private readonly isLoadingDetallesSubject = new BehaviorSubject<boolean>(false);
     private readonly isLoadingTipoEvaluacionSubject = new BehaviorSubject<boolean>(false);
+    private readonly isLoadingClavesSubject = new BehaviorSubject<boolean>(false);
 
     private readonly seccionesCatalogSubject = new BehaviorSubject<Seccion[]>([]);
     private readonly sedesCatalogSubject = new BehaviorSubject<Sede[]>([]);
@@ -172,6 +187,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     }
 
     protected readonly evaluacionesListMaxHeight = signal<number | null>(null);
+    private readonly registeringTabKeys = signal<Set<string>>(new Set());
     private evaluacionesListElement: HTMLElement | null = null;
     private evaluacionesListResizeObserver?: ResizeObserver;
 
@@ -186,6 +202,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     protected readonly isLoadingSecciones$ = this.isLoadingSeccionesSubject.asObservable();
     protected readonly isLoadingDetalles$ = this.isLoadingDetallesSubject.asObservable();
     protected readonly isLoadingTipoEvaluacion$ = this.isLoadingTipoEvaluacionSubject.asObservable();
+    protected readonly isLoadingClaves$ = this.isLoadingClavesSubject.asObservable();
 
     protected readonly dateClass: MatCalendarCellClassFunction<unknown> = (date) =>
         this.calendarMarkedDateKeys.has(this.buildDateKey(date))
@@ -209,6 +226,8 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         private readonly evaluacionProgramadaSeccionesService: EvaluacionProgramadaSeccionesService,
         private readonly evaluacionDetallesService: EvaluacionDetallesService,
         private readonly evaluacionClavesService: EvaluacionClavesService,
+        private readonly matriculasService: MatriculasService,
+        private readonly evaluacionesService: EvaluacionesService,
         private readonly evaluacionTipoPreguntasService: EvaluacionTipoPreguntasService,
         private readonly seccionesService: SeccionesService,
         private readonly tipoEvaluacionesService: TipoEvaluacionesService,
@@ -224,10 +243,11 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             this.seccionesEvaluacionSubject,
             this.evaluacionDetallesSubject,
             this.seccionesCatalogSubject,
+            this.detalleClaveCountsSubject,
         ])
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(([secciones, detalles, catalog]) => {
-                const tabs = this.buildSeccionTabs(secciones, detalles, catalog);
+            .subscribe(([secciones, detalles, catalog, claveCounts]) => {
+                const tabs = this.buildSeccionTabs(secciones, detalles, catalog, claveCounts);
                 this.seccionTabsSubject.next(tabs);
             });
 
@@ -878,6 +898,165 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         });
     }
 
+    protected canRegistrarAlumnos(tab: EvaluacionSeccionTabView): boolean {
+        const evaluacion = this.selectedEvaluacionSubject.value;
+
+        if (!evaluacion) {
+            return false;
+        }
+
+        if (evaluacion.cicloId === null || evaluacion.cicloId === undefined) {
+            return false;
+        }
+
+        if (!tab.evaluacionSeccion?.seccionCicloId) {
+            return false;
+        }
+
+        if (this.isLoadingClavesSubject.value) {
+            return false;
+        }
+
+        if (this.isRegisteringTab(tab)) {
+            return false;
+        }
+
+        return tab.detalles.length > 0 && tab.hasClaves;
+    }
+
+    protected isRegisteringTab(tab: EvaluacionSeccionTabView): boolean {
+        return this.registeringTabKeys().has(tab.key);
+    }
+
+    protected getRegistrarAlumnosTooltip(tab: EvaluacionSeccionTabView): string | null {
+        if (this.isRegisteringTab(tab)) {
+            return 'Registrando alumnos...';
+        }
+
+        if (this.isLoadingClavesSubject.value) {
+            return 'Validando las claves registradas para la sección.';
+        }
+
+        if (tab.detalles.length === 0) {
+            return 'Debe registrar al menos un detalle para la sección.';
+        }
+
+        if (!tab.hasClaves) {
+            return 'Debe registrar claves para los detalles de la sección.';
+        }
+
+        const evaluacion = this.selectedEvaluacionSubject.value;
+
+        if (!evaluacion) {
+            return 'Selecciona una evaluación para registrar alumnos.';
+        }
+
+        if (evaluacion.cicloId === null || evaluacion.cicloId === undefined) {
+            return 'La evaluación debe tener un ciclo asignado para registrar alumnos.';
+        }
+
+        if (!tab.evaluacionSeccion?.seccionCicloId) {
+            return 'La sección seleccionada no permite registrar alumnos.';
+        }
+
+        return null;
+    }
+
+    protected registerAlumnos(tab: EvaluacionSeccionTabView): void {
+        const evaluacion = this.selectedEvaluacionSubject.value;
+
+        if (!evaluacion) {
+            return;
+        }
+
+        const cicloId = evaluacion.cicloId;
+        if (cicloId === null || cicloId === undefined) {
+            this.showError('La evaluación debe tener un ciclo asignado para registrar alumnos.');
+            return;
+        }
+
+        const sedeId = evaluacion.sedeId;
+        if (sedeId === null || sedeId === undefined) {
+            this.showError('La evaluación debe tener una sede asignada para registrar alumnos.');
+            return;
+        }
+
+        const seccionCicloId = tab.evaluacionSeccion?.seccionCicloId;
+        if (!seccionCicloId) {
+            this.showError('La sección seleccionada no permite registrar alumnos.');
+            return;
+        }
+
+        this.setTabRegistering(tab.key, true);
+
+        this.matriculasService
+            .getMatriculasBySeccionCiclo(seccionCicloId)
+            .pipe(
+                switchMap((matriculas) =>
+                    this.registerAlumnosFromMatriculas({
+                        evaluacion,
+                        sedeId,
+                        cicloId,
+                        tab,
+                        matriculas,
+                    })
+                ),
+                finalize(() => this.setTabRegistering(tab.key, false))
+            )
+            .subscribe({
+                next: ({ total, registered, duplicates, failed }) => {
+                    if (total === 0) {
+                        this.snackBar.open(
+                            'No se encontraron alumnos matriculados para la sección seleccionada.',
+                            'Cerrar',
+                            { duration: 5000 }
+                        );
+                        return;
+                    }
+
+                    const messages: string[] = [];
+
+                    if (registered > 0) {
+                        messages.push(
+                            registered === 1
+                                ? '1 alumno registrado correctamente.'
+                                : `${registered} alumnos registrados correctamente.`
+                        );
+                    }
+
+                    if (duplicates > 0) {
+                        messages.push(
+                            duplicates === 1
+                                ? '1 alumno ya estaba registrado para esta sede y ciclo.'
+                                : `${duplicates} alumnos ya estaban registrados para esta sede y ciclo.`
+                        );
+                    }
+
+                    if (failed > 0) {
+                        messages.push(
+                            failed === 1
+                                ? 'No se pudo registrar 1 alumno. Inténtalo nuevamente.'
+                                : `No se pudieron registrar ${failed} alumnos. Inténtalo nuevamente.`
+                        );
+                    }
+
+                    if (messages.length === 0) {
+                        messages.push('No se realizaron cambios.');
+                    }
+
+                    this.snackBar.open(messages.join(' '), 'Cerrar', {
+                        duration: failed > 0 ? 8000 : 5000,
+                    });
+                },
+                error: (error) => {
+                    this.showError(
+                        error.message ??
+                            'No fue posible registrar a los alumnos para la evaluación seleccionada.'
+                    );
+                },
+            });
+    }
+
     private shiftSelectedDateBy(days: number): void {
         const current = this.normalizeDateInput(this.dateControl.value) ?? new Date();
         const updated = DateTime.fromJSDate(current).plus({ days });
@@ -998,6 +1177,8 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             this.seccionesEvaluacionSubject.next([]);
             this.evaluacionDetallesSubject.next([]);
             this.tipoEvaluacionSubject.next(null);
+            this.detalleClaveCountsSubject.next(new Map());
+            this.isLoadingClavesSubject.next(false);
         }
     }
 
@@ -1021,18 +1202,66 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
     private loadDetalles(evaluacionProgramadaId: number): void {
         this.isLoadingDetallesSubject.next(true);
+        this.detalleClaveCountsSubject.next(new Map());
+        this.isLoadingClavesSubject.next(false);
         this.evaluacionDetallesService
             .listByEvaluacionProgramada(evaluacionProgramadaId)
             .pipe(finalize(() => this.isLoadingDetallesSubject.next(false)))
             .subscribe({
                 next: (detalles) => {
                     this.evaluacionDetallesSubject.next(detalles);
+                    this.loadClavesSummary(detalles);
                 },
                 error: (error) => {
                     this.showError(
                         error.message ?? 'No fue posible obtener los detalles de la evaluación.'
                     );
                     this.evaluacionDetallesSubject.next([]);
+                    this.detalleClaveCountsSubject.next(new Map());
+                    this.isLoadingClavesSubject.next(false);
+                },
+            });
+    }
+
+    private loadClavesSummary(detalles: EvaluacionDetalle[]): void {
+        if (detalles.length === 0) {
+            this.detalleClaveCountsSubject.next(new Map());
+            this.isLoadingClavesSubject.next(false);
+            return;
+        }
+
+        this.isLoadingClavesSubject.next(true);
+        let hadError = false;
+
+        forkJoin(
+            detalles.map((detalle) =>
+                this.evaluacionClavesService.listByEvaluacionDetalle(detalle.id).pipe(
+                    map((claves) => ({ detalleId: detalle.id, count: claves.length })),
+                    catchError(() => {
+                        hadError = true;
+                        return of({ detalleId: detalle.id, count: 0 });
+                    })
+                )
+            )
+        )
+            .pipe(finalize(() => this.isLoadingClavesSubject.next(false)))
+            .subscribe({
+                next: (results) => {
+                    const counts = new Map<number, number>();
+                    results.forEach(({ detalleId, count }) => counts.set(detalleId, count));
+                    this.detalleClaveCountsSubject.next(counts);
+
+                    if (hadError) {
+                        this.showError(
+                            'No fue posible obtener todas las claves registradas para la evaluación.'
+                        );
+                    }
+                },
+                error: (error) => {
+                    this.showError(
+                        error.message ?? 'No fue posible obtener las claves registradas.'
+                    );
+                    this.detalleClaveCountsSubject.next(new Map());
                 },
             });
     }
@@ -1220,7 +1449,8 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     private buildSeccionTabs(
         secciones: EvaluacionProgramadaSeccion[],
         detalles: EvaluacionDetalle[],
-        catalog: Seccion[]
+        catalog: Seccion[],
+        detalleClaveCounts: Map<number, number>
     ): EvaluacionSeccionTabView[] {
         const seccionNombreMap = new Map<number, string>();
         catalog.forEach((seccion) => {
@@ -1256,6 +1486,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 seccionId,
                 evaluacionSeccion: seccion,
                 detalles: detallesAsociados,
+                hasClaves: this.hasClavesRegistradas(detallesAsociados, detalleClaveCounts),
             };
         });
 
@@ -1269,6 +1500,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 seccionId: null,
                 evaluacionSeccion: null,
                 detalles: detallesGenerales,
+                hasClaves: this.hasClavesRegistradas(detallesGenerales, detalleClaveCounts),
             });
         }
 
@@ -1283,10 +1515,28 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 seccionId: null,
                 evaluacionSeccion: null,
                 detalles: sortedDetalles,
+                hasClaves: this.hasClavesRegistradas(sortedDetalles, detalleClaveCounts),
             });
         }
 
         return tabs;
+    }
+
+    private hasClavesRegistradas(
+        detalles: EvaluacionDetalle[],
+        counts: Map<number, number>
+    ): boolean {
+        if (detalles.length === 0) {
+            return false;
+        }
+
+        for (const detalle of detalles) {
+            if ((counts.get(detalle.id) ?? 0) > 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private sortDetalles(detalles: EvaluacionDetalle[]): EvaluacionDetalle[] {
@@ -1415,6 +1665,118 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         this.cicloNombreMap.clear();
         ciclos.forEach((ciclo) => {
             this.cicloNombreMap.set(ciclo.id, ciclo.nombre);
+        });
+    }
+
+    private registerAlumnosFromMatriculas({
+        evaluacion,
+        sedeId,
+        cicloId,
+        tab,
+        matriculas,
+    }: {
+        evaluacion: EvaluacionProgramada;
+        sedeId: number;
+        cicloId: number;
+        tab: EvaluacionSeccionTabView;
+        matriculas: Matricula[];
+    }): Observable<{ total: number; registered: number; duplicates: number; failed: number }> {
+        if (!matriculas || matriculas.length === 0) {
+            return of({ total: 0, registered: 0, duplicates: 0, failed: 0 });
+        }
+
+        const uniqueMatriculas: Matricula[] = [];
+        const seenAlumnos = new Set<number>();
+
+        for (const matricula of matriculas) {
+            if (!seenAlumnos.has(matricula.alumnoId)) {
+                seenAlumnos.add(matricula.alumnoId);
+                uniqueMatriculas.push(matricula);
+            }
+        }
+
+        const total = uniqueMatriculas.length;
+
+        if (total === 0) {
+            return of({ total: 0, registered: 0, duplicates: 0, failed: 0 });
+        }
+
+        const fallbackSeccionId = tab.evaluacionSeccion?.seccionId ?? null;
+
+        return from(uniqueMatriculas).pipe(
+            concatMap((matricula) =>
+                this.registerAlumno({
+                    evaluacion,
+                    alumnoId: matricula.alumnoId,
+                    sedeId,
+                    cicloId,
+                    seccionId: fallbackSeccionId ?? matricula.seccionId ?? null,
+                }).pipe(catchError(() => of<'failed'>('failed')))
+            ),
+            reduce(
+                (acc, status) => {
+                    if (status === 'created') {
+                        acc.registered += 1;
+                    } else if (status === 'duplicate') {
+                        acc.duplicates += 1;
+                    } else if (status === 'failed') {
+                        acc.failed += 1;
+                    }
+
+                    return acc;
+                },
+                { total, registered: 0, duplicates: 0, failed: 0 }
+            )
+        );
+    }
+
+    private registerAlumno({
+        evaluacion,
+        alumnoId,
+        sedeId,
+        cicloId,
+        seccionId,
+    }: {
+        evaluacion: EvaluacionProgramada;
+        alumnoId: number;
+        sedeId: number;
+        cicloId: number;
+        seccionId: number | null;
+    }): Observable<'created' | 'duplicate'> {
+        return this.evaluacionesService
+            .listBySedeCicloAlumno(sedeId, cicloId, alumnoId)
+            .pipe(
+                map((evaluaciones) => evaluaciones.length > 0),
+                switchMap((exists) => {
+                    if (exists) {
+                        return of<'duplicate'>('duplicate');
+                    }
+
+                    return this.evaluacionesService
+                        .create({
+                            evaluacionProgramadaId: evaluacion.id,
+                            alumnoId,
+                            sedeId,
+                            cicloId,
+                            seccionId,
+                            activo: true,
+                        })
+                        .pipe(map(() => 'created' as const));
+                })
+            );
+    }
+
+    private setTabRegistering(tabKey: string, registering: boolean): void {
+        this.registeringTabKeys.update((current) => {
+            const next = new Set(current);
+
+            if (registering) {
+                next.add(tabKey);
+            } else {
+                next.delete(tabKey);
+            }
+
+            return next;
         });
     }
 

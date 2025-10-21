@@ -159,6 +159,29 @@
                               >
                               <div class="mt-4 flex flex-col gap-4">
                                 <div class="flex flex-wrap justify-end gap-2">
+                                  @let registrarTooltip = getRegistrarAlumnosTooltip(tab);
+                                  <button
+                                    mat-flat-button
+                                    color="primary"
+                                    type="button"
+                                    (click)="registerAlumnos(tab)"
+                                    [disabled]="!canRegistrarAlumnos(tab)"
+                                    [matTooltip]="registrarTooltip ?? ''"
+                                    [matTooltipDisabled]="!registrarTooltip"
+                                    class="flex items-center"
+                                    >
+                                    <span class="flex items-center gap-2">
+                                      @if (isRegisteringTab(tab)) {
+                                        <mat-progress-spinner
+                                          class="!m-0"
+                                          diameter="16"
+                                          mode="indeterminate"
+                                          strokeWidth="3"
+                                        ></mat-progress-spinner>
+                                      }
+                                      <span>Registrar alumnos</span>
+                                    </span>
+                                  </button>
                                   <button
                                     mat-stroked-button
                                     type="button"
