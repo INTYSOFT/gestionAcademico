@@ -35,8 +35,9 @@
             (cellKeyDown)="onCellKeyDown($event)"></ag-grid-angular>
 
           <ng-container *ngIf="false">
-            <!-- Mantiene el renderer de acciones disponible para ag-grid -->
+            <!-- Mantiene los componentes personalizados disponibles para ag-grid -->
             <app-evaluacion-clave-actions-cell></app-evaluacion-clave-actions-cell>
+            <app-evaluacion-clave-respuesta-cell-editor></app-evaluacion-clave-respuesta-cell-editor>
           </ng-container>
         </div>
       </div>

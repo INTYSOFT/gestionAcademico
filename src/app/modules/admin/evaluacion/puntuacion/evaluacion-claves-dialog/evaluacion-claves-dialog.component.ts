@@ -48,6 +48,7 @@ import {
     EvaluacionClaveActionsCellComponent,
     EvaluacionClaveActionsCellParams,
 } from './evaluacion-clave-actions-cell.component';
+import { EvaluacionClaveRespuestaCellEditorComponent } from './evaluacion-clave-respuesta-cell-editor.component';
 
 interface ClaveGridRow {
     formGroup: EvaluacionClaveFormGroup;
@@ -115,6 +116,7 @@ interface EvaluacionClaveFormValue {
         MatProgressBarModule,
         AgGridAngular,
         EvaluacionClaveActionsCellComponent,
+        EvaluacionClaveRespuestaCellEditorComponent,
     ],
 })
 export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
@@ -162,9 +164,9 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
             valueGetter: (params) => this.getStringValue(params, 'respuesta'),
             valueSetter: (params) => this.setRespuestaValue(params),
             editable: true,
-            cellEditor: 'agTextCellEditor',
+            cellEditor: EvaluacionClaveRespuestaCellEditorComponent,
             cellEditorParams: {
-                maxLength: 1,
+                values: this.respuestas,
             },
             cellDataType: 'text',
             cellClassRules: this.createInvalidCellClassRules('respuesta'),
@@ -452,7 +454,16 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
             return;
         }
 
+
+        const keyboardEvent = event.event as KeyboardEvent | undefined;
+        if (!keyboardEvent?.key) {
+            return;
+        }
+
+        const { key } = keyboardEvent;
+
         const key = event.event.key;
+
         if (key !== 'ArrowDown' && key !== 'ArrowUp') {
             return;
         }
@@ -475,8 +486,13 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
             return;
         }
 
+
+        keyboardEvent.preventDefault();
+        keyboardEvent.stopPropagation();
+
         event.event.preventDefault();
         event.event.stopPropagation();
+
 
         event.api.stopEditing(false);
 
