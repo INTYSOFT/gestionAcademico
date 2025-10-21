@@ -53,6 +53,14 @@ mat-nav-list {
     overflow: hidden;
 }
 
+.evaluacion-puntuacion__calendar-container {
+    background-color: #ffffff;
+}
+
+.evaluacion-puntuacion__calendar {
+    width: 100%;
+}
+
 .mat-calendar-body-cell.evaluacion-puntuacion__calendar-has-evaluacion
     .mat-calendar-body-cell-content {
     background-color: var(--mat-sys-primary-container, #e8def8);
