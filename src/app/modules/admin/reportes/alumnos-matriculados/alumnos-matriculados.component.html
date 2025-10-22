@@ -1,5 +1,7 @@
-<div class="reporte-matriculas">
-  <mat-card class="reporte-matriculas__card">
+<div class="flex flex-col flex-auto min-w-0">
+  <div class="flex-auto p-6 sm:p-10">
+
+  <mat-card >
     <mat-card-header>
       <mat-card-title>Reporte: Matrículas por sede y ciclo</mat-card-title>
       <mat-card-subtitle>
@@ -16,7 +18,7 @@
             [disabled]="(estaCargandoSedes$ | async) ?? false"
             panelClass="reporte-matriculas__select"
           >
-            <mat-option *ngIf="estaCargandoSedes$ | async" disabled>
+            <mat-option [disabled]="estaCargandoSedes$ | async">
               Cargando sedes...
             </mat-option>
             <mat-option *ngFor="let sede of sedes$ | async" [value]="sede.id">
@@ -35,7 +37,7 @@
             [disabled]="(estaCargandoCiclos$ | async) ?? false || filtrosForm.controls.cicloId.disabled"
             panelClass="reporte-matriculas__select"
           >
-            <mat-option *ngIf="estaCargandoCiclos$ | async" disabled>
+            <mat-option [disabled]="estaCargandoCiclos$ | async">
               Cargando ciclos...
             </mat-option>
             <mat-option *ngFor="let ciclo of ciclos$ | async" [value]="ciclo.id">
@@ -71,19 +73,16 @@
         </div>
       </form>
 
-      <mat-progress-bar
-        *ngIf="estaGenerandoReporte$ | async"
-        class="mt-6"
-        mode="indeterminate"
-      ></mat-progress-bar>
+    
 
-      <div class="reporte-matriculas__resumen" *ngIf="!(estaGenerandoReporte$ | async)">
+      <div class="reporte-matriculas__resumen" [hidden]="estaGenerandoReporte$ | async">
         Total de matrículas: <strong>{{ totalFilas$ | async }}</strong>
       </div>
 
-      <div class="ag-theme-quartz reporte-matriculas__grid" *ngIf="(filas$ | async) as filas">
+      <div class="ag-theme-quartz reporte-matriculas__grid">
         <ag-grid-angular
-          [rowData]="filas"
+          [rowData]="filas$ | async"
+          theme="ag-theme-alpine"
           [columnDefs]="columnas"
           [defaultColDef]="configuracionColumnasPorDefecto"
           domLayout="autoHeight"
@@ -95,10 +94,11 @@
 
       <div
         class="reporte-matriculas__sin-datos"
-        *ngIf="!(estaGenerandoReporte$ | async) && ((filas$ | async)?.length ?? 0) === 0"
+        [hidden]="!(mostrarSinDatos$ | async)"
       >
         No hay matrículas para mostrar con los filtros seleccionados.
       </div>
     </mat-card-content>
   </mat-card>
+</div>
 </div>

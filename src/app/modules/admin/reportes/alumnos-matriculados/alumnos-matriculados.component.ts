@@ -120,6 +120,15 @@ export class ReporteMatriculasPorSedeCicloComponent implements OnInit {
 
     protected readonly totalFilas$ = this.filas$.pipe(map((filas) => filas.length));
 
+    /**
+     * Emits true when not generating report and there are no filas to display.
+     */
+    protected readonly mostrarSinDatos$ = this.estaGenerandoReporte$.pipe(
+        switchMap((generando) =>
+            generando ? of(false) : this.filas$.pipe(map((filas) => (filas.length ?? 0) === 0), take(1))
+        )
+    );
+
     protected readonly columnas: ColDef<MatriculaReporteRow>[] = [
         {
             headerName: 'Alumno',

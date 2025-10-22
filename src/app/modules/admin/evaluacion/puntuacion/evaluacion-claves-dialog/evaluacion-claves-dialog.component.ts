@@ -594,7 +594,7 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
             evaluacionProgramadaId: this.evaluacion.id,
             evaluacionDetalleId: this.detalle.id,
             preguntaOrden: this.detalle.rangoInicio,
-            respuesta: 'A',
+            respuesta: '',
             ponderacion: null,
             version: 1,
             vigente: true,
