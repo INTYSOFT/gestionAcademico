@@ -138,9 +138,22 @@ export const appRoutes: Route[] = [
                 ],
             },
             {
+                path: 'reportes',
+                children: [
+                    {
+                        path: 'alumnos-matriculados',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/reportes/alumnos-matriculados/alumnos-matriculados.routes'
+                            ).then((m) => m.reportesAlumnosMatriculadosRoutes),
+                    },
+                    { path: '', pathMatch: 'full', redirectTo: 'alumnos-matriculados' },
+                ],
+            },
+            {
 
                 path: 'mantenimiento',
-                children: [                 
+                children: [
                     {
                         path: 'nivel-seccion',
                         loadChildren: () =>

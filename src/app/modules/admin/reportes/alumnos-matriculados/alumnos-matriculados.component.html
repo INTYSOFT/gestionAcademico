@@ -1,0 +1,104 @@
+<div class="reporte-matriculas">
+  <mat-card class="reporte-matriculas__card">
+    <mat-card-header>
+      <mat-card-title>Reporte: Matrículas por sede y ciclo</mat-card-title>
+      <mat-card-subtitle>
+        Selecciona una sede y luego un ciclo académico para visualizar a los alumnos matriculados.
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="filtrosForm" class="reporte-matriculas__filtros">
+        <mat-form-field appearance="fill" class="reporte-matriculas__campo">
+          <mat-label>Sede</mat-label>
+          <mat-select
+            formControlName="sedeId"
+            [disabled]="(estaCargandoSedes$ | async) ?? false"
+            panelClass="reporte-matriculas__select"
+          >
+            <mat-option *ngIf="estaCargandoSedes$ | async" disabled>
+              Cargando sedes...
+            </mat-option>
+            <mat-option *ngFor="let sede of sedes$ | async" [value]="sede.id">
+              {{ sede.nombre }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="filtrosForm.controls.sedeId.hasError('required')">
+            Selecciona una sede para continuar.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="reporte-matriculas__campo">
+          <mat-label>Ciclo</mat-label>
+          <mat-select
+            formControlName="cicloId"
+            [disabled]="(estaCargandoCiclos$ | async) ?? false || filtrosForm.controls.cicloId.disabled"
+            panelClass="reporte-matriculas__select"
+          >
+            <mat-option *ngIf="estaCargandoCiclos$ | async" disabled>
+              Cargando ciclos...
+            </mat-option>
+            <mat-option *ngFor="let ciclo of ciclos$ | async" [value]="ciclo.id">
+              {{ ciclo.nombre }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="filtrosForm.controls.cicloId.hasError('required')">
+            Selecciona un ciclo para generar el reporte.
+          </mat-error>
+        </mat-form-field>
+
+        <div class="reporte-matriculas__acciones">
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            (click)="generarReporte()"
+            [disabled]="!filtrosForm.valid || (estaGenerandoReporte$ | async)"
+          >
+            <mat-icon class="mr-2">summarize</mat-icon>
+            Reporte
+          </button>
+
+          <button
+            mat-stroked-button
+            color="primary"
+            type="button"
+            (click)="limpiarFiltros()"
+            [disabled]="(estaGenerandoReporte$ | async)"
+          >
+            Limpiar
+          </button>
+        </div>
+      </form>
+
+      <mat-progress-bar
+        *ngIf="estaGenerandoReporte$ | async"
+        class="mt-6"
+        mode="indeterminate"
+      ></mat-progress-bar>
+
+      <div class="reporte-matriculas__resumen" *ngIf="!(estaGenerandoReporte$ | async)">
+        Total de matrículas: <strong>{{ totalFilas$ | async }}</strong>
+      </div>
+
+      <div class="ag-theme-quartz reporte-matriculas__grid" *ngIf="(filas$ | async) as filas">
+        <ag-grid-angular
+          [rowData]="filas"
+          [columnDefs]="columnas"
+          [defaultColDef]="configuracionColumnasPorDefecto"
+          domLayout="autoHeight"
+          [animateRows]="true"
+          (gridReady)="manejarGridReady($event)"
+          class="w-full"
+        ></ag-grid-angular>
+      </div>
+
+      <div
+        class="reporte-matriculas__sin-datos"
+        *ngIf="!(estaGenerandoReporte$ | async) && ((filas$ | async)?.length ?? 0) === 0"
+      >
+        No hay matrículas para mostrar con los filtros seleccionados.
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
