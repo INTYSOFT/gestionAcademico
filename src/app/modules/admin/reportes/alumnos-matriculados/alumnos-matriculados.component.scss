@@ -1,73 +1,92 @@
 .reporte-matriculas {
-  padding: 1.5rem;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
 
-  &__card {
-    width: 100%;
-    max-width: 1200px;
+  mat-card-header {
+    padding-bottom: 0.5rem;
   }
 
   &__filtros {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    align-items: flex-end;
-    margin-bottom: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+    align-items: stretch;
+    margin-bottom: 1.5rem;
   }
 
-  &__campo {
-    flex: 1 1 220px;
-    min-width: 200px;
-  }
-
-  &__campo--buscador {
-    flex: 1 1 320px;
-    min-width: 260px;
-  }
-
-  &__ciclo {
+  &__control {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    flex: 1 1 240px;
-    min-width: 220px;
+    min-width: 0;
   }
 
-  &__ciclo-label {
-    font-size: 0.85rem;
+  &__campo {
+    width: 100%;
+  }
+
+  &__campo--buscador {
+    min-width: 280px;
+  }
+
+  &__label {
+    font-size: 0.875rem;
     font-weight: 600;
     color: var(--fuse-text-secondary);
   }
 
-  &__ciclo-toggle {
+  &__toggle {
     display: inline-flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    width: 100%;
+    padding: 0.25rem;
+    border-radius: 0.75rem;
+    background-color: var(--fuse-bg-hover, rgba(15, 23, 42, 0.04));
   }
 
   &__acciones {
     display: flex;
+    justify-content: flex-end;
     align-items: center;
     gap: 0.75rem;
-    padding-bottom: 0.25rem;
+    flex-wrap: wrap;
+    grid-column: 1 / -1;
+    justify-self: end;
+    padding-top: 0.5rem;
   }
 
   &__resumen {
-    margin-top: 1.5rem;
     color: var(--fuse-text-secondary);
     font-size: 0.95rem;
   }
 
   &__grid {
-    margin-top: 1.5rem;
     width: 100%;
   }
 
   &__sin-datos {
-    margin-top: 1.5rem;
     text-align: center;
     color: var(--fuse-text-disabled);
     font-style: italic;
+  }
+}
+
+@media (max-width: 600px) {
+  .reporte-matriculas {
+    &__filtros {
+      grid-template-columns: 1fr;
+    }
+
+    &__acciones {
+      flex-direction: column;
+      align-items: stretch;
+
+      button {
+        width: 100%;
+      }
+    }
   }
 }
