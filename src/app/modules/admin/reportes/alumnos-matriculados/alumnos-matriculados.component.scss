@@ -1,0 +1,48 @@
+.reporte-matriculas {
+  padding: 1.5rem;
+  display: flex;
+  justify-content: center;
+
+  &__card {
+    width: 100%;
+    max-width: 1200px;
+  }
+
+  &__filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+    margin-bottom: 1rem;
+  }
+
+  &__campo {
+    flex: 1 1 220px;
+    min-width: 200px;
+  }
+
+  &__acciones {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.25rem;
+  }
+
+  &__resumen {
+    margin-top: 1.5rem;
+    color: var(--fuse-text-secondary);
+    font-size: 0.95rem;
+  }
+
+  &__grid {
+    margin-top: 1.5rem;
+    width: 100%;
+  }
+
+  &__sin-datos {
+    margin-top: 1.5rem;
+    text-align: center;
+    color: var(--fuse-text-disabled);
+    font-style: italic;
+  }
+}

@@ -75,6 +75,21 @@ export const defaultNavigation: FuseNavigationItem[] = [
         ]
     },
     {
+        id      : 'reportes',
+        title   : 'Reportes',
+        type    : 'collapsable',
+        icon    : 'heroicons_outline:chart-bar-square',
+        children: [
+            {
+                id   : 'reportes.alumnos-matriculados',
+                title: 'Alumnos matriculados',
+                type : 'basic',
+                icon : 'heroicons_outline:document-chart-bar',
+                link : '/reportes/alumnos-matriculados'
+            }
+        ]
+    },
+    {
         id      : 'mantenimiento',
         title   : 'Mantenimiento',
         type    : 'collapsable',
@@ -210,6 +225,12 @@ export const compactNavigation: FuseNavigationItem[] = [
         icon : 'heroicons_outline:clipboard-document-list'
     },
     {
+        id   : 'reportes',
+        title: 'Reportes',
+        type : 'collapsable',
+        icon : 'heroicons_outline:chart-bar-square'
+    },
+    {
         id   : 'mantenimiento',
         title: 'Mantenimiento',
         type : 'collapsable',
@@ -241,6 +262,12 @@ export const futuristicNavigation: FuseNavigationItem[] = [
         title: 'Matricula',
         type : 'collapsable',
         icon : 'heroicons_outline:clipboard-document-list'
+    },
+    {
+        id   : 'reportes',
+        title: 'Reportes',
+        type : 'collapsable',
+        icon : 'heroicons_outline:chart-bar-square'
     },
     {
         id   : 'mantenimiento',
@@ -291,6 +318,13 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 link : '/matricula/tipo-concepto'
             }
         ]
+    },
+    {
+        id   : 'reportes',
+        title: 'Reportes',
+        type : 'group',
+        icon : 'heroicons_outline:chart-bar-square',
+        children: []
     },
     {
         id   : 'evaluacion',
