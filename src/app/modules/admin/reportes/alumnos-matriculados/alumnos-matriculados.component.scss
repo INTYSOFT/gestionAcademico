@@ -21,6 +21,28 @@
     min-width: 200px;
   }
 
+  &__campo--toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__campo--buscador {
+    min-width: 260px;
+  }
+
+  &__campo-titulo {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--fuse-text-secondary);
+  }
+
+  &__toggle-group {
+    width: fit-content;
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+
   &__acciones {
     display: flex;
     align-items: center;

@@ -30,23 +30,67 @@
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="fill" class="reporte-matriculas__campo">
-          <mat-label>Ciclo</mat-label>
-          <mat-select
-            formControlName="cicloId"
+        <div class="reporte-matriculas__campo reporte-matriculas__campo--toggle">
+          <span class="reporte-matriculas__campo-titulo">Ciclos a buscar</span>
+          <mat-button-toggle-group
+            formControlName="tipoCiclo"
+            appearance="legacy"
+            class="reporte-matriculas__toggle-group"
             [disabled]="(estaCargandoCiclos$ | async) ?? false || filtrosForm.controls.cicloId.disabled"
-            panelClass="reporte-matriculas__select"
           >
-            <mat-option [disabled]="estaCargandoCiclos$ | async">
-              Cargando ciclos...
-            </mat-option>
-            <mat-option *ngFor="let ciclo of ciclos$ | async" [value]="ciclo.id">
-              {{ ciclo.nombre }}
-            </mat-option>
-          </mat-select>
+            <mat-button-toggle value="vigentes">
+              <mat-icon class="mr-2">event_available</mat-icon>
+              Vigentes
+            </mat-button-toggle>
+            <mat-button-toggle value="todos">
+              <mat-icon class="mr-2">event_note</mat-icon>
+              Todos
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+
+        <mat-form-field appearance="fill" class="reporte-matriculas__campo reporte-matriculas__campo--buscador">
+          <mat-label>Buscar ciclo</mat-label>
+          <input
+            matInput
+            placeholder="Escribe el nombre o las fechas del ciclo"
+            [formControl]="cicloBusquedaControl"
+            [matAutocomplete]="ciclosAuto"
+            [disabled]="(estaCargandoCiclos$ | async) ?? false || filtrosForm.controls.cicloId.disabled"
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Limpiar búsqueda"
+            *ngIf="cicloBusquedaControl.value"
+            (click)="limpiarBusquedaCiclo()"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
           <mat-error *ngIf="filtrosForm.controls.cicloId.hasError('required')">
             Selecciona un ciclo para generar el reporte.
           </mat-error>
+          <mat-autocomplete
+            #ciclosAuto="matAutocomplete"
+            (optionSelected)="manejarCicloSeleccionado($event)"
+            [displayWith]="mostrarCicloEnBuscador"
+            class="reporte-matriculas__autocomplete"
+          >
+            <mat-option *ngIf="estaCargandoCiclos$ | async" disabled>
+              Cargando ciclos...
+            </mat-option>
+            <ng-container *ngIf="!(estaCargandoCiclos$ | async)">
+              <ng-container *ngIf="(ciclosFiltrados$ | async) as ciclos">
+                <mat-option *ngFor="let ciclo of ciclos" [value]="ciclo">
+                  {{ obtenerEtiquetaCiclo(ciclo) }}
+                </mat-option>
+                <mat-option *ngIf="ciclos.length === 0" disabled>
+                  No se encontraron ciclos con la búsqueda actual.
+                </mat-option>
+              </ng-container>
+            </ng-container>
+          </mat-autocomplete>
         </mat-form-field>
 
         <div class="reporte-matriculas__acciones">

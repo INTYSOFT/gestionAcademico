@@ -7,15 +7,17 @@ import {
     ViewEncapsulation,
     inject,
 } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatOptionModule } from '@angular/material/core';
-import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AgGridAngular } from 'ag-grid-angular';
 import {
@@ -24,7 +26,7 @@ import {
     GridReadyEvent,
     ValueFormatterParams,
 } from 'ag-grid-community';
-import { BehaviorSubject, Observable, forkJoin, of } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, forkJoin, of } from 'rxjs';
 import {
     catchError,
     finalize,
@@ -33,6 +35,7 @@ import {
     take,
     tap,
     filter,
+    startWith,
 } from 'rxjs/operators';
 import { Sede } from 'app/core/models/centro-estudios/sede.model';
 import { Ciclo } from 'app/core/models/centro-estudios/ciclo.model';
@@ -79,9 +82,11 @@ interface MatriculaReporteRow {
         ReactiveFormsModule,
         MatCardModule,
         MatFormFieldModule,
-        MatSelectModule,
+        MatInputModule,
+        MatAutocompleteModule,
         MatOptionModule,
         MatButtonModule,
+        MatButtonToggleModule,
         MatIconModule,
         MatProgressBarModule,
         MatSnackBarModule,
@@ -109,6 +114,7 @@ export class ReporteMatriculasPorSedeCicloComponent implements OnInit {
         cicloId: this.fb.control<number | null>({ value: null, disabled: true }, {
             validators: [Validators.required],
         }),
+        tipoCiclo: this.fb.control<'vigentes' | 'todos'>('vigentes', { nonNullable: true }),
     });
 
     protected readonly sedes$ = new BehaviorSubject<Sede[]>([]);
@@ -127,6 +133,34 @@ export class ReporteMatriculasPorSedeCicloComponent implements OnInit {
         switchMap((generando) =>
             generando ? of(false) : this.filas$.pipe(map((filas) => (filas.length ?? 0) === 0), take(1))
         )
+    );
+
+    protected readonly cicloBusquedaControl = new FormControl<Ciclo | string>({
+        value: '',
+        disabled: true,
+    });
+
+    protected readonly ciclosFiltrados$ = combineLatest([
+        this.ciclos$,
+        this.filtrosForm.controls.tipoCiclo.valueChanges.pipe(
+            startWith(this.filtrosForm.controls.tipoCiclo.value)
+        ),
+        this.cicloBusquedaControl.valueChanges.pipe(
+            startWith(this.cicloBusquedaControl.value),
+            map((valor) => (typeof valor === 'string' ? valor : ''))
+        ),
+    ]).pipe(
+        map(([ciclos, tipo, termino]) => {
+            const porTipo = this.filtrarCiclosPorTipo(ciclos, tipo);
+            if (!termino.trim()) {
+                return porTipo;
+            }
+
+            const terminoNormalizado = termino.trim().toLowerCase();
+            return porTipo.filter((ciclo) =>
+                this.obtenerEtiquetaCiclo(ciclo).toLowerCase().includes(terminoNormalizado)
+            );
+        })
     );
 
     protected readonly columnas: ColDef<MatriculaReporteRow>[] = [
@@ -191,6 +225,9 @@ export class ReporteMatriculasPorSedeCicloComponent implements OnInit {
     private readonly nivelesCache = new Map<number, Nivel>();
     private readonly carrerasCache = new Map<number, Carrera>();
     private readonly ciclosCatalogo$ = new BehaviorSubject<Ciclo[]>([]);
+    private readonly cicloFechaFormatter = new Intl.DateTimeFormat('es-PE', {
+        dateStyle: 'medium',
+    });
 
     private ciclosCatalogoCargado = false;
     private seccionesCargadas = false;
@@ -203,6 +240,8 @@ export class ReporteMatriculasPorSedeCicloComponent implements OnInit {
         this.cargarSedes();
         this.cargarCatalogoCiclos();
         this.suscribirCambiosDeSede();
+        this.suscribirBusquedaCiclo();
+        this.suscribirCambiosTipoCiclo();
     }
 
     protected manejarGridReady(evento: GridReadyEvent<MatriculaReporteRow>): void {
@@ -267,8 +306,11 @@ export class ReporteMatriculasPorSedeCicloComponent implements OnInit {
     protected limpiarFiltros(): void {
         this.filtrosForm.reset();
         this.filtrosForm.controls.cicloId.disable();
+        this.filtrosForm.controls.tipoCiclo.setValue('vigentes');
         this.filas$.next([]);
         this.gridApi?.setGridOption('rowData', []);
+        this.cicloBusquedaControl.setValue('', { emitEvent: false });
+        this.cicloBusquedaControl.disable();
     }
 
     private cargarSedes(): void {
@@ -318,6 +360,8 @@ export class ReporteMatriculasPorSedeCicloComponent implements OnInit {
             .subscribe((sedeId) => {
                 this.filtrosForm.controls.cicloId.reset();
                 this.filtrosForm.controls.cicloId.disable();
+                this.cicloBusquedaControl.setValue('', { emitEvent: false });
+                this.cicloBusquedaControl.disable();
                 this.ciclos$.next([]);
 
                 if (sedeId === null) {
@@ -370,8 +414,132 @@ export class ReporteMatriculasPorSedeCicloComponent implements OnInit {
             .pipe(take(1), takeUntilDestroyed(this.destroyRef))
             .subscribe((catalogo) => {
                 this.ciclos$.next(catalogo);
-                this.filtrosForm.controls.cicloId.enable();
+                if (catalogo.length > 0) {
+                    this.habilitarSeleccionCiclo();
+                } else {
+                    this.deshabilitarSeleccionCiclo();
+                }
             });
+    }
+
+    private filtrarCiclosPorTipo(
+        ciclos: Ciclo[],
+        tipo: 'vigentes' | 'todos'
+    ): Ciclo[] {
+        if (tipo === 'todos') {
+            return ciclos;
+        }
+
+        return ciclos.filter((ciclo) => this.esCicloVigente(ciclo));
+    }
+
+    private esCicloVigente(ciclo: Ciclo): boolean {
+        if (!ciclo.activo) {
+            return false;
+        }
+
+        if (!ciclo.fechaInicio || !ciclo.fechaFin) {
+            return false;
+        }
+
+        const fechaInicio = new Date(ciclo.fechaInicio);
+        const fechaFin = new Date(ciclo.fechaFin);
+
+        if (Number.isNaN(fechaInicio.getTime()) || Number.isNaN(fechaFin.getTime())) {
+            return false;
+        }
+
+        const hoy = new Date();
+        return fechaInicio <= hoy && hoy <= fechaFin;
+    }
+
+    private habilitarSeleccionCiclo(): void {
+        if (this.filtrosForm.controls.cicloId.disabled) {
+            this.filtrosForm.controls.cicloId.enable();
+        }
+
+        if (this.cicloBusquedaControl.disabled) {
+            this.cicloBusquedaControl.enable();
+        }
+
+        this.cicloBusquedaControl.setValue('', { emitEvent: true });
+    }
+
+    private deshabilitarSeleccionCiclo(): void {
+        this.filtrosForm.controls.cicloId.setValue(null);
+        if (!this.filtrosForm.controls.cicloId.disabled) {
+            this.filtrosForm.controls.cicloId.disable();
+        }
+
+        this.cicloBusquedaControl.setValue('', { emitEvent: false });
+        if (!this.cicloBusquedaControl.disabled) {
+            this.cicloBusquedaControl.disable();
+        }
+    }
+
+    private suscribirBusquedaCiclo(): void {
+        this.cicloBusquedaControl.valueChanges
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((valor) => {
+                if (typeof valor === 'object' && valor !== null) {
+                    this.filtrosForm.controls.cicloId.setValue(valor.id);
+                } else {
+                    this.filtrosForm.controls.cicloId.setValue(null);
+                }
+            });
+    }
+
+    private suscribirCambiosTipoCiclo(): void {
+        this.filtrosForm.controls.tipoCiclo.valueChanges
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => {
+                this.filtrosForm.controls.cicloId.setValue(null);
+                this.cicloBusquedaControl.setValue('', { emitEvent: true });
+            });
+    }
+
+    protected manejarCicloSeleccionado({ option }: MatAutocompleteSelectedEvent): void {
+        const ciclo = option.value as Ciclo | null;
+        if (ciclo) {
+            this.filtrosForm.controls.cicloId.setValue(ciclo.id);
+        }
+    }
+
+    protected mostrarCicloEnBuscador = (valor: Ciclo | string | null): string => {
+        if (!valor) {
+            return '';
+        }
+
+        if (typeof valor === 'string') {
+            return valor;
+        }
+
+        return this.obtenerEtiquetaCiclo(valor);
+    };
+
+    protected limpiarBusquedaCiclo(): void {
+        this.cicloBusquedaControl.setValue('', { emitEvent: true });
+        this.filtrosForm.controls.cicloId.setValue(null);
+    }
+
+    protected obtenerEtiquetaCiclo(ciclo: Ciclo): string {
+        const fechaInicio = this.formatearFechaCiclo(ciclo.fechaInicio);
+        const fechaFin = this.formatearFechaCiclo(ciclo.fechaFin);
+
+        return `${ciclo.nombre} - ${fechaInicio} - ${fechaFin}`.trim();
+    }
+
+    private formatearFechaCiclo(fechaIso: string | null): string {
+        if (!fechaIso) {
+            return 'Sin fecha';
+        }
+
+        const fecha = new Date(fechaIso);
+        if (Number.isNaN(fecha.getTime())) {
+            return 'Fecha no válida';
+        }
+
+        return this.cicloFechaFormatter.format(fecha);
     }
 
     private filtrarCiclosPorSede(
