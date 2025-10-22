@@ -1,104 +1,135 @@
 <div class="flex flex-col flex-auto min-w-0">
   <div class="flex-auto p-6 sm:p-10">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Reporte: Matrículas por sede y ciclo</mat-card-title>
+        <mat-card-subtitle>
+          Selecciona una sede y luego un ciclo académico para visualizar a los alumnos matriculados.
+        </mat-card-subtitle>
+      </mat-card-header>
 
-  <mat-card >
-    <mat-card-header>
-      <mat-card-title>Reporte: Matrículas por sede y ciclo</mat-card-title>
-      <mat-card-subtitle>
-        Selecciona una sede y luego un ciclo académico para visualizar a los alumnos matriculados.
-      </mat-card-subtitle>
-    </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="filtrosForm" class="reporte-matriculas__filtros">
+          <mat-form-field appearance="fill" class="reporte-matriculas__campo">
+            <mat-label>Sede</mat-label>
+            <mat-select
+              formControlName="sedeId"
+              [disabled]="(estaCargandoSedes$ | async) ?? false"
+              panelClass="reporte-matriculas__select"
+            >
+              @if ((estaCargandoSedes$ | async) ?? false) {
+                <mat-option disabled>Cargando sedes...</mat-option>
+              }
+              @for (sede of sedes$ | async; track sede.id) {
+                <mat-option [value]="sede.id">{{ sede.nombre }}</mat-option>
+              }
+            </mat-select>
+            @if (filtrosForm.controls.sedeId.hasError('required') && filtrosForm.controls.sedeId.touched) {
+              <mat-error>Selecciona una sede para continuar.</mat-error>
+            }
+          </mat-form-field>
 
-    <mat-card-content>
-      <form [formGroup]="filtrosForm" class="reporte-matriculas__filtros">
-        <mat-form-field appearance="fill" class="reporte-matriculas__campo">
-          <mat-label>Sede</mat-label>
-          <mat-select
-            formControlName="sedeId"
-            [disabled]="(estaCargandoSedes$ | async) ?? false"
-            panelClass="reporte-matriculas__select"
+          <div class="reporte-matriculas__ciclo">
+            <span class="reporte-matriculas__ciclo-label">Ciclos a buscar</span>
+            <mat-button-toggle-group
+              formControlName="cicloFiltro"
+              class="reporte-matriculas__ciclo-toggle"
+              aria-label="Filtro de ciclos"
+            >
+              @for (opcion of cicloFiltroOpciones; track opcion.value) {
+                <mat-button-toggle [value]="opcion.value">
+                  {{ opcion.label }}
+                </mat-button-toggle>
+              }
+            </mat-button-toggle-group>
+          </div>
+
+          <mat-form-field appearance="fill" class="reporte-matriculas__campo reporte-matriculas__campo--buscador">
+            <mat-label>Buscar ciclo</mat-label>
+            <input
+              matInput
+              type="text"
+              placeholder="Nombre - Fecha inicio - Fecha fin"
+              [matAutocomplete]="cicloAutocomplete"
+              [formControl]="cicloBusquedaControl"
+            />
+            <mat-icon matSuffix>search</mat-icon>
+            @if (filtrosForm.controls.cicloId.hasError('required') && filtrosForm.controls.cicloId.touched) {
+              <mat-error>Selecciona un ciclo para generar el reporte.</mat-error>
+            }
+          </mat-form-field>
+          <mat-autocomplete
+            #cicloAutocomplete="matAutocomplete"
+            [displayWith]="mostrarCicloEnBusqueda"
+            (optionSelected)="manejarCicloSeleccionado($event)"
           >
-            <mat-option [disabled]="estaCargandoSedes$ | async">
-              Cargando sedes...
-            </mat-option>
-            <mat-option *ngFor="let sede of sedes$ | async" [value]="sede.id">
-              {{ sede.nombre }}
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="filtrosForm.controls.sedeId.hasError('required')">
-            Selecciona una sede para continuar.
-          </mat-error>
-        </mat-form-field>
+            @if ((estaCargandoCiclos$ | async) ?? false) {
+              <mat-option disabled>Cargando ciclos...</mat-option>
+            } @else {
+              @if (ciclosFiltrados$ | async; as ciclosFiltrados) {
+                @if (ciclosFiltrados.length === 0) {
+                  @if (filtrosForm.controls.sedeId.value === null) {
+                    <mat-option disabled>Selecciona una sede para buscar ciclos</mat-option>
+                  } @else {
+                    <mat-option disabled>No se encontraron ciclos</mat-option>
+                  }
+                }
+                @for (ciclo of ciclosFiltrados; track ciclo.id) {
+                  <mat-option [value]="ciclo">{{ describirCiclo(ciclo) }}</mat-option>
+                }
+              }
+            }
+          </mat-autocomplete>
 
-        <mat-form-field appearance="fill" class="reporte-matriculas__campo">
-          <mat-label>Ciclo</mat-label>
-          <mat-select
-            formControlName="cicloId"
-            [disabled]="(estaCargandoCiclos$ | async) ?? false || filtrosForm.controls.cicloId.disabled"
-            panelClass="reporte-matriculas__select"
-          >
-            <mat-option [disabled]="estaCargandoCiclos$ | async">
-              Cargando ciclos...
-            </mat-option>
-            <mat-option *ngFor="let ciclo of ciclos$ | async" [value]="ciclo.id">
-              {{ ciclo.nombre }}
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="filtrosForm.controls.cicloId.hasError('required')">
-            Selecciona un ciclo para generar el reporte.
-          </mat-error>
-        </mat-form-field>
+          <div class="reporte-matriculas__acciones">
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              (click)="generarReporte()"
+              [disabled]="!filtrosForm.valid || (estaGenerandoReporte$ | async)"
+            >
+              <mat-icon class="mr-2">summarize</mat-icon>
+              Reporte
+            </button>
 
-        <div class="reporte-matriculas__acciones">
-          <button
-            mat-flat-button
-            color="primary"
-            type="button"
-            (click)="generarReporte()"
-            [disabled]="!filtrosForm.valid || (estaGenerandoReporte$ | async)"
-          >
-            <mat-icon class="mr-2">summarize</mat-icon>
-            Reporte
-          </button>
+            <button
+              mat-stroked-button
+              color="primary"
+              type="button"
+              (click)="limpiarFiltros()"
+              [disabled]="(estaGenerandoReporte$ | async)"
+            >
+              Limpiar
+            </button>
+          </div>
+        </form>
 
-          <button
-            mat-stroked-button
-            color="primary"
-            type="button"
-            (click)="limpiarFiltros()"
-            [disabled]="(estaGenerandoReporte$ | async)"
-          >
-            Limpiar
-          </button>
+        @if (!(estaGenerandoReporte$ | async)) {
+          <div class="reporte-matriculas__resumen">
+            Total de matrículas: <strong>{{ totalFilas$ | async }}</strong>
+          </div>
+        }
+
+        <div class="ag-theme-quartz reporte-matriculas__grid">
+          <ag-grid-angular
+            [rowData]="filas$ | async"
+            theme="ag-theme-alpine"
+            [columnDefs]="columnas"
+            [defaultColDef]="configuracionColumnasPorDefecto"
+            domLayout="autoHeight"
+            [animateRows]="true"
+            (gridReady)="manejarGridReady($event)"
+            class="w-full"
+          ></ag-grid-angular>
         </div>
-      </form>
 
-    
-
-      <div class="reporte-matriculas__resumen" [hidden]="estaGenerandoReporte$ | async">
-        Total de matrículas: <strong>{{ totalFilas$ | async }}</strong>
-      </div>
-
-      <div class="ag-theme-quartz reporte-matriculas__grid">
-        <ag-grid-angular
-          [rowData]="filas$ | async"
-          theme="ag-theme-alpine"
-          [columnDefs]="columnas"
-          [defaultColDef]="configuracionColumnasPorDefecto"
-          domLayout="autoHeight"
-          [animateRows]="true"
-          (gridReady)="manejarGridReady($event)"
-          class="w-full"
-        ></ag-grid-angular>
-      </div>
-
-      <div
-        class="reporte-matriculas__sin-datos"
-        [hidden]="!(mostrarSinDatos$ | async)"
-      >
-        No hay matrículas para mostrar con los filtros seleccionados.
-      </div>
-    </mat-card-content>
-  </mat-card>
-</div>
+        @if (mostrarSinDatos$ | async) {
+          <div class="reporte-matriculas__sin-datos">
+            No hay matrículas para mostrar con los filtros seleccionados.
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  </div>
 </div>
