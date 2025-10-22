@@ -21,6 +21,31 @@
     min-width: 200px;
   }
 
+  &__campo--buscador {
+    flex: 1 1 320px;
+    min-width: 260px;
+  }
+
+  &__ciclo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1 1 240px;
+    min-width: 220px;
+  }
+
+  &__ciclo-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--fuse-text-secondary);
+  }
+
+  &__ciclo-toggle {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
   &__acciones {
     display: flex;
     align-items: center;
