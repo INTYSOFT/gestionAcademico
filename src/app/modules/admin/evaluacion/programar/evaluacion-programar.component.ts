@@ -1,4 +1,4 @@
-import { AsyncPipe, NgClass } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -13,7 +13,6 @@ import {
     ValidationErrors,
     Validators,
 } from '@angular/forms';
-import { NestedTreeControl } from '@angular/cdk/tree';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -21,12 +20,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { AgGridAngular } from 'ag-grid-angular';
+import { ColDef, FirstDataRenderedEvent, GridApi, GridReadyEvent } from 'ag-grid-community';
 import {
     BehaviorSubject,
     Observable,
@@ -59,29 +59,29 @@ import type {
     EvaluacionProgramadaDialogData,
     EvaluacionProgramadaDialogResult,
 } from './evaluacion-programada-dialog/evaluacion-programada-dialog.component';
+import { EvaluacionProgramarActionsCellComponent } from './actions-cell/evaluacion-programar-actions-cell.component';
+import { EvaluacionProgramarSeccionesCellComponent } from './secciones-cell/evaluacion-programar-secciones-cell.component';
 
-interface EvaluacionTreeNodeDetail {
-    label: string;
-    value: string;
+export interface EvaluacionProgramacionSeccionRow {
+    id: number;
+    nombre: string;
+    activo: boolean;
+    estadoLabel: string;
 }
 
-interface EvaluacionTreeNodeIconConfig {
-    name: string;
-    classes?: string[];
-    tooltip?: string;
-    ariaLabel?: string;
-}
-
-interface EvaluacionTreeNode {
-    id: string;
-    title: string;
-    subtitleLines: string[];
-    status: 'default' | 'info';
-    evaluacionId?: number;
-    children?: EvaluacionTreeNode[];
-    details?: EvaluacionTreeNodeDetail[];
-    leadingIcon?: EvaluacionTreeNodeIconConfig;
-    trailingIcon?: EvaluacionTreeNodeIconConfig;
+export interface EvaluacionProgramacionRow {
+    id: number;
+    nombre: string;
+    fechaInicioIso: string;
+    fechaFormateada: string;
+    horarioFormateado: string;
+    tipo: string;
+    sede: string;
+    ciclo: string;
+    carrera: string;
+    activo: boolean;
+    estadoLabel: string;
+    secciones: EvaluacionProgramacionSeccionRow[];
 }
 
 const EVALUACION_SEARCH_MODE = {
@@ -124,23 +124,24 @@ function validateDateRange(control: AbstractControl): ValidationErrors | null {
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-    AsyncPipe,
-    NgClass,
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatButtonToggleModule,
-    MatCardModule,
-    MatDialogModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
-    MatTooltipModule,
-    MatTreeModule
-],
+        AsyncPipe,
+        ReactiveFormsModule,
+        AgGridAngular,
+        EvaluacionProgramarActionsCellComponent,
+        EvaluacionProgramarSeccionesCellComponent,
+        MatButtonModule,
+        MatButtonToggleModule,
+        MatCardModule,
+        MatDialogModule,
+        MatIconModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatDatepickerModule,
+        MatNativeDateModule,
+        MatProgressSpinnerModule,
+        MatSnackBarModule,
+        MatTooltipModule,
+    ],
 })
 export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
     protected readonly filtersForm = this.fb.group({
@@ -160,12 +161,98 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
     });
     protected readonly isLoadingEvaluaciones$ = new BehaviorSubject<boolean>(false);
     protected readonly SearchMode = EVALUACION_SEARCH_MODE;
-
-    protected readonly treeControl = new NestedTreeControl<EvaluacionTreeNode>((node) => node.children ?? []);
-    protected readonly treeDataSource = new MatTreeNestedDataSource<EvaluacionTreeNode>();
-
-    protected readonly hasChild = (_: number, node: EvaluacionTreeNode): boolean =>
-        Array.isArray(node.children) && node.children.length > 0;
+    protected readonly programaciones$ = new BehaviorSubject<EvaluacionProgramacionRow[]>([]);
+    protected readonly columnDefs: ColDef<EvaluacionProgramacionRow>[] = [
+        {
+            headerName: 'Programación',
+            field: 'nombre',
+            minWidth: 220,
+            flex: 1.3,
+            cellClass: 'program-grid__cell-title',
+        },
+        {
+            headerName: 'Fecha',
+            minWidth: 200,
+            flex: 1,
+            valueGetter: (params) => params.data?.fechaFormateada ?? '',
+        },
+        {
+            headerName: 'Horario',
+            minWidth: 160,
+            valueGetter: (params) => params.data?.horarioFormateado ?? '',
+        },
+        {
+            headerName: 'Tipo de evaluación',
+            field: 'tipo',
+            minWidth: 180,
+            flex: 1,
+        },
+        {
+            headerName: 'Sede',
+            field: 'sede',
+            minWidth: 160,
+        },
+        {
+            headerName: 'Ciclo',
+            field: 'ciclo',
+            minWidth: 140,
+        },
+        {
+            headerName: 'Carrera',
+            minWidth: 180,
+            flex: 1,
+            valueGetter: (params) => params.data?.carrera || '—',
+        },
+        {
+            headerName: 'Estado',
+            field: 'estadoLabel',
+            minWidth: 140,
+            cellRenderer: (params) => {
+                const badge = document.createElement('span');
+                badge.classList.add(
+                    'program-grid__status',
+                    params.data?.activo
+                        ? 'program-grid__status--active'
+                        : 'program-grid__status--inactive'
+                );
+                badge.textContent = params.value ?? '';
+                return badge;
+            },
+            cellClass: 'program-grid__status-cell',
+        },
+        {
+            headerName: 'Secciones',
+            cellRenderer: EvaluacionProgramarSeccionesCellComponent,
+            minWidth: 260,
+            flex: 1.6,
+            autoHeight: true,
+            wrapText: true,
+            suppressSizeToFit: true,
+            sortable: false,
+            filter: false,
+            resizable: false,
+        },
+        {
+            headerName: 'Acciones',
+            cellRenderer: EvaluacionProgramarActionsCellComponent,
+            cellRendererParams: {
+                onEdit: (row: EvaluacionProgramacionRow) => this.editProgramacion(row.id),
+            },
+            width: 120,
+            sortable: false,
+            filter: false,
+            resizable: false,
+            pinned: 'right',
+        },
+    ];
+    protected readonly defaultColDef: ColDef = {
+        sortable: true,
+        filter: true,
+        resizable: true,
+        flex: 1,
+        wrapHeaderText: true,
+        autoHeaderHeight: true,
+    };
 
     private readonly destroy$ = new Subject<void>();
 
@@ -184,6 +271,7 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
     private tiposEvaluacion: TipoEvaluacion[] = [];
     private carreras: Carrera[] = [];
     private secciones: Seccion[] = [];
+    private gridApi?: GridApi<EvaluacionProgramacionRow>;
 
     constructor(
         private readonly fb: FormBuilder,
@@ -206,10 +294,20 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
     ngOnDestroy(): void {
         this.destroy$.next();
         this.destroy$.complete();
+        this.gridApi?.destroy();
     }
 
     protected createProgramacion(): void {
         this.openProgramacionDialog();
+    }
+
+    protected onGridReady(event: GridReadyEvent<EvaluacionProgramacionRow>): void {
+        this.gridApi = event.api;
+        event.api.sizeColumnsToFit();
+    }
+
+    protected onFirstDataRendered(event: FirstDataRenderedEvent<EvaluacionProgramacionRow>): void {
+        event.api.sizeColumnsToFit();
     }
 
     protected editProgramacion(evaluacionId: number): void {
@@ -235,6 +333,15 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
         }
 
         return formatted.toLocaleString(DateTime.DATE_FULL);
+    }
+
+    private updateGridRows(rows: EvaluacionProgramacionRow[]): void {
+        this.programaciones$.next(rows);
+        if (this.gridApi) {
+            this.gridApi.setGridOption('rowData', rows);
+            this.gridApi.refreshCells({ force: true });
+            this.gridApi.sizeColumnsToFit();
+        }
     }
 
     private loadCatalogs(): void {
@@ -420,9 +527,10 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
                     const seccionesMap = new Map<number, EvaluacionProgramadaSeccion[]>(
                         items.map((item) => [item.evaluacion.id, item.secciones])
                     );
-                    this.allEvaluaciones = items.map((item) => item.evaluacion);
+                    const evaluaciones = items.map((item) => item.evaluacion);
+                    this.allEvaluaciones = evaluaciones;
                     this.evaluacionSecciones = seccionesMap;
-                    this.buildTreeData(items.map((item) => item.evaluacion), seccionesMap);
+                    this.buildGridData(evaluaciones, seccionesMap);
                 },
                 error: (error) => {
                     this.resetEvaluaciones();
@@ -436,7 +544,7 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
     private resetEvaluaciones(): void {
         this.allEvaluaciones = [];
         this.evaluacionSecciones = new Map();
-        this.treeDataSource.data = [];
+        this.updateGridRows([]);
     }
 
     private buildDefaultDateRange(): { start: Date; end: Date } {
@@ -462,80 +570,62 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
         return date.toISODate();
     }
 
-    private buildTreeData(
+    private buildGridData(
         evaluaciones: EvaluacionProgramada[],
         seccionesMap: Map<number, EvaluacionProgramadaSeccion[]>
     ): void {
-        const nodes: EvaluacionTreeNode[] = evaluaciones.map((evaluacion): EvaluacionTreeNode => {
+        const rows: EvaluacionProgramacionRow[] = evaluaciones.map((evaluacion) => {
             const sede = this.getSedeNombre(evaluacion.sedeId);
             const ciclo = this.getCicloNombre(evaluacion.cicloId);
             const tipo = this.getTipoEvaluacionNombre(evaluacion.tipoEvaluacionId);
             const carrera = this.getCarreraNombre(evaluacion.carreraId);
-            const fecha = this.formatFechaLabel(evaluacion.fechaInicio);
-            const horario = `${this.formatHora(evaluacion.horaInicio)} – ${this.formatHora(evaluacion.horaFin)}`;
+            const horario = this.buildHorarioLabel(evaluacion.horaInicio, evaluacion.horaFin);
             const secciones = seccionesMap.get(evaluacion.id) ?? [];
 
-            const children: EvaluacionTreeNode[] = secciones.length
-                ? secciones.map<EvaluacionTreeNode>((seccion) => {
-                      const seccionNombre = this.getSeccionNombre(seccion.seccionId);
-                      const isActivo = Boolean(seccion.activo);
+            const mappedSecciones: EvaluacionProgramacionSeccionRow[] = secciones.map((seccion) => {
+                const seccionNombre = this.getSeccionNombre(seccion.seccionId);
+                const activo = Boolean(seccion.activo);
 
-                      return {
-                          id: `seccion-${evaluacion.id}-${seccion.id}`,
-                          title: seccionNombre,
-                          subtitleLines: [],
-                          status: 'default',
-                          trailingIcon: {
-                              name: isActivo ? 'check_circle' : 'cancel',
-                              classes: [
-                                  isActivo
-                                      ? 'tree-node__status-icon--active'
-                                      : 'tree-node__status-icon--inactive',
-                              ],
-                              tooltip: isActivo ? 'Activo' : 'Inactivo',
-                              ariaLabel: `Estado ${isActivo ? 'activo' : 'inactivo'}`,
-                          },
-                      };
-                  })
-                : [
-                      {
-                          id: `seccion-empty-${evaluacion.id}`,
-                          title: 'No hay secciones registradas',
-                          subtitleLines: [],
-                          status: 'info',
-                          leadingIcon: {
-                              name: 'info',
-                              classes: ['tree-node__bullet--info'],
-                              tooltip: 'No hay secciones registradas para esta evaluación',
-                              ariaLabel: 'Sin secciones registradas',
-                          },
-                      } satisfies EvaluacionTreeNode,
-                  ];
-
-            const details: EvaluacionTreeNodeDetail[] = [
-                { label: 'Fecha', value: fecha },
-                { label: 'Tipo', value: tipo },
-                { label: 'Horario', value: horario },
-                { label: 'Sede', value: sede },
-                { label: 'Ciclo', value: ciclo },
-                carrera ? { label: 'Carrera', value: carrera } : null,
-                { label: 'Estado', value: evaluacion.activo ? 'Activo' : 'Inactivo' },
-            ].filter((detail): detail is EvaluacionTreeNodeDetail => !!detail && detail.value.trim().length > 0);
+                return {
+                    id: seccion.id,
+                    nombre: seccionNombre,
+                    activo,
+                    estadoLabel: activo ? 'Activa' : 'Inactiva',
+                } satisfies EvaluacionProgramacionSeccionRow;
+            });
 
             return {
-                id: `evaluacion-${evaluacion.id}`,
-                title: evaluacion.nombre,
-                subtitleLines: [],
-                status: 'default',
-                evaluacionId: evaluacion.id,
-                children,
-                details,
-            };
+                id: evaluacion.id,
+                nombre: evaluacion.nombre,
+                fechaInicioIso: evaluacion.fechaInicio,
+                fechaFormateada: this.formatFechaLabel(evaluacion.fechaInicio),
+                horarioFormateado: horario,
+                tipo,
+                sede,
+                ciclo,
+                carrera,
+                activo: Boolean(evaluacion.activo),
+                estadoLabel: evaluacion.activo ? 'Activo' : 'Inactivo',
+                secciones: mappedSecciones,
+            } satisfies EvaluacionProgramacionRow;
         });
 
-        this.treeControl.dataNodes = nodes;
-        this.treeDataSource.data = nodes;
-        queueMicrotask(() => this.treeControl.expandAll());
+        this.updateGridRows(rows);
+    }
+
+    private buildHorarioLabel(horaInicio: string, horaFin: string): string {
+        const inicio = this.formatHora(horaInicio);
+        const fin = this.formatHora(horaFin);
+
+        if (!inicio && !fin) {
+            return 'Sin horario asignado';
+        }
+
+        if (!inicio || !fin) {
+            return inicio || fin;
+        }
+
+        return `${inicio} – ${fin}`;
     }
 
     private formatFechaLabel(value: string): string {
