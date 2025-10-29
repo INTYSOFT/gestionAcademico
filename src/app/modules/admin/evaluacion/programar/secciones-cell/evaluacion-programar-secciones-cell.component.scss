@@ -9,27 +9,55 @@
     padding: 0.25rem 0;
 }
 
-.secciones-cell__list {
+.secciones-cell__scroller {
     display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: 0 -0.25rem;
+    padding: 0.25rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99, 102, 241, 0.45) transparent;
+
+    &::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: rgba(99, 102, 241, 0.45);
+        border-radius: 999px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+}
+
+.secciones-cell__list {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0.5rem;
     margin: 0;
     padding: 0;
     list-style: none;
+    min-width: max-content;
 }
 
 .secciones-cell__item {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.6rem;
-    padding: 0.45rem 0.75rem;
-    border-radius: 0.75rem;
-    background: rgba(63, 81, 181, 0.06);
-    transition: background-color 200ms ease;
+    gap: 0.65rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(63, 81, 181, 0.08);
+    transition: background-color 200ms ease, box-shadow 200ms ease;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    flex: 0 0 auto;
+    min-height: 2.5rem;
 }
 
 .secciones-cell__item--inactive {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(15, 23, 42, 0.08);
 }
 
 .secciones-cell__icon {
@@ -47,26 +75,35 @@
 }
 
 .secciones-cell__info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    line-height: 1.1;
+    min-width: max-content;
+    white-space: nowrap;
 }
 
 .secciones-cell__name {
     font-weight: 600;
     font-size: 0.85rem;
     color: rgba(0, 0, 0, 0.84);
+    white-space: nowrap;
 }
 
 .secciones-cell__status {
     font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: rgba(0, 0, 0, 0.54);
+    color: rgba(63, 81, 181, 0.9);
+    background: rgba(63, 81, 181, 0.12);
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
 }
 
 .secciones-cell__item--inactive .secciones-cell__status {
-    color: rgba(0, 0, 0, 0.45);
+    color: rgba(15, 23, 42, 0.66);
+    background: rgba(15, 23, 42, 0.12);
 }
 
 .secciones-cell__empty {
@@ -76,4 +113,19 @@
     color: rgba(0, 0, 0, 0.6);
     font-size: 0.8125rem;
     font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .secciones-cell__item {
+        padding-inline: 0.65rem;
+        gap: 0.5rem;
+    }
+
+    .secciones-cell__name {
+        font-size: 0.8125rem;
+    }
+
+    .secciones-cell__status {
+        font-size: 0.7rem;
+    }
 }

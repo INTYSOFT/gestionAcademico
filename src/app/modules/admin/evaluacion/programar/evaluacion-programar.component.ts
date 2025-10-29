@@ -238,11 +238,15 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
             cellRendererParams: {
                 onEdit: (row: EvaluacionProgramacionRow) => this.editProgramacion(row.id),
             },
-            width: 120,
+            minWidth: 156,
+            width: 168,
+            maxWidth: 184,
             sortable: false,
             filter: false,
             resizable: false,
             pinned: 'right',
+            suppressSizeToFit: true,
+            cellClass: 'program-grid__actions-cell',
         },
     ];
     protected readonly defaultColDef: ColDef = {

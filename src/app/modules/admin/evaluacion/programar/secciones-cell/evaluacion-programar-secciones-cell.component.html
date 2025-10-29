@@ -1,29 +1,31 @@
 <div class="secciones-cell">
   @if (secciones.length) {
-    <ul class="secciones-cell__list">
-      @for (seccion of secciones; track seccion.id) {
-        <li
-          class="secciones-cell__item"
-          [ngClass]="{ 'secciones-cell__item--inactive': !seccion.activo }"
-        >
-          <mat-icon
-            class="secciones-cell__icon"
-            [ngClass]="{
-              'secciones-cell__icon--active': seccion.activo,
-              'secciones-cell__icon--inactive': !seccion.activo
-            }"
-            [matTooltip]="seccion.estadoLabel"
-            [attr.aria-label]="'Sección ' + seccion.estadoLabel.toLowerCase()"
+    <div class="secciones-cell__scroller" role="presentation">
+      <ul class="secciones-cell__list" role="list">
+        @for (seccion of secciones; track seccion.id) {
+          <li
+            class="secciones-cell__item"
+            [ngClass]="{ 'secciones-cell__item--inactive': !seccion.activo }"
           >
-            {{ seccion.activo ? 'check_circle' : 'cancel' }}
-          </mat-icon>
-          <div class="secciones-cell__info">
-            <span class="secciones-cell__name">{{ seccion.nombre }}</span>
-            <span class="secciones-cell__status">{{ seccion.estadoLabel }}</span>
-          </div>
-        </li>
-      }
-    </ul>
+            <mat-icon
+              class="secciones-cell__icon"
+              [ngClass]="{
+                'secciones-cell__icon--active': seccion.activo,
+                'secciones-cell__icon--inactive': !seccion.activo
+              }"
+              [matTooltip]="seccion.estadoLabel"
+              [attr.aria-label]="'Sección ' + seccion.estadoLabel.toLowerCase()"
+            >
+              {{ seccion.activo ? 'check_circle' : 'cancel' }}
+            </mat-icon>
+            <div class="secciones-cell__info">
+              <span class="secciones-cell__name">{{ seccion.nombre }}</span>
+              <span class="secciones-cell__status">{{ seccion.estadoLabel }}</span>
+            </div>
+          </li>
+        }
+      </ul>
+    </div>
   } @else {
     <div class="secciones-cell__empty">No hay secciones registradas</div>
   }

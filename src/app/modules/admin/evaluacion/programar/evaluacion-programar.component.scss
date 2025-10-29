@@ -194,8 +194,24 @@
     padding-block: 0.75rem;
 }
 
+:host ::ng-deep .schedule__grid .program-grid__actions-cell {
+    justify-content: center;
+    gap: 0.35rem;
+}
+
 :host ::ng-deep .schedule__grid .ag-cell-wrap-text {
     align-items: flex-start;
+}
+
+:host ::ng-deep .schedule__grid .ag-pinned-right-cols-container,
+:host ::ng-deep .schedule__grid .ag-pinned-right-header {
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: -8px 0 24px rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(6px);
+}
+
+:host ::ng-deep .schedule__grid .ag-pinned-right-header .ag-header-cell {
+    border-color: transparent;
 }
 
 .program-grid__cell-title {
