@@ -4,47 +4,69 @@
       <mat-card-header>
         <mat-card-title>Reporte: Matrículas por sede y ciclo</mat-card-title>
         <mat-card-subtitle>
-          Selecciona una sede y luego un ciclo académico para visualizar a los alumnos matriculados.
+          Selecciona una sede y luego un ciclo académico para visualizar a los
+          alumnos matriculados.
         </mat-card-subtitle>
       </mat-card-header>
 
       <mat-card-content>
-        <form [formGroup]="filtrosForm" class="reporte-matriculas__filtros" novalidate>
+        <form [formGroup]="filtrosForm" class="reporte-matriculas__filtros"
+          novalidate>
+
+          <div
+            class="reporte-matriculas__control reporte-matriculas__control--toggle">
+            <span class="reporte-matriculas__label"
+              id="reporte-matriculas-ciclo-label">Ciclos a buscar</span>
+            <mat-button-toggle-group
+              formControlName="cicloFiltro"
+              class="reporte-matriculas__toggle"
+              aria-labelledby="reporte-matriculas-ciclo-label">
+              @for (opcion of cicloFiltroOpciones; track opcion.value) {
+              <mat-button-toggle [value]="opcion.value">
+                {{ opcion.label }}
+              </mat-button-toggle>
+              }
+            </mat-button-toggle-group>
+          </div>
+
           <div class="reporte-matriculas__fila">
             <div class="reporte-matriculas__control">
-              <mat-form-field appearance="fill" class="reporte-matriculas__campo">
+              <mat-form-field appearance="fill"
+                class="reporte-matriculas__campo">
                 <mat-label>Sede</mat-label>
                 <mat-select
                   formControlName="sedeId"
                   [disabled]="(estaCargandoSedes$ | async) ?? false"
-                  panelClass="reporte-matriculas__select"
-                >
+                  panelClass="reporte-matriculas__select">
                   @if ((estaCargandoSedes$ | async) ?? false) {
-                    <mat-option disabled>Cargando sedes...</mat-option>
+                  <mat-option disabled>Cargando sedes...</mat-option>
                   }
                   @for (sede of sedes$ | async; track sede.id) {
-                    <mat-option [value]="sede.id">{{ sede.nombre }}</mat-option>
+                  <mat-option [value]="sede.id">{{ sede.nombre }}</mat-option>
                   }
                 </mat-select>
-                @if (filtrosForm.controls.sedeId.hasError('required') && filtrosForm.controls.sedeId.touched) {
-                  <mat-error>Selecciona una sede para continuar.</mat-error>
+                @if (filtrosForm.controls.sedeId.hasError('required') &&
+                filtrosForm.controls.sedeId.touched) {
+                <mat-error>Selecciona una sede para continuar.</mat-error>
                 }
               </mat-form-field>
             </div>
 
             <div class="reporte-matriculas__control">
-              <mat-form-field appearance="fill" class="reporte-matriculas__campo reporte-matriculas__campo--buscador">
+              <mat-form-field appearance="fill"
+                class="reporte-matriculas__campo reporte-matriculas__campo--buscador">
                 <mat-label>Buscar ciclo</mat-label>
                 <input
                   matInput
                   type="text"
                   placeholder="Nombre - Fecha inicio - Fecha fin"
                   [matAutocomplete]="cicloAutocomplete"
-                  [formControl]="cicloBusquedaControl"
-                />
+                  [formControl]="cicloBusquedaControl" />
                 <mat-icon matSuffix>search</mat-icon>
-                @if (filtrosForm.controls.cicloId.hasError('required') && filtrosForm.controls.cicloId.touched) {
-                  <mat-error>Selecciona un ciclo para generar el reporte.</mat-error>
+                @if (filtrosForm.controls.cicloId.hasError('required') &&
+                filtrosForm.controls.cicloId.touched) {
+                <mat-error>Selecciona un ciclo para generar el
+                  reporte.</mat-error>
                 }
               </mat-form-field>
             </div>
@@ -55,8 +77,7 @@
                 color="primary"
                 type="button"
                 (click)="generarReporte()"
-                [disabled]="!filtrosForm.valid || (estaGenerandoReporte$ | async)"
-              >
+                [disabled]="!filtrosForm.valid || (estaGenerandoReporte$ | async)">
                 <mat-icon class="mr-2">summarize</mat-icon>
                 Reporte
               </button>
@@ -66,56 +87,40 @@
                 color="primary"
                 type="button"
                 (click)="limpiarFiltros()"
-                [disabled]="(estaGenerandoReporte$ | async)"
-              >
+                [disabled]="(estaGenerandoReporte$ | async)">
                 Limpiar
               </button>
             </div>
           </div>
 
-          <div class="reporte-matriculas__control reporte-matriculas__control--toggle">
-            <span class="reporte-matriculas__label" id="reporte-matriculas-ciclo-label">Ciclos a buscar</span>
-            <mat-button-toggle-group
-              formControlName="cicloFiltro"
-              class="reporte-matriculas__toggle"
-              aria-labelledby="reporte-matriculas-ciclo-label"
-            >
-              @for (opcion of cicloFiltroOpciones; track opcion.value) {
-                <mat-button-toggle [value]="opcion.value">
-                  {{ opcion.label }}
-                </mat-button-toggle>
-              }
-            </mat-button-toggle-group>
-          </div>
-
           <mat-autocomplete
             #cicloAutocomplete="matAutocomplete"
             [displayWith]="mostrarCicloEnBusqueda"
-            (optionSelected)="manejarCicloSeleccionado($event)"
-          >
+            (optionSelected)="manejarCicloSeleccionado($event)">
             @if ((estaCargandoCiclos$ | async) ?? false) {
-              <mat-option disabled>Cargando ciclos...</mat-option>
+            <mat-option disabled>Cargando ciclos...</mat-option>
             } @else {
-              @if (ciclosFiltrados$ | async; as ciclosFiltrados) {
-                @if (ciclosFiltrados.length === 0) {
-                  @if (filtrosForm.controls.sedeId.value === null) {
-                    <mat-option disabled>Selecciona una sede para buscar ciclos</mat-option>
-                  } @else {
-                    <mat-option disabled>No se encontraron ciclos</mat-option>
-                  }
-                }
-                @for (ciclo of ciclosFiltrados; track ciclo.id) {
-                  <mat-option [value]="ciclo">{{ describirCiclo(ciclo) }}</mat-option>
-                }
-              }
+            @if (ciclosFiltrados$ | async; as ciclosFiltrados) {
+            @if (ciclosFiltrados.length === 0) {
+            @if (filtrosForm.controls.sedeId.value === null) {
+            <mat-option disabled>Selecciona una sede para buscar
+              ciclos</mat-option>
+            } @else {
+            <mat-option disabled>No se encontraron ciclos</mat-option>
+            }
+            }
+            @for (ciclo of ciclosFiltrados; track ciclo.id) {
+            <mat-option [value]="ciclo">{{ describirCiclo(ciclo) }}</mat-option>
+            }
+            }
             }
           </mat-autocomplete>
         </form>
 
         @if (!(estaGenerandoReporte$ | async)) {
-          <div class="reporte-matriculas__resumen">
-            Total de matrículas: <strong>{{ totalFilas$ | async }}</strong>
-          </div>
+        <div class="reporte-matriculas__resumen">
+          Total de matrículas: <strong>{{ totalFilas$ | async }}</strong>
+        </div>
         }
 
         <div class="ag-theme-quartz reporte-matriculas__grid">
@@ -127,14 +132,13 @@
             domLayout="autoHeight"
             [animateRows]="true"
             (gridReady)="manejarGridReady($event)"
-            class="w-full"
-          ></ag-grid-angular>
+            class="w-full"></ag-grid-angular>
         </div>
 
         @if (mostrarSinDatos$ | async) {
-          <div class="reporte-matriculas__sin-datos">
-            No hay matrículas para mostrar con los filtros seleccionados.
-          </div>
+        <div class="reporte-matriculas__sin-datos">
+          No hay matrículas para mostrar con los filtros seleccionados.
+        </div>
         }
       </mat-card-content>
     </mat-card>
