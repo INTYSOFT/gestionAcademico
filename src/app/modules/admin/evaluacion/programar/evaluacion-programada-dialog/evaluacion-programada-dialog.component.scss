@@ -149,6 +149,18 @@
         text-orientation: mixed;
     }
 
+    &__item-heading {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        width: 100%;
+        direction: ltr;
+        writing-mode: horizontal-tb;
+        text-align: left;
+    }
+
     &__item-title {
         font-weight: 600;
         font-size: 1.4rem;
@@ -157,6 +169,8 @@
         overflow-wrap: break-word;
         writing-mode: horizontal-tb;
         text-orientation: mixed;
+        display: inline-flex;
+        align-items: center;
     }
 
     &__item-subtitle {
