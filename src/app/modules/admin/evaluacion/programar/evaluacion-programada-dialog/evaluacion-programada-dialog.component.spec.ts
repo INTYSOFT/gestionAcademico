@@ -110,7 +110,10 @@ describe('EvaluacionProgramadaDialogComponent', () => {
         form.controls['fechaInicio'].setValue(DateTime.fromISO('2024-06-10'));
         form.controls['horaInicio'].setValue('08:00');
         form.controls['horaFin'].setValue('09:30');
-        form.controls['seccionCicloIds'].setValue([1000]);
+
+        const available = (component as any).availableSeccionOptions$.value;
+        expect(available.length).toBeGreaterThan(0);
+        (component as any).addSeccion(available[0]);
 
         (component as any).submitForm();
         tick();

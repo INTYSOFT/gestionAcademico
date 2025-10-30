@@ -140,26 +140,92 @@
         }
       </div>
 
-      <mat-form-field appearance="outline" class="evaluacion-dialog__sections-select">
-        <mat-label>Secciones disponibles</mat-label>
-        <mat-select formControlName="seccionCicloIds" multiple>
-          @for (option of seccionOptions$ | async; track option) {
-            <mat-option [value]="option.seccionCicloId">
-              {{ option.label }}
-              @if (!option.activo) {
-                <span class="evaluacion-dialog__section-status">
-                  (inactiva)
-                </span>
+      <div class="evaluacion-dialog__sections-body">
+        <div class="evaluacion-dialog__list evaluacion-dialog__list--available">
+          <div class="evaluacion-dialog__list-header">
+            <h4>Disponibles</h4>
+            <span>Agrega secciones a la programación</span>
+          </div>
+
+          @if ((availableSeccionOptions$ | async) as disponibles) {
+            <div class="evaluacion-dialog__list-items">
+              @if (disponibles.length > 0) {
+                @for (option of disponibles; track trackBySeccionCicloId) {
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    class="evaluacion-dialog__list-item"
+                    (click)="addSeccion(option)"
+                  >
+                    <span class="evaluacion-dialog__item-label">{{ option.label }}</span>
+                    <mat-icon>add</mat-icon>
+                  </button>
+                }
               }
-            </mat-option>
+              @else {
+                <p class="evaluacion-dialog__empty">No hay secciones disponibles.</p>
+              }
+            </div>
           }
-        </mat-select>
-        @if (form.controls['seccionCicloIds'].hasError('required')) {
-          <mat-error>
-            Selecciona al menos una sección.
-          </mat-error>
-        }
-      </mat-form-field>
+        </div>
+
+        <div class="evaluacion-dialog__list evaluacion-dialog__list--selected">
+          <div class="evaluacion-dialog__list-header">
+            <h4>Seleccionadas</h4>
+            <span>Gestiona las secciones registradas</span>
+          </div>
+
+          @if ((selectedSecciones$ | async) as seleccionadas) {
+            <div class="evaluacion-dialog__list-items">
+              @if (seleccionadas.length > 0) {
+                @for (item of seleccionadas; track trackBySeccionCicloId) {
+                  <div class="evaluacion-dialog__selected-item">
+                    <div class="evaluacion-dialog__selected-info">
+                      <span class="evaluacion-dialog__item-label">{{ item.label }}</span>
+                      @if (item.registrado) {
+                        <span class="evaluacion-dialog__badge evaluacion-dialog__badge--registered">Registrada</span>
+                      }
+                      @if (!item.activoEnCiclo) {
+                        <span class="evaluacion-dialog__badge evaluacion-dialog__badge--warning">Fuera de ciclo</span>
+                      }
+                    </div>
+                    <div class="evaluacion-dialog__selected-actions">
+                      <mat-slide-toggle
+                        color="primary"
+                        [checked]="item.activo"
+                        (change)="toggleSeccionActivo(item, $event.checked)"
+                        class="evaluacion-dialog__selected-toggle"
+                      >
+                        Activo
+                      </mat-slide-toggle>
+                      <button
+                        mat-icon-button
+                        type="button"
+                        color="warn"
+                        (click)="removeSeccion(item)"
+                        [disabled]="item.registrado"
+                        aria-label="Quitar sección"
+                      >
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                }
+              }
+              @else {
+                <p class="evaluacion-dialog__empty">No hay secciones seleccionadas.</p>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (
+        form.controls['seccionCicloIds'].hasError('required') &&
+        (form.controls['seccionCicloIds'].touched || form.touched)
+      ) {
+        <p class="evaluacion-dialog__error">Selecciona al menos una sección.</p>
+      }
     </div>
   </mat-dialog-content>
 
