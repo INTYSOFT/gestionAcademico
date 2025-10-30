@@ -126,9 +126,7 @@ function validateDateRange(control: AbstractControl): ValidationErrors | null {
     imports: [
         AsyncPipe,
         ReactiveFormsModule,
-        AgGridAngular,
-        EvaluacionProgramarActionsCellComponent,
-        EvaluacionProgramarSeccionesCellComponent,
+        AgGridAngular,        
         MatButtonModule,
         MatButtonToggleModule,
         MatCardModule,
