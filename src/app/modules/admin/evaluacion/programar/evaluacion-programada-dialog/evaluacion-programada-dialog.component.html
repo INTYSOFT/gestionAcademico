@@ -163,7 +163,11 @@
                 @for (option of disponibles; track option.seccionCicloId) {
                   <article class="evaluacion-dialog__item">
                     <div class="evaluacion-dialog__item-text">
-                      <span class="evaluacion-dialog__item-title">{{ option.label }}</span>
+                      <div class="evaluacion-dialog__item-heading">
+                        <span class="evaluacion-dialog__item-title" [attr.title]="option.label">
+                          {{ option.label }}
+                        </span>
+                      </div>
                     </div>
                     <button
                       mat-icon-button
@@ -204,7 +208,11 @@
                   <article class="evaluacion-dialog__item evaluacion-dialog__item--selected">
                     <div class="evaluacion-dialog__item-content">
                       <div class="evaluacion-dialog__item-text">
-                        <span class="evaluacion-dialog__item-title">{{ seccion.label }}</span>
+                        <div class="evaluacion-dialog__item-heading">
+                          <span class="evaluacion-dialog__item-title" [attr.title]="seccion.label">
+                            {{ seccion.label }}
+                          </span>
+                        </div>
                         <span class="evaluacion-dialog__item-subtitle">
                           {{ seccion.registrado ? 'Registrada anteriormente' : 'Nueva sección' }}
                         </span>
