@@ -1,0 +1,199 @@
+<mat-card class="evaluaciones-programadas-card">
+    <mat-card-header>
+        <div class="card-header">
+            <div>
+                <mat-card-title>Reporte: Evaluaciones programadas</mat-card-title>
+                <mat-card-subtitle>
+                    Visualiza las programaciones activas y revisa el detalle de alumnos inscritos
+                    por evaluación.
+                </mat-card-subtitle>
+            </div>
+            <button
+                mat-icon-button
+                type="button"
+                class="refresh-button"
+                matTooltip="Limpiar filtros"
+                (click)="limpiarFiltros()"
+            >
+                <mat-icon>refresh</mat-icon>
+            </button>
+        </div>
+    </mat-card-header>
+
+    <mat-card-content>
+        <section class="filtros" [formGroup]="filtrosForm">
+            <div class="filtros__row">
+                <mat-form-field appearance="outline" class="filtro">
+                    <mat-label>Estado de la evaluación</mat-label>
+                    <mat-select formControlName="estadoId" placeholder="Selecciona un estado">
+                        @if (isLoadingEstados$ | async) {
+                            <mat-option disabled>Cargando estados...</mat-option>
+                        }
+                        @if (!(isLoadingEstados$ | async) && (estados$ | async)?.length === 0) {
+                            <mat-option disabled>No hay estados disponibles</mat-option>
+                        }
+                        @for (estado of estados$ | async; track trackPorId) {
+                            <mat-option [value]="estado.id">{{ estado.nombre }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+
+                <div class="filtro filtro--modo">
+                    <span class="filtro__label">Modo de búsqueda</span>
+                    <mat-button-toggle-group formControlName="modo" exclusive appearance="legacy">
+                        <mat-button-toggle [value]="'rango'" aria-label="Buscar por rango">
+                            Rango de fechas
+                        </mat-button-toggle>
+                        <mat-button-toggle [value]="'fecha-ciclo'" aria-label="Buscar por fecha y ciclo">
+                            Fecha y ciclo
+                        </mat-button-toggle>
+                    </mat-button-toggle-group>
+                </div>
+            </div>
+
+            <div class="filtros__row">
+                @if ((filtrosForm.controls.modo.value ?? 'rango') === 'rango') {
+                    <mat-form-field appearance="outline" class="filtro filtro--fecha">
+                        <mat-label>Rango de inicio</mat-label>
+                        <mat-date-range-input [rangePicker]="rangoPicker">
+                            <input matStartDate formControlName="fechaDesde" placeholder="Desde" />
+                            <input matEndDate formControlName="fechaHasta" placeholder="Hasta" />
+                        </mat-date-range-input>
+                        <mat-datepicker-toggle matSuffix [for]="rangoPicker"></mat-datepicker-toggle>
+                        <mat-date-range-picker
+                            #rangoPicker
+                            startView="multi-year"
+                            panelClass="filtro-date-range-picker"
+                        ></mat-date-range-picker>
+                        @if (rangoInvalido$ | async) {
+                            <mat-error>La fecha inicial no puede ser mayor que la final.</mat-error>
+                        }
+                    </mat-form-field>
+                } @else {
+                    <div class="filtros__row filtros__row--inline">
+                        <mat-form-field appearance="outline" class="filtro filtro--fecha">
+                            <mat-label>Fecha de inicio</mat-label>
+                            <input
+                                matInput
+                                formControlName="fechaUnica"
+                                [matDatepicker]="fechaPicker"
+                                placeholder="Selecciona una fecha"
+                            />
+                            <mat-datepicker-toggle matSuffix [for]="fechaPicker"></mat-datepicker-toggle>
+                            <mat-datepicker #fechaPicker startView="multi-year"></mat-datepicker>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="filtro filtro--ciclo">
+                            <mat-label>Ciclo</mat-label>
+                            <mat-select formControlName="cicloId" placeholder="Selecciona un ciclo">
+                                @if (isLoadingCiclos$ | async) {
+                                    <mat-option disabled>Cargando ciclos...</mat-option>
+                                }
+                                @if (!(isLoadingCiclos$ | async) && (ciclos$ | async)?.length === 0) {
+                                    <mat-option disabled>No hay ciclos disponibles</mat-option>
+                                }
+                                @for (ciclo of ciclos$ | async; track trackPorId) {
+                                    <mat-option [value]="ciclo.id">{{ ciclo.nombre }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <section class="programaciones">
+            @let programaciones = programaciones$ | async;
+            <header class="programaciones__header">
+                <h3>Programaciones encontradas</h3>
+                <div class="programaciones__estado">
+                    @if (isLoadingProgramaciones$ | async) {
+                        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+                    } @else if (programaciones?.length) {
+                        <span>{{ programaciones.length }} resultados</span>
+                    } @else {
+                        <span>Sin resultados</span>
+                    }
+                </div>
+            </header>
+
+            <mat-form-field appearance="outline" class="programaciones__selector">
+                <mat-label>Evaluación programada</mat-label>
+                <mat-select
+                    [formControl]="programacionControl"
+                    placeholder="Selecciona una programación"
+                >
+                    @if (isLoadingProgramaciones$ | async) {
+                        <mat-option disabled>Buscando programaciones...</mat-option>
+                    }
+                    @if (!(isLoadingProgramaciones$ | async) && (programaciones?.length ?? 0) === 0) {
+                        <mat-option disabled>No se encontraron programaciones.</mat-option>
+                    }
+                    @for (programacion of programaciones ?? []; track trackPorId) {
+                        <mat-option [value]="programacion.id">
+                            <div class="programacion-option">
+                                <span class="programacion-option__nombre">
+                                    {{ programacion.nombre }}
+                                </span>
+                                <span class="programacion-option__fecha">
+                                    {{ programacion.fechaInicio | date: 'dd/MM/yyyy' }}
+                                </span>
+                            </div>
+                        </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        </section>
+
+        <section class="resultados">
+            <header class="resultados__header">
+                <div class="resultados__info">
+                    <h3>Detalle de alumnos</h3>
+                    @let totalAlumnos = totalResultados$ | async;
+                    @if (totalAlumnos !== null && totalAlumnos !== undefined) {
+                        <span class="resultados__contador">{{ totalAlumnos }} alumnos encontrados</span>
+                    }
+                </div>
+                @let resumen = resumenFiltros$ | async;
+                @if (resumen) {
+                    <div class="resultados__resumen">
+                        @if (resumen[0]) {
+                            <span class="chip">Estado: {{ resumen[0]?.nombre }}</span>
+                        }
+                        <span class="chip">
+                            Búsqueda:
+                            @if (resumen[1] === 'rango') {
+                                Rango de fechas
+                            } @else {
+                                Fecha y ciclo
+                            }
+                        </span>
+                    </div>
+                }
+            </header>
+
+            <div class="resultados__grid" (window:resize)="manejarGridRedimension()">
+                @let consultas = consultas$ | async;
+                @if (isLoadingConsultas$ | async) {
+                    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+                }
+
+                @if (!(isLoadingConsultas$ | async) && (!consultas || consultas.length === 0)) {
+                    <div class="resultados__vacio">
+                        <mat-icon>groups</mat-icon>
+                        <p>Selecciona una programación para visualizar la lista de alumnos.</p>
+                    </div>
+                } @else {
+                    <ag-grid-angular
+                        class="ag-theme-quartz"
+                        [rowData]="consultas || []"
+                        [columnDefs]="columnDefs"
+                        [defaultColDef]="defaultColDef"
+                        [domLayout]="'autoHeight'"
+                        (gridReady)="manejarGridReady($event)"
+                    ></ag-grid-angular>
+                }
+            </div>
+        </section>
+    </mat-card-content>
+</mat-card>
