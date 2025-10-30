@@ -108,10 +108,9 @@
 
     &__item {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1.2rem;
-        padding: 1.2rem;
+        align-items: stretch;
+        gap: 1.6rem;
+        padding: 1.4rem;
         border-radius: 0.8rem;
         background-color: rgba(255, 255, 255, 0.92);
         border: 1px solid rgba(0, 0, 0, 0.05);
@@ -129,9 +128,9 @@
     }
 
     &__item-content {
-        display: flex;
+        display: grid;
+        grid-template-columns: 1fr auto;
         align-items: center;
-        justify-content: space-between;
         gap: 1.6rem;
         width: 100%;
     }
@@ -141,13 +140,15 @@
         flex-direction: column;
         gap: 0.4rem;
         min-width: 0;
+        flex: 1 1 auto;
     }
 
     &__item-title {
         font-weight: 600;
         font-size: 1.4rem;
         color: #1f3454;
-        word-break: break-word;
+        white-space: normal;
+        overflow-wrap: break-word;
     }
 
     &__item-subtitle {
@@ -158,6 +159,8 @@
     &__item-actions {
         display: flex;
         align-items: center;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
         gap: 1.2rem;
 
         mat-slide-toggle {
@@ -205,14 +208,16 @@ mat-dialog-actions {
         }
 
         &__item-content {
-            flex-direction: column;
+            grid-template-columns: 1fr;
             align-items: flex-start;
-            gap: 1rem;
+            gap: 1.2rem;
         }
 
         &__item-actions {
             width: 100%;
-            justify-content: space-between;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
     }
 }
