@@ -1,7 +1,8 @@
 .evaluacion-dialog {
     display: flex;
     flex-direction: column;
-    min-width: 640px;
+    width: min(100%, 960px);
+    min-width: 0;
 
     &__grid {
         display: grid;
@@ -29,7 +30,7 @@
     &__sections {
         display: flex;
         flex-direction: column;
-        gap: 1.2rem;
+        gap: 1.6rem;
         margin-top: 1.6rem;
     }
 
@@ -41,19 +42,147 @@
 
         h3 {
             margin: 0;
-            font-size: 1.6rem;
+            font-size: 1.8rem;
             font-weight: 600;
         }
     }
 
-    &__sections-select {
-        width: 100%;
+    &__sections-grid {
+        display: grid;
+        gap: 1.6rem;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        align-items: stretch;
     }
 
-    &__section-status {
+    &__list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #fafafb 100%);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 16px;
+        padding: 1.4rem;
+        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+        min-height: 320px;
+    }
+
+    &__list-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.2rem;
+
+        h4 {
+            margin: 0;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+    }
+
+    &__list-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    &__list-empty {
+        margin: auto 0;
+        text-align: center;
+        font-size: 1.3rem;
+        color: rgba(15, 23, 42, 0.58);
+        padding: 1.6rem 0.8rem;
+    }
+
+    &__items {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        max-height: 320px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+
+    &__item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.2rem;
+        padding: 1rem 1.4rem;
+        border-radius: 14px;
+        background: rgba(15, 23, 42, 0.04);
+        transition: background-color 150ms ease, box-shadow 150ms ease;
+
+        &:hover {
+            background: rgba(59, 130, 246, 0.08);
+            box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.18);
+        }
+    }
+
+    &__item-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        min-width: 0;
+    }
+
+    &__item-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #0f172a;
+        word-break: break-word;
+    }
+
+    &__item-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+    }
+
+    &__item-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    &__item-actions--selected {
+        gap: 1.2rem;
+    }
+
+    &__chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        border-radius: 999px;
+        padding: 0.2rem 0.9rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+    }
+
+    &__chip--inactive {
+        background: rgba(248, 113, 113, 0.18);
+        color: #b91c1c;
+    }
+
+    &__chip--registered {
+        background: rgba(59, 130, 246, 0.18);
+        color: #1d4ed8;
+    }
+
+    &__chip--new {
+        background: rgba(74, 222, 128, 0.18);
+        color: #15803d;
+    }
+
+    &__sections-error {
         font-size: 1.2rem;
-        color: rgba(0, 0, 0, 0.54);
-        margin-left: 0.8rem;
+        font-weight: 600;
+        color: #b91c1c;
     }
 }
 
@@ -73,6 +202,15 @@ mat-dialog-actions {
 
 @media (max-width: 720px) {
     .evaluacion-dialog {
-        min-width: 100%;
+        width: 100%;
+
+        &__list {
+            min-height: 280px;
+            padding: 1.2rem;
+        }
+
+        &__items {
+            max-height: none;
+        }
     }
 }

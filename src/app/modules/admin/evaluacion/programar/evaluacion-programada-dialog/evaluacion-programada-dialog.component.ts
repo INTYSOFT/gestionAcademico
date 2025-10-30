@@ -20,6 +20,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
 import {
     BehaviorSubject,
     EMPTY,
@@ -91,6 +92,15 @@ interface SeccionOption {
     activo: boolean;
 }
 
+interface SelectedSeccionView {
+    seccionCicloId: number;
+    seccionId: number | null;
+    label: string;
+    activo: boolean;
+    registrado: boolean;
+    evaluacionSeccionId: number | null;
+}
+
 @Component({
     selector: 'app-evaluacion-programada-dialog',
     standalone: true,
@@ -111,7 +121,8 @@ interface SeccionOption {
     MatSlideToggleModule,
     MatProgressSpinnerModule,
     MatDividerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatIconModule
 ],
 })
 export class EvaluacionProgramadaDialogComponent implements OnInit {
@@ -123,6 +134,16 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
     protected readonly carreras$ = new BehaviorSubject<Carrera[]>([]);
     protected readonly secciones$ = new BehaviorSubject<Seccion[]>([]);
     protected readonly seccionOptions$ = new BehaviorSubject<SeccionOption[]>([]);
+    protected readonly selectedSecciones$ = new BehaviorSubject<SelectedSeccionView[]>([]);
+    protected readonly availableSeccionOptions$ = combineLatest([
+        this.seccionOptions$,
+        this.selectedSecciones$,
+    ]).pipe(
+        map(([options, selected]) => {
+            const selectedIds = new Set(selected.map((item) => item.seccionCicloId));
+            return options.filter((option) => !selectedIds.has(option.seccionCicloId));
+        })
+    );
 
     protected readonly isLoadingCatalogs$ = new BehaviorSubject<boolean>(false);
     protected readonly isLoadingCiclos$ = new BehaviorSubject<boolean>(false);
@@ -306,7 +327,8 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
                 switchMap((cicloId) => {
                     this.revalidateFechaInicio();
                     const sedeId = this.form.controls['sedeId'].value;
-                    this.form.controls['seccionCicloIds'].setValue([]);
+                    this.form.controls['seccionCicloIds'].setValue([], { emitEvent: false });
+                    this.selectedSecciones$.next([]);
                     this.seccionOptions$.next([]);
                     this.setControlEnabled('seccionCicloIds', false);
 
@@ -340,10 +362,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
                 this.seccionOptions$.next(options);
                 this.setControlEnabled('seccionCicloIds', options.length > 0);
 
-                if (this.data.mode === 'edit' && this.initialSeccionRecords.length) {
-                    const initialIds = this.initialSeccionRecords.map((item) => item.seccionCicloId);
-                    this.form.controls['seccionCicloIds'].setValue(initialIds);
-                }
+                this.syncSelectedSeccionesWithOptions(options);
             });
     }
 
@@ -389,6 +408,54 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
         });
 
         return seccionOptions;
+    }
+
+    protected addSeccion(option: SeccionOption): void {
+        const current = this.selectedSecciones$.value;
+        if (current.some((item) => item.seccionCicloId === option.seccionCicloId)) {
+            return;
+        }
+
+        const existingRecord = this.initialSeccionRecords.find(
+            (record) => record.seccionCicloId === option.seccionCicloId
+        );
+
+        const updated = [
+            ...current,
+            {
+                seccionCicloId: option.seccionCicloId,
+                seccionId: option.seccionId,
+                label: option.label,
+                activo: option.activo,
+                registrado: !!existingRecord,
+                evaluacionSeccionId: existingRecord?.id ?? null,
+            },
+        ];
+
+        this.selectedSecciones$.next(updated);
+        this.updateSeccionControl(updated, true);
+    }
+
+    protected removeSeccion(seccionCicloId: number): void {
+        const current = this.selectedSecciones$.value;
+        const target = current.find((item) => item.seccionCicloId === seccionCicloId);
+
+        if (!target || target.registrado) {
+            return;
+        }
+
+        const updated = current.filter((item) => item.seccionCicloId !== seccionCicloId);
+        this.selectedSecciones$.next(updated);
+        this.updateSeccionControl(updated, true);
+    }
+
+    protected toggleSeccionActivo(seccionCicloId: number, activo: boolean): void {
+        const updated = this.selectedSecciones$.value.map((item) =>
+            item.seccionCicloId === seccionCicloId ? { ...item, activo } : item
+        );
+
+        this.selectedSecciones$.next(updated);
+        this.updateSeccionControl(updated, true);
     }
 
     private getSeccionLabel(seccionId: number | null): string {
@@ -683,70 +750,6 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
         return null;
     }
 
-    private syncSecciones(
-        evaluacionId: number,
-        selectedSeccionCicloIds: number[]
-    ): Observable<EvaluacionProgramadaSeccion[]> {
-        const options = this.seccionOptions$.value;
-        const existing = new Map<number, EvaluacionProgramadaSeccion>(
-            this.initialSeccionRecords.map((record) => [record.seccionCicloId, record])
-        );
-
-        const operations: Observable<EvaluacionProgramadaSeccion>[] = [];
-
-        selectedSeccionCicloIds.forEach((seccionCicloId) => {
-            const seccionId = options.find((option) => option.seccionCicloId === seccionCicloId)?.seccionId ?? null;
-            const current = existing.get(seccionCicloId);
-
-            if (!current) {
-                const payload: CreateEvaluacionProgramadaSeccionPayload = {
-                    evaluacionProgramadaId: evaluacionId,
-                    seccionCicloId,
-                    seccionId,
-                    activo: true,
-                };
-                operations.push(this.evaluacionProgramadaSeccionesService.create(payload));
-            } else if (!current.activo || current.seccionId !== seccionId) {
-                const payload: UpdateEvaluacionProgramadaSeccionPayload = {
-                    evaluacionProgramadaId: evaluacionId,
-                    seccionCicloId,
-                    seccionId,
-                    activo: true,
-                };
-                operations.push(this.evaluacionProgramadaSeccionesService.update(current.id, payload));
-            } else {
-                operations.push(of(current));
-            }
-        });
-
-        this.initialSeccionRecords.forEach((record) => {
-            if (!selectedSeccionCicloIds.includes(record.seccionCicloId) && record.activo) {
-                const payload: UpdateEvaluacionProgramadaSeccionPayload = {
-                    evaluacionProgramadaId: evaluacionId,
-                    seccionCicloId: record.seccionCicloId,
-                    seccionId: record.seccionId ?? null,
-                    activo: false,
-                };
-                operations.push(this.evaluacionProgramadaSeccionesService.update(record.id, payload));
-            } else if (!selectedSeccionCicloIds.includes(record.seccionCicloId)) {
-                operations.push(of(record));
-            }
-        });
-
-        if (!operations.length) {
-            return of([...this.initialSeccionRecords]);
-        }
-
-        return forkJoin(operations).pipe(
-            map((results) => {
-                const unique = new Map<number, EvaluacionProgramadaSeccion>();
-                results.forEach((item) => unique.set(item.id, item));
-                this.initialSeccionRecords = Array.from(unique.values());
-                return this.initialSeccionRecords;
-            })
-        );
-    }
-
     private handleSubmitStream(): void {
         this.submit$
             .pipe(
@@ -767,15 +770,12 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
                         return EMPTY;
                     }
 
-                    const { seccionCicloIds } = this.form.getRawValue() as {
-                        seccionCicloIds: number[];
-                    };
-                    const selectedSeccionIds = seccionCicloIds ?? [];
+                    const selectedSecciones = this.selectedSecciones$.value;
 
                     this.isSaving$.next(true);
                     this.dialogRef.disableClose = true;
 
-                    return this.persistEvaluacion(payload, selectedSeccionIds).pipe(
+                    return this.persistEvaluacion(payload, selectedSecciones).pipe(
                         finalize(() => {
                             this.isSaving$.next(false);
                             this.dialogRef.disableClose = false;
@@ -801,7 +801,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
 
     private persistEvaluacion(
         payload: CreateEvaluacionProgramadaPayload,
-        selectedSeccionIds: number[]
+        selectedSecciones: SelectedSeccionView[]
     ): Observable<{ evaluacion: EvaluacionProgramada; secciones: EvaluacionProgramadaSeccion[] }> {
         const save$ =
             this.data.mode === 'create'
@@ -813,10 +813,165 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
 
         return save$.pipe(
             switchMap((evaluacion) =>
-                this.syncSecciones(evaluacion.id, selectedSeccionIds).pipe(
+                this.syncSecciones(evaluacion.id, selectedSecciones).pipe(
                     map((secciones) => ({ evaluacion, secciones }))
                 )
             )
         );
+    }
+
+    private updateSeccionControl(selected: SelectedSeccionView[], touch = false): void {
+        const control = this.form.controls['seccionCicloIds'];
+        control.setValue(selected.map((item) => item.seccionCicloId), { emitEvent: false });
+        if (touch) {
+            control.markAsTouched({ onlySelf: true });
+        }
+        control.updateValueAndValidity({ emitEvent: false });
+    }
+
+    private syncSelectedSeccionesWithOptions(options: SeccionOption[]): void {
+        const optionMap = new Map(options.map((option) => [option.seccionCicloId, option]));
+        const current = this.selectedSecciones$.value;
+
+        if (!current.length && this.initialSeccionRecords.length) {
+            const restored = this.initialSeccionRecords.map((record) => {
+                const option = optionMap.get(record.seccionCicloId);
+                return {
+                    seccionCicloId: record.seccionCicloId,
+                    seccionId: option?.seccionId ?? record.seccionId ?? null,
+                    label: option?.label ?? this.getSeccionLabel(record.seccionId ?? null),
+                    activo: record.activo,
+                    registrado: true,
+                    evaluacionSeccionId: record.id,
+                };
+            });
+
+            this.selectedSecciones$.next(restored);
+            this.updateSeccionControl(restored);
+            return;
+        }
+
+        if (!current.length) {
+            this.selectedSecciones$.next([]);
+            this.updateSeccionControl([]);
+            return;
+        }
+
+        const updated = current.map((item) => {
+            const option = optionMap.get(item.seccionCicloId);
+            if (!option) {
+                return item;
+            }
+
+            return {
+                ...item,
+                label: option.label,
+                seccionId: option.seccionId,
+            };
+        });
+
+        this.selectedSecciones$.next(updated);
+        this.updateSeccionControl(updated);
+    }
+
+    private syncSecciones(
+        evaluacionId: number,
+        selectedSecciones: SelectedSeccionView[]
+    ): Observable<EvaluacionProgramadaSeccion[]> {
+        const existingBySeccionCicloId = new Map(
+            this.initialSeccionRecords.map((record) => [record.seccionCicloId, record])
+        );
+        const operations: Observable<EvaluacionProgramadaSeccion>[] = [];
+
+        selectedSecciones.forEach((item) => {
+            const current = existingBySeccionCicloId.get(item.seccionCicloId);
+            const payloadBase = {
+                evaluacionProgramadaId: evaluacionId,
+                seccionCicloId: item.seccionCicloId,
+                seccionId: item.seccionId ?? null,
+                activo: item.activo,
+            };
+
+            if (!current) {
+                operations.push(
+                    this.evaluacionProgramadaSeccionesService.create({
+                        ...payloadBase,
+                    } as CreateEvaluacionProgramadaSeccionPayload)
+                );
+            } else {
+                existingBySeccionCicloId.delete(item.seccionCicloId);
+
+                if (current.activo !== item.activo || current.seccionId !== payloadBase.seccionId) {
+                    operations.push(
+                        this.evaluacionProgramadaSeccionesService.update(
+                            current.id,
+                            payloadBase as UpdateEvaluacionProgramadaSeccionPayload
+                        )
+                    );
+                } else {
+                    operations.push(of(current));
+                }
+            }
+        });
+
+        existingBySeccionCicloId.forEach((record) => {
+            if (!record.activo) {
+                operations.push(of(record));
+                return;
+            }
+
+            const payload: UpdateEvaluacionProgramadaSeccionPayload = {
+                evaluacionProgramadaId: evaluacionId,
+                seccionCicloId: record.seccionCicloId,
+                seccionId: record.seccionId ?? null,
+                activo: false,
+            };
+
+            operations.push(this.evaluacionProgramadaSeccionesService.update(record.id, payload));
+        });
+
+        if (!operations.length) {
+            return of([...this.initialSeccionRecords]);
+        }
+
+        return forkJoin(operations).pipe(
+            map((results) => {
+                const unique = new Map<number, EvaluacionProgramadaSeccion>();
+                results.forEach((item) => unique.set(item.id, item));
+                this.initialSeccionRecords = Array.from(unique.values());
+                this.refreshSelectedAfterSync();
+                return this.initialSeccionRecords;
+            })
+        );
+    }
+
+    private refreshSelectedAfterSync(): void {
+        if (!this.selectedSecciones$.value.length) {
+            return;
+        }
+
+        const bySeccionCicloId = new Map(
+            this.initialSeccionRecords.map((record) => [record.seccionCicloId, record])
+        );
+
+        const updated = this.selectedSecciones$.value
+            .map((item) => {
+                const record = bySeccionCicloId.get(item.seccionCicloId);
+                if (!record) {
+                    return null;
+                }
+
+                return {
+                    ...item,
+                    activo: record.activo,
+                    registrado: true,
+                    evaluacionSeccionId: record.id,
+                    seccionId: record.seccionId ?? null,
+                };
+            })
+            .filter((item): item is SelectedSeccionView => item !== null);
+
+        this.selectedSecciones$.next(updated);
+        this.updateSeccionControl(updated);
     }
 }
