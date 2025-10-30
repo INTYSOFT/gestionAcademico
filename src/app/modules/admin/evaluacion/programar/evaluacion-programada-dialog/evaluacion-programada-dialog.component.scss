@@ -1,7 +1,9 @@
 .evaluacion-dialog {
     display: flex;
     flex-direction: column;
-    min-width: 640px;
+    width: min(100%, 960px);
+    max-width: 100%;
+    gap: 1.6rem;
 
     &__grid {
         display: grid;
@@ -26,13 +28,6 @@
         margin-top: 0.4rem;
     }
 
-    &__sections {
-        display: flex;
-        flex-direction: column;
-        gap: 1.2rem;
-        margin-top: 1.6rem;
-    }
-
     &__sections-header {
         display: flex;
         align-items: center;
@@ -46,14 +41,144 @@
         }
     }
 
-    &__sections-select {
+    &__sections {
+        display: flex;
+        flex-direction: column;
+        gap: 1.6rem;
+        margin-top: 1.6rem;
+    }
+
+    &__sections-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.6rem;
+    }
+
+    &__badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.8rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 9999px;
+        background: rgba(33, 150, 243, 0.12);
+        color: #1976d2;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    &__list {
+        background: linear-gradient(135deg, #ffffff, #f7f9fc);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 1.2rem;
+        padding: 1.6rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+        box-shadow: 0 12px 32px rgba(31, 52, 84, 0.08);
+
+        &--accent {
+            background: linear-gradient(135deg, #f8fbff, #eef4ff);
+            border-color: rgba(25, 118, 210, 0.24);
+        }
+    }
+
+    &__list-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+
+        h4 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1f3454;
+        }
+    }
+
+    &__list-body {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        max-height: 320px;
+        overflow-y: auto;
+        padding-right: 0.4rem;
+    }
+
+    &__item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.2rem;
+        padding: 1.2rem;
+        border-radius: 0.8rem;
+        background-color: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(31, 52, 84, 0.12);
+        }
+
+        &--selected {
+            background-color: rgba(25, 118, 210, 0.08);
+            border-color: rgba(25, 118, 210, 0.24);
+        }
+    }
+
+    &__item-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.6rem;
         width: 100%;
     }
 
-    &__section-status {
+    &__item-text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        min-width: 0;
+    }
+
+    &__item-title {
+        font-weight: 600;
+        font-size: 1.4rem;
+        color: #1f3454;
+        word-break: break-word;
+    }
+
+    &__item-subtitle {
         font-size: 1.2rem;
-        color: rgba(0, 0, 0, 0.54);
-        margin-left: 0.8rem;
+        color: rgba(31, 52, 84, 0.72);
+    }
+
+    &__item-actions {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+
+        mat-slide-toggle {
+            white-space: nowrap;
+        }
+    }
+
+    &__empty {
+        margin: 0;
+        font-size: 1.3rem;
+        color: rgba(31, 52, 84, 0.56);
+        text-align: center;
+        padding: 1.2rem;
+        border-radius: 0.8rem;
+        background-color: rgba(0, 0, 0, 0.03);
+    }
+
+    &__sections-error {
+        color: #d32f2f;
+        font-size: 1.3rem;
+        font-weight: 500;
     }
 }
 
@@ -73,6 +198,21 @@ mat-dialog-actions {
 
 @media (max-width: 720px) {
     .evaluacion-dialog {
-        min-width: 100%;
+        width: 100%;
+
+        &__sections-grid {
+            grid-template-columns: 1fr;
+        }
+
+        &__item-content {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        &__item-actions {
+            width: 100%;
+            justify-content: space-between;
+        }
     }
 }
