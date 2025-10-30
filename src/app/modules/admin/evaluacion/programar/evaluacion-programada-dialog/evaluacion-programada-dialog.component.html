@@ -147,7 +147,11 @@
           <div class="evaluacion-dialog__list-header">
             <h4>Secciones disponibles</h4>
             <span class="evaluacion-dialog__badge" aria-hidden="true">
+
+              @if (availableSeccionOptions$ | async; as disponibles) {
+
               @if ((availableSeccionOptions$ | async) as disponibles) {
+
                 {{ disponibles.length }}
               } @else {
                 0
@@ -156,7 +160,11 @@
           </div>
 
           <div class="evaluacion-dialog__list-body">
+
+            @if (availableSeccionOptions$ | async; as disponibles) {
+
             @if ((availableSeccionOptions$ | async) as disponibles) {
+
               @if (disponibles.length === 0) {
                 <p class="evaluacion-dialog__empty">No hay secciones para agregar.</p>
               } @else {
@@ -185,7 +193,11 @@
           <div class="evaluacion-dialog__list-header">
             <h4>Secciones seleccionadas</h4>
             <span class="evaluacion-dialog__badge" aria-hidden="true">
+
+              @if (selectedSecciones$ | async; as seleccionadas) {
+
               @if ((selectedSecciones$ | async) as seleccionadas) {
+
                 {{ seleccionadas.length }}
               } @else {
                 0
@@ -194,7 +206,11 @@
           </div>
 
           <div class="evaluacion-dialog__list-body">
+
+            @if (selectedSecciones$ | async; as seleccionadas) {
+
             @if ((selectedSecciones$ | async) as seleccionadas) {
+
               @if (seleccionadas.length === 0) {
                 <p class="evaluacion-dialog__empty">Selecciona al menos una sección.</p>
               } @else {
