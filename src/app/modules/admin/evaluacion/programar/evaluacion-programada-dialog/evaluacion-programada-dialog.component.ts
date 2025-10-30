@@ -8,7 +8,14 @@ import {
     ViewEncapsulation,
     inject,
 } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+    AbstractControl,
+    FormBuilder,
+    FormGroup,
+    ReactiveFormsModule,
+    ValidationErrors,
+    Validators,
+} from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -20,6 +27,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
 import {
     BehaviorSubject,
     EMPTY,
@@ -89,7 +97,10 @@ interface SeccionOption {
     seccionId: number | null;
     label: string;
     activo: boolean;
+    registrado: boolean;
 }
+
+interface SelectedSeccion extends SeccionOption {}
 
 @Component({
     selector: 'app-evaluacion-programada-dialog',
@@ -111,7 +122,8 @@ interface SeccionOption {
     MatSlideToggleModule,
     MatProgressSpinnerModule,
     MatDividerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatIconModule
 ],
 })
 export class EvaluacionProgramadaDialogComponent implements OnInit {
@@ -123,6 +135,18 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
     protected readonly carreras$ = new BehaviorSubject<Carrera[]>([]);
     protected readonly secciones$ = new BehaviorSubject<Seccion[]>([]);
     protected readonly seccionOptions$ = new BehaviorSubject<SeccionOption[]>([]);
+    protected readonly selectedSecciones$ = new BehaviorSubject<SelectedSeccion[]>([]);
+    protected readonly availableSeccionOptions$ = combineLatest([
+        this.seccionOptions$,
+        this.selectedSecciones$,
+    ]).pipe(
+        map(([options, selected]) => {
+            const selectedIds = new Set(selected.map((item) => item.seccionCicloId));
+            return options
+                .filter((option) => !selectedIds.has(option.seccionCicloId))
+                .sort((a, b) => a.label.localeCompare(b.label));
+        })
+    );
 
     protected readonly isLoadingCatalogs$ = new BehaviorSubject<boolean>(false);
     protected readonly isLoadingCiclos$ = new BehaviorSubject<boolean>(false);
@@ -185,8 +209,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
             carreraId: this.fb.control<number | null>(null),
             activo: this.fb.control(true, { nonNullable: true }),
             seccionCicloIds: this.fb.control<number[]>({ value: [], disabled: true }, {
-                validators: [Validators.required],
-                nonNullable: true,
+                validators: [this.seccionSelectionValidator.bind(this)],
             }),
         });
 
@@ -256,7 +279,8 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
                 takeUntilDestroyed(this.destroyRef),
                 switchMap((sedeId) => {
                     this.form.controls['cicloId'].setValue(null);
-                    this.form.controls['seccionCicloIds'].setValue([]);
+                    this.form.controls['seccionCicloIds'].setValue([], { emitEvent: false });
+                    this.form.controls['seccionCicloIds'].updateValueAndValidity({ onlySelf: true });
                     this.filteredCiclos$.next([]);
                     this.setControlEnabled('seccionCicloIds', false);
 
@@ -306,8 +330,10 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
                 switchMap((cicloId) => {
                     this.revalidateFechaInicio();
                     const sedeId = this.form.controls['sedeId'].value;
-                    this.form.controls['seccionCicloIds'].setValue([]);
+                    this.form.controls['seccionCicloIds'].setValue([], { emitEvent: false });
+                    this.form.controls['seccionCicloIds'].updateValueAndValidity({ onlySelf: true });
                     this.seccionOptions$.next([]);
+                    this.selectedSecciones$.next([]);
                     this.setControlEnabled('seccionCicloIds', false);
 
                     if (
@@ -338,12 +364,10 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
             .subscribe((seccionCiclos) => {
                 const options = this.buildSeccionOptions(seccionCiclos);
                 this.seccionOptions$.next(options);
+                this.initializeSelectedSecciones(options);
                 this.setControlEnabled('seccionCicloIds', options.length > 0);
 
-                if (this.data.mode === 'edit' && this.initialSeccionRecords.length) {
-                    const initialIds = this.initialSeccionRecords.map((item) => item.seccionCicloId);
-                    this.form.controls['seccionCicloIds'].setValue(initialIds);
-                }
+                this.updateSelectedControl();
             });
     }
 
@@ -367,15 +391,22 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
     }
 
     private buildSeccionOptions(seccionCiclos: SeccionCiclo[]): SeccionOption[] {
-        const initialIds = new Set(this.initialSeccionRecords.map((item) => item.seccionCicloId));
+        const initialRecords = new Map(
+            this.initialSeccionRecords.map((record) => [record.seccionCicloId, record])
+        );
+
         const seccionOptions: SeccionOption[] = seccionCiclos
-            .filter((seccionCiclo) => seccionCiclo.activo || initialIds.has(seccionCiclo.id))
-            .map((seccionCiclo) => ({
-                seccionCicloId: seccionCiclo.id,
-                seccionId: seccionCiclo.seccionId,
-                label: this.getSeccionLabel(seccionCiclo.seccionId),
-                activo: seccionCiclo.activo,
-            }));
+            .filter((seccionCiclo) => seccionCiclo.activo || initialRecords.has(seccionCiclo.id))
+            .map((seccionCiclo) => {
+                const registro = initialRecords.get(seccionCiclo.id);
+                return {
+                    seccionCicloId: seccionCiclo.id,
+                    seccionId: seccionCiclo.seccionId,
+                    label: this.getSeccionLabel(seccionCiclo.seccionId),
+                    activo: registro ? registro.activo : seccionCiclo.activo,
+                    registrado: !!registro,
+                };
+            });
 
         this.initialSeccionRecords.forEach((record) => {
             if (!seccionOptions.some((option) => option.seccionCicloId === record.seccionCicloId)) {
@@ -384,11 +415,12 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
                     seccionId: record.seccionId ?? null,
                     label: this.getSeccionLabel(record.seccionId ?? null),
                     activo: record.activo,
+                    registrado: true,
                 });
             }
         });
 
-        return seccionOptions;
+        return seccionOptions.sort((a, b) => a.label.localeCompare(b.label));
     }
 
     private getSeccionLabel(seccionId: number | null): string {
@@ -685,33 +717,31 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
 
     private syncSecciones(
         evaluacionId: number,
-        selectedSeccionCicloIds: number[]
+        selectedSecciones: SelectedSeccion[]
     ): Observable<EvaluacionProgramadaSeccion[]> {
-        const options = this.seccionOptions$.value;
         const existing = new Map<number, EvaluacionProgramadaSeccion>(
             this.initialSeccionRecords.map((record) => [record.seccionCicloId, record])
         );
 
         const operations: Observable<EvaluacionProgramadaSeccion>[] = [];
 
-        selectedSeccionCicloIds.forEach((seccionCicloId) => {
-            const seccionId = options.find((option) => option.seccionCicloId === seccionCicloId)?.seccionId ?? null;
-            const current = existing.get(seccionCicloId);
+        selectedSecciones.forEach((seccion) => {
+            const current = existing.get(seccion.seccionCicloId);
 
             if (!current) {
                 const payload: CreateEvaluacionProgramadaSeccionPayload = {
                     evaluacionProgramadaId: evaluacionId,
-                    seccionCicloId,
-                    seccionId,
-                    activo: true,
+                    seccionCicloId: seccion.seccionCicloId,
+                    seccionId: seccion.seccionId ?? null,
+                    activo: seccion.activo,
                 };
                 operations.push(this.evaluacionProgramadaSeccionesService.create(payload));
-            } else if (!current.activo || current.seccionId !== seccionId) {
+            } else if (current.activo !== seccion.activo || current.seccionId !== seccion.seccionId) {
                 const payload: UpdateEvaluacionProgramadaSeccionPayload = {
                     evaluacionProgramadaId: evaluacionId,
-                    seccionCicloId,
-                    seccionId,
-                    activo: true,
+                    seccionCicloId: seccion.seccionCicloId,
+                    seccionId: seccion.seccionId ?? null,
+                    activo: seccion.activo,
                 };
                 operations.push(this.evaluacionProgramadaSeccionesService.update(current.id, payload));
             } else {
@@ -720,7 +750,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
         });
 
         this.initialSeccionRecords.forEach((record) => {
-            if (!selectedSeccionCicloIds.includes(record.seccionCicloId) && record.activo) {
+            if (!selectedSecciones.some((seccion) => seccion.seccionCicloId === record.seccionCicloId)) {
                 const payload: UpdateEvaluacionProgramadaSeccionPayload = {
                     evaluacionProgramadaId: evaluacionId,
                     seccionCicloId: record.seccionCicloId,
@@ -728,8 +758,6 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
                     activo: false,
                 };
                 operations.push(this.evaluacionProgramadaSeccionesService.update(record.id, payload));
-            } else if (!selectedSeccionCicloIds.includes(record.seccionCicloId)) {
-                operations.push(of(record));
             }
         });
 
@@ -767,15 +795,12 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
                         return EMPTY;
                     }
 
-                    const { seccionCicloIds } = this.form.getRawValue() as {
-                        seccionCicloIds: number[];
-                    };
-                    const selectedSeccionIds = seccionCicloIds ?? [];
+                    const selectedSecciones = [...this.selectedSecciones$.value];
 
                     this.isSaving$.next(true);
                     this.dialogRef.disableClose = true;
 
-                    return this.persistEvaluacion(payload, selectedSeccionIds).pipe(
+                    return this.persistEvaluacion(payload, selectedSecciones).pipe(
                         finalize(() => {
                             this.isSaving$.next(false);
                             this.dialogRef.disableClose = false;
@@ -801,7 +826,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
 
     private persistEvaluacion(
         payload: CreateEvaluacionProgramadaPayload,
-        selectedSeccionIds: number[]
+        selectedSecciones: SelectedSeccion[]
     ): Observable<{ evaluacion: EvaluacionProgramada; secciones: EvaluacionProgramadaSeccion[] }> {
         const save$ =
             this.data.mode === 'create'
@@ -813,10 +838,118 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
 
         return save$.pipe(
             switchMap((evaluacion) =>
-                this.syncSecciones(evaluacion.id, selectedSeccionIds).pipe(
+                this.syncSecciones(evaluacion.id, selectedSecciones).pipe(
                     map((secciones) => ({ evaluacion, secciones }))
                 )
             )
         );
+    }
+
+    private initializeSelectedSecciones(options: SeccionOption[]): void {
+        const currentSelection = this.selectedSecciones$.value;
+        if (currentSelection.length) {
+            const updatedSelection = currentSelection
+                .map((selected) => {
+                    const option = options.find(
+                        (item) => item.seccionCicloId === selected.seccionCicloId
+                    );
+                    return option
+                        ? {
+                              ...selected,
+                              label: option.label,
+                              seccionId: option.seccionId,
+                              registrado: option.registrado,
+                          }
+                        : null;
+                })
+                .filter((item): item is SelectedSeccion => item !== null);
+            this.selectedSecciones$.next(updatedSelection);
+            return;
+        }
+
+        if (!this.initialSeccionRecords.length) {
+            this.selectedSecciones$.next([]);
+            return;
+        }
+
+        const initialIds = new Set(
+            this.initialSeccionRecords.map((record) => record.seccionCicloId)
+        );
+        const selected = options
+            .filter((option) => initialIds.has(option.seccionCicloId))
+            .map((option) => {
+                const record = this.initialSeccionRecords.find(
+                    (item) => item.seccionCicloId === option.seccionCicloId
+                );
+                return {
+                    ...option,
+                    activo: record ? record.activo : option.activo,
+                    registrado: true,
+                } as SelectedSeccion;
+            });
+
+        this.selectedSecciones$.next(selected);
+    }
+
+    protected addSeccion(option: SeccionOption): void {
+        if (!option) {
+            return;
+        }
+
+        const currentSelection = this.selectedSecciones$.value;
+        if (currentSelection.some((item) => item.seccionCicloId === option.seccionCicloId)) {
+            return;
+        }
+
+        const updated = [...currentSelection, { ...option }];
+        this.selectedSecciones$.next(updated);
+        this.updateSelectedControl(updated);
+    }
+
+    protected removeSeccion(seccionCicloId: number): void {
+        if (seccionCicloId === null || seccionCicloId === undefined) {
+            return;
+        }
+
+        const target = this.selectedSecciones$.value.find(
+            (item) => item.seccionCicloId === seccionCicloId
+        );
+        if (!target || target.registrado) {
+            return;
+        }
+
+        const filtered = this.selectedSecciones$.value.filter(
+            (item) => item.seccionCicloId !== seccionCicloId
+        );
+        if (filtered.length === this.selectedSecciones$.value.length) {
+            return;
+        }
+
+        this.selectedSecciones$.next(filtered);
+        this.updateSelectedControl(filtered);
+    }
+
+    protected toggleSeccionActivo(seccionCicloId: number, activo: boolean): void {
+        const updated = this.selectedSecciones$.value.map((item) =>
+            item.seccionCicloId === seccionCicloId ? { ...item, activo } : item
+        );
+
+        this.selectedSecciones$.next(updated);
+        this.updateSelectedControl(updated);
+    }
+
+    private updateSelectedControl(selected: SelectedSeccion[] = this.selectedSecciones$.value): void {
+        const ids = selected.map((item) => item.seccionCicloId);
+        this.form.controls['seccionCicloIds'].setValue(ids, { emitEvent: false });
+        this.form.controls['seccionCicloIds'].updateValueAndValidity({ onlySelf: true });
+    }
+
+    private seccionSelectionValidator(control: AbstractControl<number[] | null>): ValidationErrors | null {
+        const value = control.value;
+        if (!value || (Array.isArray(value) && value.length === 0)) {
+            return { required: true };
+        }
+
+        return null;
     }
 }
