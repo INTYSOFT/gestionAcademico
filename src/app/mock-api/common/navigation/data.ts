@@ -86,13 +86,6 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:document-chart-bar',
                 link : '/reportes/alumnos-matriculados'
-            },
-            {
-                id   : 'reportes.evaluaciones-programadas',
-                title: 'Evaluaciones programadas',
-                type : 'basic',
-                icon : 'heroicons_outline:clipboard-document-check',
-                link : '/reportes/evaluaciones-programadas'
             }
         ]
     },
@@ -331,22 +324,7 @@ export const horizontalNavigation: FuseNavigationItem[] = [
         title: 'Reportes',
         type : 'group',
         icon : 'heroicons_outline:chart-bar-square',
-        children: [
-            {
-                id   : 'reportes.alumnos-matriculados',
-                title: 'Alumnos matriculados',
-                type : 'basic',
-                icon : 'heroicons_outline:document-chart-bar',
-                link : '/reportes/alumnos-matriculados'
-            },
-            {
-                id   : 'reportes.evaluaciones-programadas',
-                title: 'Evaluaciones programadas',
-                type : 'basic',
-                icon : 'heroicons_outline:clipboard-document-check',
-                link : '/reportes/evaluaciones-programadas'
-            }
-        ]
+        children: []
     },
     {
         id   : 'evaluacion',

@@ -11,6 +11,4 @@ export const CENTRO_ESTUDIOS_API = {
     evaluacionDetalles: '/api/EvaluacionDetalles',
     evaluacionClaves: '/api/EvaluacionClaves',
     evaluaciones: '/api/Evaluacions',
-    estadoEvaluacionProgramadas: '/api/EstadoEvaluacionProgramadums',
-    evaluacionProgramadaConsultas: '/api/EvaluacionProgramadaConsultas',
 } as const;
