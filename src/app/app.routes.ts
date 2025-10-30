@@ -147,13 +147,7 @@ export const appRoutes: Route[] = [
                                 'app/modules/admin/reportes/alumnos-matriculados/alumnos-matriculados.routes'
                             ).then((m) => m.reportesAlumnosMatriculadosRoutes),
                     },
-                    {
-                        path: 'evaluaciones-programadas',
-                        loadChildren: () =>
-                            import(
-                                'app/modules/admin/reportes/evaluaciones-programadas/evaluaciones-programadas.routes'
-                            ).then((m) => m.reportesEvaluacionesProgramadasRoutes),
-                    },
+                 
                     { path: '', pathMatch: 'full', redirectTo: 'alumnos-matriculados' },
                 ],
             },
