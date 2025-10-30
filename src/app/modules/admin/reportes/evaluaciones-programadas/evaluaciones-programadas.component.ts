@@ -29,16 +29,18 @@ import {
     SizeColumnsToFitGridStrategy,
     ValueFormatterParams,
 } from 'ag-grid-community';
-import { BehaviorSubject, Observable, combineLatest, forkJoin, of } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { catchError, finalize, map, switchMap, tap } from 'rxjs/operators';
+import { catchError, finalize, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { DateTime } from 'luxon';
 import { EstadoEvaluacionProgramada } from 'app/core/models/centro-estudios/estado-evaluacion-programada.model';
 import { EvaluacionProgramadaConsulta } from 'app/core/models/centro-estudios/evaluacion-programada-consulta.model';
 import { EvaluacionProgramada } from 'app/core/models/centro-estudios/evaluacion-programada.model';
+import { Ciclo } from 'app/core/models/centro-estudios/ciclo.model';
 import { EstadoEvaluacionProgramadaService } from 'app/core/services/centro-estudios/estado-evaluacion-programada.service';
 import { EvaluacionProgramadasService } from 'app/core/services/centro-estudios/evaluacion-programadas.service';
 import { EvaluacionProgramadaConsultasService } from 'app/core/services/centro-estudios/evaluacion-programada-consultas.service';
+import { CiclosService } from 'app/core/services/centro-estudios/ciclos.service';
 
 const FECHA_MODO = {
     Unica: 'single',
@@ -138,11 +140,13 @@ export class ReporteEvaluacionesProgramadasComponent {
     private readonly estadoService = inject(EstadoEvaluacionProgramadaService);
     private readonly evaluacionProgramadasService = inject(EvaluacionProgramadasService);
     private readonly consultasService = inject(EvaluacionProgramadaConsultasService);
+    private readonly ciclosService = inject(CiclosService);
 
     protected readonly filtrosForm = this.fb.group({
         estadoId: this.fb.control<number | null>(null, { validators: [Validators.required] }),
         fechaModo: this.fb.nonNullable.control<FechaModo>(FECHA_MODO.Unica),
         fechaUnica: this.fb.control<Date | null>(null, { validators: [Validators.required] }),
+        cicloId: this.fb.control<number | null>(null, { validators: [Validators.required] }),
         fechaRango: this.fb.group(
             {
                 start: this.fb.control<Date | null>(null),
@@ -150,19 +154,35 @@ export class ReporteEvaluacionesProgramadasComponent {
             },
             { validators: [requireDateRange, validateDateRange] }
         ),
+        evaluacionProgramadaId: this.fb.control<number | null>({ value: null, disabled: true }),
     });
 
     protected readonly estados$ = new BehaviorSubject<EstadoEvaluacionProgramada[]>([]);
     protected readonly estaCargandoEstados$ = new BehaviorSubject<boolean>(false);
+    protected readonly ciclos$ = new BehaviorSubject<Ciclo[]>([]);
+    protected readonly estaCargandoCiclos$ = new BehaviorSubject<boolean>(false);
+    protected readonly evaluacionesProgramadas$ = new BehaviorSubject<EvaluacionProgramada[]>([]);
+    protected readonly estaCargandoProgramaciones$ = new BehaviorSubject<boolean>(false);
     protected readonly estaCargandoResultados$ = new BehaviorSubject<boolean>(false);
     protected readonly filas$ = new BehaviorSubject<EvaluacionProgramadaAlumnoRow[]>([]);
 
     protected readonly totalFilas$ = this.filas$.pipe(map((filas) => filas.length));
 
+    protected readonly evaluacionSeleccionadaId$ = this.filtrosForm.controls.evaluacionProgramadaId.valueChanges.pipe(
+        startWith(this.filtrosForm.controls.evaluacionProgramadaId.value)
+    );
+
     protected readonly mostrarSinDatos$ = combineLatest([
         this.estaCargandoResultados$,
+        this.estaCargandoProgramaciones$,
         this.filas$,
-    ]).pipe(map(([cargando, filas]) => !cargando && filas.length === 0));
+        this.evaluacionSeleccionadaId$,
+    ]).pipe(
+        map(
+            ([cargandoResultados, cargandoProgramaciones, filas, evaluacionId]) =>
+                !cargandoResultados && !cargandoProgramaciones && evaluacionId !== null && filas.length === 0
+        )
+    );
 
     protected readonly fechaModoOpciones: ReadonlyArray<{
         valor: FechaModo;
@@ -249,6 +269,7 @@ export class ReporteEvaluacionesProgramadasComponent {
     };
 
     private readonly estadosPorId = new Map<number, EstadoEvaluacionProgramada>();
+    private readonly evaluacionesPorId = new Map<number, EvaluacionProgramada>();
     private gridApi?: GridApi<EvaluacionProgramadaAlumnoRow>;
 
     private readonly fechaLargaFormatter = new Intl.DateTimeFormat('es-PE', {
@@ -266,7 +287,9 @@ export class ReporteEvaluacionesProgramadasComponent {
     constructor() {
         this.configurarValidacionesIniciales();
         this.cargarEstados();
+        this.cargarCiclos();
         this.suscribirseACambiosDeModo();
+        this.suscribirseASeleccionDeEvaluacion();
     }
 
     protected manejarGridReady(evento: GridReadyEvent<EvaluacionProgramadaAlumnoRow>): void {
@@ -290,23 +313,38 @@ export class ReporteEvaluacionesProgramadasComponent {
             return;
         }
 
-        this.estaCargandoResultados$.next(true);
+        this.limpiarProgramaciones();
+        this.estaCargandoProgramaciones$.next(true);
         this.obtenerEvaluacionesSegunFiltro(estadoId, fechaModo)
             .pipe(
-                finalize(() => this.estaCargandoResultados$.next(false)),
+                finalize(() => this.estaCargandoProgramaciones$.next(false)),
                 takeUntilDestroyed(this.destroyRef)
             )
             .subscribe({
-                next: (filas) => {
-                    this.filas$.next(filas);
-                    this.ajustarColumnas();
-                    if (filas.length === 0) {
-                        this.mostrarMensaje('No se encontraron alumnos para los filtros indicados.');
+                next: (programaciones) => {
+                    if (programaciones.length === 0) {
+                        this.evaluacionesProgramadas$.next([]);
+                        this.mostrarMensaje('No se encontraron evaluaciones programadas para los filtros indicados.');
+                        return;
                     }
+
+                    const evaluacionControl = this.filtrosForm.controls.evaluacionProgramadaId;
+                    this.evaluacionesProgramadas$.next(programaciones);
+                    programaciones.forEach((programacion) =>
+                        this.evaluacionesPorId.set(programacion.id, programacion)
+                    );
+
+                    evaluacionControl.enable({ emitEvent: false });
+                    if (programaciones.length === 1) {
+                        evaluacionControl.setValue(programaciones[0].id);
+                    } else {
+                        evaluacionControl.setValue(null, { emitEvent: false });
+                    }
+                    evaluacionControl.markAsUntouched();
+                    evaluacionControl.updateValueAndValidity({ emitEvent: false });
                 },
                 error: (error) => {
-                    this.filas$.next([]);
-                    this.mostrarError('Ocurrió un error al obtener las evaluaciones.', error);
+                    this.mostrarError('Ocurrió un error al obtener las evaluaciones programadas.', error);
                 },
             });
     }
@@ -316,23 +354,32 @@ export class ReporteEvaluacionesProgramadasComponent {
             estadoId: null,
             fechaModo: FECHA_MODO.Unica,
             fechaUnica: null,
+            cicloId: null,
             fechaRango: { start: null, end: null },
+            evaluacionProgramadaId: null,
         });
         this.filtrosForm.markAsPristine();
         this.filtrosForm.markAsUntouched();
         this.configurarValidacionesIniciales();
-        this.filas$.next([]);
-        this.ajustarColumnas();
+        this.limpiarProgramaciones();
     }
 
     private configurarValidacionesIniciales(): void {
-        const { fechaUnica, fechaRango } = this.filtrosForm.controls;
+        const { fechaUnica, fechaRango, cicloId, evaluacionProgramadaId } = this.filtrosForm.controls;
         fechaUnica.enable({ emitEvent: false });
         fechaUnica.setValidators([Validators.required]);
         fechaUnica.updateValueAndValidity({ emitEvent: false });
 
         fechaRango.disable({ emitEvent: false });
         fechaRango.updateValueAndValidity({ emitEvent: false });
+
+        cicloId.enable({ emitEvent: false });
+        cicloId.setValidators([Validators.required]);
+        cicloId.updateValueAndValidity({ emitEvent: false });
+
+        evaluacionProgramadaId.disable({ emitEvent: false });
+        evaluacionProgramadaId.setValue(null, { emitEvent: false });
+        evaluacionProgramadaId.updateValueAndValidity({ emitEvent: false });
     }
 
     private cargarEstados(): void {
@@ -360,42 +407,133 @@ export class ReporteEvaluacionesProgramadasComponent {
             });
     }
 
+    private cargarCiclos(): void {
+        this.estaCargandoCiclos$.next(true);
+        this.ciclosService
+            .listAll()
+            .pipe(
+                map((ciclos) => ciclos.filter((ciclo) => ciclo.activo)),
+                map((ciclos) => [...ciclos].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))),
+                finalize(() => this.estaCargandoCiclos$.next(false)),
+                takeUntilDestroyed(this.destroyRef)
+            )
+            .subscribe({
+                next: (ciclos) => {
+                    this.ciclos$.next(ciclos);
+                },
+                error: (error) => {
+                    this.ciclos$.next([]);
+                    this.mostrarError('No se pudieron cargar los ciclos.', error);
+                },
+            });
+    }
+
     private suscribirseACambiosDeModo(): void {
         this.filtrosForm.controls.fechaModo.valueChanges
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe((modo) => {
                 this.ajustarControlesSegunModo(modo);
+                this.limpiarProgramaciones();
+            });
+    }
+
+    private suscribirseASeleccionDeEvaluacion(): void {
+        this.evaluacionSeleccionadaId$
+            .pipe(
+                switchMap((evaluacionId) => {
+                    this.filas$.next([]);
+                    this.ajustarColumnas();
+
+                    if (evaluacionId === null) {
+                        this.estaCargandoResultados$.next(false);
+                        return of<EvaluacionProgramadaAlumnoRow[]>([]);
+                    }
+
+                    const evaluacion = this.evaluacionesPorId.get(evaluacionId);
+                    if (!evaluacion) {
+                        this.mostrarError('No se encontró la programación seleccionada.');
+                        return of<EvaluacionProgramadaAlumnoRow[]>([]);
+                    }
+
+                    this.estaCargandoResultados$.next(true);
+
+                    return this.consultasService.listByEvaluacionProgramadaId(evaluacionId).pipe(
+                        map((consultas) =>
+                            consultas.map((consulta) => this.crearFilaDesdeConsulta(consulta, evaluacion))
+                        ),
+                        map((filas) => this.ordenarFilas(filas)),
+                        catchError((error: HttpErrorResponse | Error) => {
+                            this.mostrarError('No se pudo obtener la lista de alumnos.', error);
+                            return of<EvaluacionProgramadaAlumnoRow[]>([]);
+                        }),
+                        finalize(() => this.estaCargandoResultados$.next(false))
+                    );
+                }),
+                takeUntilDestroyed(this.destroyRef)
+            )
+            .subscribe((filas) => {
+                this.filas$.next(filas);
+                this.ajustarColumnas();
+
+                if (filas.length === 0 && this.filtrosForm.controls.evaluacionProgramadaId.value !== null) {
+                    this.mostrarMensaje('No se encontraron alumnos para la programación seleccionada.');
+                }
             });
     }
 
     private ajustarControlesSegunModo(modo: FechaModo): void {
-        const { fechaUnica, fechaRango } = this.filtrosForm.controls;
+        const { fechaUnica, fechaRango, cicloId } = this.filtrosForm.controls;
 
         if (modo === FECHA_MODO.Unica) {
             fechaRango.reset({ start: null, end: null }, { emitEvent: false });
             fechaRango.disable({ emitEvent: false });
             fechaUnica.enable({ emitEvent: false });
             fechaUnica.setValidators([Validators.required]);
+            cicloId.enable({ emitEvent: false });
+            cicloId.setValidators([Validators.required]);
         } else {
             fechaUnica.setValue(null, { emitEvent: false });
             fechaUnica.disable({ emitEvent: false });
             fechaUnica.clearValidators();
             fechaRango.enable({ emitEvent: false });
+            cicloId.setValue(null, { emitEvent: false });
+            cicloId.disable({ emitEvent: false });
+            cicloId.clearValidators();
         }
 
         fechaUnica.updateValueAndValidity({ emitEvent: false });
         fechaRango.updateValueAndValidity({ emitEvent: false });
+        cicloId.updateValueAndValidity({ emitEvent: false });
+    }
+
+    private limpiarProgramaciones(): void {
+        const { evaluacionProgramadaId } = this.filtrosForm.controls;
+        evaluacionProgramadaId.enable({ emitEvent: false });
+        evaluacionProgramadaId.setValue(null);
+        evaluacionProgramadaId.disable({ emitEvent: false });
+        evaluacionProgramadaId.markAsPristine();
+        evaluacionProgramadaId.markAsUntouched();
+        evaluacionProgramadaId.updateValueAndValidity({ emitEvent: false });
+
+        this.evaluacionesProgramadas$.next([]);
+        this.evaluacionesPorId.clear();
+        this.filas$.next([]);
+        this.estaCargandoResultados$.next(false);
+        this.ajustarColumnas();
     }
 
     private obtenerEvaluacionesSegunFiltro(
         estadoId: number,
         modo: FechaModo
-    ): Observable<EvaluacionProgramadaAlumnoRow[]> {
+    ): Observable<EvaluacionProgramada[]> {
         if (modo === FECHA_MODO.Unica) {
             const fecha = this.filtrosForm.controls.fechaUnica.value;
-            if (!fecha) {
+            const cicloId = this.filtrosForm.controls.cicloId.value;
+
+            if (!fecha || cicloId === null) {
                 return of([]);
             }
+
             const fechaIso = this.formatearFechaParaApi(fecha);
             if (!fechaIso) {
                 this.mostrarError('La fecha seleccionada no es válida.');
@@ -403,8 +541,8 @@ export class ReporteEvaluacionesProgramadasComponent {
             }
 
             return this.evaluacionProgramadasService
-                .listByFechaInicio(fechaIso)
-                .pipe(switchMap((evaluaciones) => this.procesarEvaluaciones(evaluaciones, estadoId)));
+                .listByFechaYCiclo(fechaIso, cicloId)
+                .pipe(map((evaluaciones) => this.filtrarProgramacionesPorEstado(evaluaciones, estadoId)));
         }
 
         const rango = this.filtrosForm.controls.fechaRango.value;
@@ -422,35 +560,33 @@ export class ReporteEvaluacionesProgramadasComponent {
 
         return this.evaluacionProgramadasService
             .listByFechaInicioRange(desde, hasta)
-            .pipe(switchMap((evaluaciones) => this.procesarEvaluaciones(evaluaciones, estadoId)));
+            .pipe(map((evaluaciones) => this.filtrarProgramacionesPorEstado(evaluaciones, estadoId)));
     }
 
-    private procesarEvaluaciones(
+    private filtrarProgramacionesPorEstado(
         evaluaciones: EvaluacionProgramada[],
         estadoId: number
-    ): Observable<EvaluacionProgramadaAlumnoRow[]> {
+    ): EvaluacionProgramada[] {
         const filtradas = evaluaciones.filter((evaluacion) => evaluacion.estadoId === estadoId);
+        return this.ordenarProgramaciones(filtradas);
+    }
 
-        if (filtradas.length === 0) {
-            return of([]);
-        }
+    private ordenarProgramaciones(
+        evaluaciones: EvaluacionProgramada[]
+    ): EvaluacionProgramada[] {
+        return [...evaluaciones].sort((a, b) => {
+            if (a.fechaInicio !== b.fechaInicio) {
+                return a.fechaInicio.localeCompare(b.fechaInicio);
+            }
 
-        const solicitudes = filtradas.map((evaluacion) =>
-            this.consultasService.listByEvaluacionProgramadaId(evaluacion.id).pipe(
-                map((consultas) =>
-                    consultas.map((consulta) => this.crearFilaDesdeConsulta(consulta, evaluacion))
-                ),
-                catchError((error: HttpErrorResponse | Error) => {
-                    this.mostrarError('No se pudo obtener la lista de alumnos.', error);
-                    return of([]);
-                })
-            )
-        );
+            return a.nombre.localeCompare(b.nombre, 'es');
+        });
+    }
 
-        return forkJoin(solicitudes).pipe(
-            map((resultadoPorEvaluacion) => resultadoPorEvaluacion.flat()),
-            map((filas) => this.ordenarFilas(filas))
-        );
+    protected obtenerEtiquetaProgramacion(evaluacion: EvaluacionProgramada): string {
+        const nombre = this.valorParaMostrar(evaluacion.nombre);
+        const fecha = this.formatearFechaPresentacion(evaluacion.fechaInicio);
+        return `${nombre} — ${fecha}`;
     }
 
     private crearFilaDesdeConsulta(
