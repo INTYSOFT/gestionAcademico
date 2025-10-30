@@ -17,7 +17,7 @@
       <mat-form-field appearance="outline">
         <mat-label>Tipo de evaluación</mat-label>
         <mat-select formControlName="tipoEvaluacionId">
-          @for (tipo of tipoEvaluaciones$ | async; track tipo) {
+          @for (tipo of tipoEvaluaciones$ | async; track tipo.id) {
             <mat-option [value]="tipo.id">
               {{ tipo.nombre }}
             </mat-option>
@@ -33,7 +33,7 @@
       <mat-form-field appearance="outline">
         <mat-label>Sede</mat-label>
         <mat-select formControlName="sedeId">
-          @for (sede of sedes$ | async; track sede) {
+          @for (sede of sedes$ | async; track sede.id) {
             <mat-option [value]="sede.id">
               {{ sede.nombre }}
             </mat-option>
@@ -49,7 +49,7 @@
       <mat-form-field appearance="outline">
         <mat-label>Ciclo</mat-label>
         <mat-select formControlName="cicloId">
-          @for (ciclo of filteredCiclos$ | async; track ciclo) {
+          @for (ciclo of filteredCiclos$ | async; track ciclo.id) {
             <mat-option [value]="ciclo.id">
               {{ ciclo.nombre }}
             </mat-option>
@@ -114,7 +114,7 @@
         <mat-label>Carrera (opcional)</mat-label>
         <mat-select formControlName="carreraId">
           <mat-option [value]="null">Sin carrera</mat-option>
-          @for (carrera of carreras$ | async; track carrera) {
+          @for (carrera of carreras$ | async; track carrera.id) {
             <mat-option [value]="carrera.id">
               {{ carrera.nombre }}
             </mat-option>
@@ -147,12 +147,8 @@
           <div class="evaluacion-dialog__list-header">
             <h4>Secciones disponibles</h4>
             <span class="evaluacion-dialog__badge" aria-hidden="true">
-
               @if (availableSeccionOptions$ | async; as disponibles) {
-
-              @if ((availableSeccionOptions$ | async) as disponibles) {
-
-                {{ disponibles.length }}
+                {{ disponibles?.length ?? 0 }}
               } @else {
                 0
               }
@@ -160,12 +156,8 @@
           </div>
 
           <div class="evaluacion-dialog__list-body">
-
             @if (availableSeccionOptions$ | async; as disponibles) {
-
-            @if ((availableSeccionOptions$ | async) as disponibles) {
-
-              @if (disponibles.length === 0) {
+              @if ((disponibles?.length ?? 0) === 0) {
                 <p class="evaluacion-dialog__empty">No hay secciones para agregar.</p>
               } @else {
                 @for (option of disponibles; track option.seccionCicloId) {
@@ -185,6 +177,8 @@
                   </article>
                 }
               }
+            } @else {
+              <p class="evaluacion-dialog__empty">No hay secciones para agregar.</p>
             }
           </div>
         </section>
@@ -193,12 +187,8 @@
           <div class="evaluacion-dialog__list-header">
             <h4>Secciones seleccionadas</h4>
             <span class="evaluacion-dialog__badge" aria-hidden="true">
-
               @if (selectedSecciones$ | async; as seleccionadas) {
-
-              @if ((selectedSecciones$ | async) as seleccionadas) {
-
-                {{ seleccionadas.length }}
+                {{ seleccionadas?.length ?? 0 }}
               } @else {
                 0
               }
@@ -206,12 +196,8 @@
           </div>
 
           <div class="evaluacion-dialog__list-body">
-
             @if (selectedSecciones$ | async; as seleccionadas) {
-
-            @if ((selectedSecciones$ | async) as seleccionadas) {
-
-              @if (seleccionadas.length === 0) {
+              @if ((seleccionadas?.length ?? 0) === 0) {
                 <p class="evaluacion-dialog__empty">Selecciona al menos una sección.</p>
               } @else {
                 @for (seccion of seleccionadas; track seccion.seccionCicloId) {
@@ -246,6 +232,8 @@
                   </article>
                 }
               }
+            } @else {
+              <p class="evaluacion-dialog__empty">Selecciona al menos una sección.</p>
             }
           </div>
         </section>
@@ -266,15 +254,9 @@
     <button mat-button type="button" (click)="cancel()">Cancelar</button>
     <button mat-flat-button color="primary" type="submit" [disabled]="isSaving$ | async">
       @if (isSaving$ | async) {
-        <mat-progress-spinner
-          diameter="20"
-          mode="indeterminate"
-        ></mat-progress-spinner>
-      }
-      @if (!(isSaving$ | async)) {
-        <span>
-          {{ data.mode === 'create' ? 'Registrar' : 'Guardar cambios' }}
-        </span>
+        <mat-progress-spinner diameter="20" mode="indeterminate"></mat-progress-spinner>
+      } @else {
+        <span>{{ data.mode === 'create' ? 'Registrar' : 'Guardar cambios' }}</span>
       }
     </button>
   </mat-dialog-actions>
