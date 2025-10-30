@@ -5,12 +5,14 @@
     <div class="evaluacion-dialog__grid">
       <mat-form-field appearance="outline">
         <mat-label>Nombre</mat-label>
-        <input matInput formControlName="nombre" maxlength="150" autocomplete="off" />
-        <mat-hint align="end">{{ form.controls['nombre'].value?.length || 0 }}/150</mat-hint>
+        <input matInput formControlName="nombre" maxlength="150"
+          autocomplete="off" />
+        <mat-hint align="end">{{ form.controls['nombre'].value?.length || 0
+          }}/150</mat-hint>
         @if (form.controls['nombre'].hasError('required')) {
-          <mat-error>
-            El nombre es obligatorio....
-          </mat-error>
+        <mat-error>
+          El nombre es obligatorio....
+        </mat-error>
         }
       </mat-form-field>
 
@@ -18,15 +20,15 @@
         <mat-label>Tipo de evaluación</mat-label>
         <mat-select formControlName="tipoEvaluacionId">
           @for (tipo of tipoEvaluaciones$ | async; track tipo.id) {
-            <mat-option [value]="tipo.id">
-              {{ tipo.nombre }}
-            </mat-option>
+          <mat-option [value]="tipo.id">
+            {{ tipo.nombre }}
+          </mat-option>
           }
         </mat-select>
         @if (form.controls['tipoEvaluacionId'].hasError('required')) {
-          <mat-error>
-            Selecciona un tipo de evaluación.
-          </mat-error>
+        <mat-error>
+          Selecciona un tipo de evaluación.
+        </mat-error>
         }
       </mat-form-field>
 
@@ -34,15 +36,15 @@
         <mat-label>Sede</mat-label>
         <mat-select formControlName="sedeId">
           @for (sede of sedes$ | async; track sede.id) {
-            <mat-option [value]="sede.id">
-              {{ sede.nombre }}
-            </mat-option>
+          <mat-option [value]="sede.id">
+            {{ sede.nombre }}
+          </mat-option>
           }
         </mat-select>
         @if (form.controls['sedeId'].hasError('required')) {
-          <mat-error>
-            Selecciona una sede.
-          </mat-error>
+        <mat-error>
+          Selecciona una sede.
+        </mat-error>
         }
       </mat-form-field>
 
@@ -50,38 +52,41 @@
         <mat-label>Ciclo</mat-label>
         <mat-select formControlName="cicloId">
           @for (ciclo of filteredCiclos$ | async; track ciclo.id) {
-            <mat-option [value]="ciclo.id">
-              {{ ciclo.nombre }}
-            </mat-option>
+          <mat-option [value]="ciclo.id">
+            {{ ciclo.nombre }}
+          </mat-option>
           }
         </mat-select>
         @if (isLoadingCiclos$ | async) {
-          <div class="evaluacion-dialog__loading">
-            <mat-progress-spinner diameter="20" mode="indeterminate"></mat-progress-spinner>
-            <span>Cargando ciclos...</span>
-          </div>
+        <div class="evaluacion-dialog__loading">
+          <mat-progress-spinner diameter="20"
+            mode="indeterminate"></mat-progress-spinner>
+          <span>Cargando ciclos...</span>
+        </div>
         }
         @if (form.controls['cicloId'].hasError('required')) {
-          <mat-error>
-            Selecciona un ciclo válido.
-          </mat-error>
+        <mat-error>
+          Selecciona un ciclo válido.
+        </mat-error>
         }
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Fecha de inicio</mat-label>
-        <input matInput [matDatepicker]="fechaInicioPicker" formControlName="fechaInicio" />
-        <mat-datepicker-toggle matSuffix [for]="fechaInicioPicker"></mat-datepicker-toggle>
+        <input matInput [matDatepicker]="fechaInicioPicker"
+          formControlName="fechaInicio" />
+        <mat-datepicker-toggle matSuffix
+          [for]="fechaInicioPicker"></mat-datepicker-toggle>
         <mat-datepicker #fechaInicioPicker></mat-datepicker>
         @if (form.controls['fechaInicio'].hasError('required')) {
-          <mat-error>
-            Selecciona una fecha de inicio.
-          </mat-error>
+        <mat-error>
+          Selecciona una fecha de inicio.
+        </mat-error>
         }
         @if (form.controls['fechaInicio'].hasError('fechaDuplicada')) {
-          <mat-error>
-            Ya existe una evaluación programada con esta fecha y ciclo.
-          </mat-error>
+        <mat-error>
+          Ya existe una evaluación programada con esta fecha y ciclo.
+        </mat-error>
         }
       </mat-form-field>
 
@@ -89,9 +94,9 @@
         <mat-label>Hora de inicio</mat-label>
         <input matInput type="time" formControlName="horaInicio" />
         @if (form.controls['horaInicio'].hasError('required')) {
-          <mat-error>
-            Ingresa la hora de inicio.
-          </mat-error>
+        <mat-error>
+          Ingresa la hora de inicio.
+        </mat-error>
         }
       </mat-form-field>
 
@@ -99,14 +104,14 @@
         <mat-label>Hora de fin</mat-label>
         <input matInput type="time" formControlName="horaFin" />
         @if (form.controls['horaFin'].hasError('required')) {
-          <mat-error>
-            Ingresa la hora de fin.
-          </mat-error>
+        <mat-error>
+          Ingresa la hora de fin.
+        </mat-error>
         }
         @if (form.hasError('horarioInvalido')) {
-          <mat-error>
-            La hora de fin debe ser mayor a la hora de inicio.
-          </mat-error>
+        <mat-error>
+          La hora de fin debe ser mayor a la hora de inicio.
+        </mat-error>
         }
       </mat-form-field>
 
@@ -115,9 +120,9 @@
         <mat-select formControlName="carreraId">
           <mat-option [value]="null">Sin carrera</mat-option>
           @for (carrera of carreras$ | async; track carrera.id) {
-            <mat-option [value]="carrera.id">
-              {{ carrera.nombre }}
-            </mat-option>
+          <mat-option [value]="carrera.id">
+            {{ carrera.nombre }}
+          </mat-option>
           }
         </mat-select>
       </mat-form-field>
@@ -133,10 +138,11 @@
       <div class="evaluacion-dialog__sections-header">
         <h3>Secciones</h3>
         @if (isLoadingSecciones$ | async) {
-          <div class="evaluacion-dialog__sections-loader">
-            <mat-progress-spinner diameter="20" mode="indeterminate"></mat-progress-spinner>
-            <span>Cargando secciones disponibles…</span>
-          </div>
+        <div class="evaluacion-dialog__sections-loader">
+          <mat-progress-spinner diameter="20"
+            mode="indeterminate"></mat-progress-spinner>
+          <span>Cargando secciones disponibles…</span>
+        </div>
         }
       </div>
 
@@ -145,126 +151,137 @@
       <div class="evaluacion-dialog__sections-grid">
         <section class="evaluacion-dialog__list">
           <div class="evaluacion-dialog__list-header">
-            <h4>Secciones disponibles</h4>
+            <h3>Secciones disponibles</h3>
             <span class="evaluacion-dialog__badge" aria-hidden="true">
               @if (availableSeccionOptions$ | async; as disponibles) {
-                {{ disponibles?.length ?? 0 }}
+              {{ disponibles?.length ?? 0 }}
               } @else {
-                0
+              0
               }
             </span>
           </div>
 
           <div class="evaluacion-dialog__list-body">
             @if (availableSeccionOptions$ | async; as disponibles) {
-              @if ((disponibles?.length ?? 0) === 0) {
-                <p class="evaluacion-dialog__empty">No hay secciones para agregar.</p>
-              } @else {
-                @for (option of disponibles; track option.seccionCicloId) {
-                  <article class="evaluacion-dialog__item">
-                    <div class="evaluacion-dialog__item-text">
-                      <div class="evaluacion-dialog__item-heading">
-                        <span class="evaluacion-dialog__item-title" [attr.title]="option.label">
-                          {{ option.label }}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      mat-icon-button
-                      type="button"
-                      (click)="addSeccion(option)"
-                      [disabled]="isSaving$ | async"
-                      aria-label="Agregar sección"
-                    >
-                      <mat-icon>add</mat-icon>
-                    </button>
-                  </article>
-                }
-              }
+            @if ((disponibles?.length ?? 0) === 0) {
+            <p class="evaluacion-dialog__empty">No hay secciones para
+              agregar.</p>
             } @else {
-              <p class="evaluacion-dialog__empty">No hay secciones para agregar.</p>
+            @for (option of disponibles; track option.seccionCicloId) {
+            <article class="evaluacion-dialog__item">
+              <div class="evaluacion-dialog__item-text">
+                <div class="evaluacion-dialog__item-heading">
+                  <span class="evaluacion-dialog__item-title"
+                    [attr.title]="option.label">
+                    {{ option.label }}
+                  </span>
+                </div>
+              </div>
+              <button
+                mat-icon-button
+                type="button"
+                (click)="addSeccion(option)"
+                [disabled]="isSaving$ | async"
+                aria-label="Agregar sección">
+                <mat-icon>add</mat-icon>
+              </button>
+            </article>
+            }
+            }
+            } @else {
+            <p class="evaluacion-dialog__empty">No hay secciones para
+              agregar.</p>
             }
           </div>
         </section>
 
-        <section class="evaluacion-dialog__list evaluacion-dialog__list--accent">
+        <section
+          class="evaluacion-dialog__list evaluacion-dialog__list--accent">
           <div class="evaluacion-dialog__list-header">
-            <h4>Secciones seleccionadas</h4>
+            <h3>Secciones seleccionadas</h3>
             <span class="evaluacion-dialog__badge" aria-hidden="true">
               @if (selectedSecciones$ | async; as seleccionadas) {
-                {{ seleccionadas?.length ?? 0 }}
+              {{ seleccionadas?.length ?? 0 }}
               } @else {
-                0
+              0
               }
             </span>
           </div>
 
           <div class="evaluacion-dialog__list-body">
             @if (selectedSecciones$ | async; as seleccionadas) {
-              @if ((seleccionadas?.length ?? 0) === 0) {
-                <p class="evaluacion-dialog__empty">Selecciona al menos una sección.</p>
-              } @else {
-                @for (seccion of seleccionadas; track seccion.seccionCicloId) {
-                  <article class="evaluacion-dialog__item evaluacion-dialog__item--selected">
-                    <div class="evaluacion-dialog__item-content">
-                      <div class="evaluacion-dialog__item-text">
-                        <div class="evaluacion-dialog__item-heading">
-                          <span class="evaluacion-dialog__item-title" [attr.title]="seccion.label">
-                            {{ seccion.label }}
-                          </span>
-                        </div>
-                        <span class="evaluacion-dialog__item-subtitle">
-                          {{ seccion.registrado ? 'Registrada anteriormente' : 'Nueva sección' }}
-                        </span>
-                      </div>
-                      <div class="evaluacion-dialog__item-actions">
-                        <mat-slide-toggle
-                          color="primary"
-                          [checked]="seccion.activo"
-                          (change)="toggleSeccionActivo(seccion.seccionCicloId, $event.checked)"
-                          [disabled]="isSaving$ | async"
-                        >
-                          Activa
-                        </mat-slide-toggle>
-                        <button
-                          mat-icon-button
-                          type="button"
-                          (click)="removeSeccion(seccion.seccionCicloId)"
-                          [disabled]="seccion.registrado || (isSaving$ | async)"
-                          aria-label="Eliminar sección"
-                        >
-                          <mat-icon>delete</mat-icon>
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                }
-              }
+            @if ((seleccionadas?.length ?? 0) === 0) {
+            <p class="evaluacion-dialog__empty">Selecciona al menos una
+              sección.</p>
             } @else {
-              <p class="evaluacion-dialog__empty">Selecciona al menos una sección.</p>
+            @for (seccion of seleccionadas; track seccion.seccionCicloId) {
+            <article
+              class="evaluacion-dialog__item evaluacion-dialog__item--selected">
+              <div class="evaluacion-dialog__item-content">
+                <div class="evaluacion-dialog__item-text">
+                  <div class="evaluacion-dialog__item-heading">
+                    <span class="evaluacion-dialog__item-title"
+                      [attr.title]="seccion.label">
+                      {{ seccion.label }}
+                    </span>
+
+                    <mat-slide-toggle
+                      color="primary"
+                      [checked]="seccion.activo"
+                      (change)="toggleSeccionActivo(seccion.seccionCicloId, $event.checked)"
+                      [disabled]="isSaving$ | async">
+                      Activa
+                    </mat-slide-toggle>
+                  </div>
+                  <span class="evaluacion-dialog__item-subtitle">
+                    {{ seccion.registrado ? 'Registrada anteriormente' :
+                    'Nueva sección' }}
+                  </span>
+                </div>
+                <div class="evaluacion-dialog__item-actions">
+
+                  <button
+                    mat-icon-button
+                    type="button"
+                    (click)="removeSeccion(seccion.seccionCicloId)"
+                    [disabled]="seccion.registrado || (isSaving$ | async)"
+                    aria-label="Eliminar sección">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </article>
+            }
+            }
+            } @else {
+            <p class="evaluacion-dialog__empty">Selecciona al menos una
+              sección.</p>
             }
           </div>
         </section>
       </div>
 
       @if (
-        form.controls['seccionCicloIds'].hasError('required') &&
-        form.controls['seccionCicloIds'].touched
+      form.controls['seccionCicloIds'].hasError('required') &&
+      form.controls['seccionCicloIds'].touched
       ) {
-        <div class="evaluacion-dialog__sections-error">
-          Selecciona al menos una sección para continuar.
-        </div>
+      <div class="evaluacion-dialog__sections-error">
+        Selecciona al menos una sección para continuar.
+      </div>
       }
     </div>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
     <button mat-button type="button" (click)="cancel()">Cancelar</button>
-    <button mat-flat-button color="primary" type="submit" [disabled]="isSaving$ | async">
+    <button mat-flat-button color="primary" type="submit"
+      [disabled]="isSaving$ | async">
       @if (isSaving$ | async) {
-        <mat-progress-spinner diameter="20" mode="indeterminate"></mat-progress-spinner>
+      <mat-progress-spinner diameter="20"
+        mode="indeterminate"></mat-progress-spinner>
       } @else {
-        <span>{{ data.mode === 'create' ? 'Registrar' : 'Guardar cambios' }}</span>
+      <span>{{ data.mode === 'create' ? 'Registrar' : 'Guardar cambios'
+        }}</span>
       }
     </button>
   </mat-dialog-actions>
