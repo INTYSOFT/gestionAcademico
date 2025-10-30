@@ -10,6 +10,8 @@
       </mat-card-header>
 
       <mat-card-content>
+        @let cargandoProgramaciones = (estaCargandoProgramaciones$ | async) ?? false;
+        @let cargandoResultados = (estaCargandoResultados$ | async) ?? false;
         <form
           [formGroup]="filtrosForm"
           class="evaluaciones-programadas__filtros"
@@ -62,6 +64,7 @@
 
           <div class="evaluaciones-programadas__fila evaluaciones-programadas__fila--fechas">
             @if (filtrosForm.controls.fechaModo.value === 'single') {
+            @let cargandoCiclos = (estaCargandoCiclos$ | async) ?? false;
             <mat-form-field appearance="fill" class="evaluaciones-programadas__campo">
               <mat-label>Fecha de inicio</mat-label>
               <input
@@ -73,6 +76,29 @@
               <mat-datepicker #fechaUnicaPicker></mat-datepicker>
               @if (filtrosForm.controls.fechaUnica.hasError('required') && filtrosForm.controls.fechaUnica.touched) {
               <mat-error>Selecciona la fecha de inicio.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="evaluaciones-programadas__campo">
+              <mat-label>Ciclo</mat-label>
+              <mat-select
+                formControlName="cicloId"
+                [disabled]="cargandoCiclos || cargandoProgramaciones"
+                panelClass="evaluaciones-programadas__select">
+                @if (cargandoCiclos) {
+                <mat-option disabled>Cargando ciclos...</mat-option>
+                } @else if (ciclos$ | async; as ciclos) {
+                @if (ciclos.length === 0) {
+                <mat-option disabled>No hay ciclos disponibles</mat-option>
+                } @else {
+                @for (ciclo of ciclos; track ciclo.id) {
+                <mat-option [value]="ciclo.id">{{ ciclo.nombre }}</mat-option>
+                }
+                }
+                }
+              </mat-select>
+              @if (filtrosForm.controls.cicloId.hasError('required') && filtrosForm.controls.cicloId.touched) {
+              <mat-error>Selecciona un ciclo para continuar.</mat-error>
               }
             </mat-form-field>
             } @else {
@@ -106,7 +132,7 @@
                 color="primary"
                 type="button"
                 (click)="buscarEvaluaciones()"
-                [disabled]="(estaCargandoResultados$ | async) ?? false">
+                [disabled]="cargandoProgramaciones || cargandoResultados">
                 <mat-icon class="mr-2">search</mat-icon>
                 Buscar
               </button>
@@ -115,18 +141,41 @@
                 color="primary"
                 type="button"
                 (click)="limpiarFiltros()"
-                [disabled]="(estaCargandoResultados$ | async) ?? false">
+                [disabled]="cargandoProgramaciones || cargandoResultados">
                 Limpiar
               </button>
             </div>
           </div>
+
+          <div class="evaluaciones-programadas__fila evaluaciones-programadas__fila--programaciones">
+            <mat-form-field appearance="fill" class="evaluaciones-programadas__campo">
+              <mat-label>Programación</mat-label>
+              <mat-select
+                formControlName="evaluacionProgramadaId"
+                panelClass="evaluaciones-programadas__select">
+                @if (cargandoProgramaciones) {
+                <mat-option disabled>Cargando programaciones...</mat-option>
+                } @else if (evaluacionesProgramadas$ | async; as programaciones) {
+                @if (programaciones.length === 0) {
+                <mat-option disabled>No hay programaciones para los filtros seleccionados</mat-option>
+                } @else {
+                @for (programacion of programaciones; track programacion.id) {
+                <mat-option [value]="programacion.id">
+                  {{ obtenerEtiquetaProgramacion(programacion) }}
+                </mat-option>
+                }
+                }
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
         </form>
 
-        @if ((estaCargandoResultados$ | async) ?? false) {
+        @if (cargandoProgramaciones || cargandoResultados) {
         <mat-progress-bar mode="indeterminate"></mat-progress-bar>
         }
 
-        @if (!(estaCargandoResultados$ | async)) {
+        @if (!cargandoProgramaciones && !cargandoResultados) {
         <div class="evaluaciones-programadas__resumen">
           Total de alumnos: <strong>{{ totalFilas$ | async }}</strong>
         </div>
@@ -145,10 +194,14 @@
             class="w-full"></ag-grid-angular>
         </div>
 
-        @if ((estaCargandoResultados$ | async) ?? false) {
+        @if (cargandoProgramaciones || cargandoResultados) {
         <div class="evaluaciones-programadas__cargando">
           <mat-progress-spinner diameter="48" mode="indeterminate"></mat-progress-spinner>
+          @if (cargandoResultados) {
           <span>Cargando evaluaciones y alumnos...</span>
+          } @else {
+          <span>Cargando programaciones...</span>
+          }
         </div>
         }
 
