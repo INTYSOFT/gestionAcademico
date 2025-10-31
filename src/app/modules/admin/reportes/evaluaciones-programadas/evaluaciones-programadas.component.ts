@@ -19,6 +19,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatDialog } from '@angular/material/dialog';
 import { MatNativeDateModule, MatOptionModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -43,27 +44,38 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DateTime } from 'luxon';
 import { EstadoEvaluacionProgramada } from 'app/core/models/centro-estudios/estado-evaluacion-programada.model';
-import { Ciclo } from 'app/core/models/centro-estudios/ciclo.model';
 import { EvaluacionProgramada } from 'app/core/models/centro-estudios/evaluacion-programada.model';
 import { EvaluacionProgramadaConsulta } from 'app/core/models/centro-estudios/evaluacion-programada-consulta.model';
 import { EstadoEvaluacionProgramadaService } from 'app/core/services/centro-estudios/estado-evaluacion-programada.service';
-import { CiclosService } from 'app/core/services/centro-estudios/ciclos.service';
 import { EvaluacionProgramadasService } from 'app/core/services/centro-estudios/evaluacion-programadas.service';
 import { EvaluacionProgramadaConsultasService } from 'app/core/services/centro-estudios/evaluacion-programada-consultas.service';
 
 const enum BusquedaModo {
     Rango = 'rango',
-    FechaYCiclo = 'fecha-ciclo',
+    Fecha = 'fecha',
 }
 
 type FiltrosFormValue = {
     estadoId: number | null;
     modo: BusquedaModo;
     fechaUnica: Date | null;
-    cicloId: number | null;
     fechaDesde: Date | null;
     fechaHasta: Date | null;
 };
+
+interface FiltroRapidoOpcion {
+    value: string;
+    label: string;
+}
+
+interface FiltrosRapidosOpciones {
+    sedes: FiltroRapidoOpcion[];
+    ciclos: FiltroRapidoOpcion[];
+    secciones: FiltroRapidoOpcion[];
+}
+
+const FILTRO_TODOS = '__all__';
+const FILTRO_VACIO = '__empty__';
 
 @Component({
     selector: 'app-reporte-evaluaciones-programadas',
@@ -97,10 +109,10 @@ export class ReporteEvaluacionesProgramadasComponent {
     private readonly fb = inject(FormBuilder);
     private readonly destroyRef = inject(DestroyRef);
     private readonly snackBar = inject(MatSnackBar);
+    private readonly dialog = inject(MatDialog);
     private readonly estadoEvaluacionProgramadaService = inject(
         EstadoEvaluacionProgramadaService
     );
-    private readonly ciclosService = inject(CiclosService);
     private readonly evaluacionProgramadasService = inject(
         EvaluacionProgramadasService
     );
@@ -114,7 +126,6 @@ export class ReporteEvaluacionesProgramadasComponent {
         }),
         modo: this.fb.nonNullable.control<BusquedaModo>(BusquedaModo.Rango),
         fechaUnica: this.fb.control<Date | null>({ value: null, disabled: true }),
-        cicloId: this.fb.control<number | null>({ value: null, disabled: true }),
         fechaDesde: this.fb.control<Date | null>(null),
         fechaHasta: this.fb.control<Date | null>(null),
     });
@@ -125,20 +136,47 @@ export class ReporteEvaluacionesProgramadasComponent {
     });
 
     protected readonly estados$ = new BehaviorSubject<EstadoEvaluacionProgramada[]>([]);
-    protected readonly ciclos$ = new BehaviorSubject<Ciclo[]>([]);
     protected readonly programaciones$ = new BehaviorSubject<EvaluacionProgramada[]>([]);
     protected readonly consultas$ = new BehaviorSubject<EvaluacionProgramadaConsulta[]>([]);
+    protected readonly filtrosRapidosForm = this.fb.nonNullable.group({
+        sede: [FILTRO_TODOS],
+        ciclo: [FILTRO_TODOS],
+        seccion: [FILTRO_TODOS],
+    });
+    protected readonly consultasFiltradas$ = combineLatest([
+        this.consultas$,
+        this.filtrosRapidosForm.valueChanges.pipe(
+            startWith(this.filtrosRapidosForm.getRawValue())
+        ),
+    ]).pipe(
+        map(([consultas, filtros]) =>
+            consultas.filter((consulta) =>
+                this.coincideConFiltrosRapidos(consulta, filtros)
+            )
+        )
+    );
 
     protected readonly isLoadingEstados$ = new BehaviorSubject<boolean>(false);
-    protected readonly isLoadingCiclos$ = new BehaviorSubject<boolean>(false);
     protected readonly isLoadingProgramaciones$ = new BehaviorSubject<boolean>(false);
     protected readonly isLoadingConsultas$ = new BehaviorSubject<boolean>(false);
 
     protected readonly rangoInvalido$ = new BehaviorSubject<boolean>(false);
 
-    protected readonly totalResultados$ = this.consultas$.pipe(
+    protected readonly totalResultados$ = this.consultasFiltradas$.pipe(
         map((filas) => filas.length)
     );
+
+    protected readonly hoy = new Date();
+
+    private readonly filtrosRapidosOpcionesSubject =
+        new BehaviorSubject<FiltrosRapidosOpciones>({
+            sedes: this.crearOpcionesVacias('sedes'),
+            ciclos: this.crearOpcionesVacias('ciclos'),
+            secciones: this.crearOpcionesVacias('secciones'),
+        });
+
+    protected readonly filtrosRapidosOpciones$ =
+        this.filtrosRapidosOpcionesSubject.asObservable();
 
     protected readonly resumenFiltros$ = combineLatest([
         this.filtrosForm.controls.estadoId.valueChanges.pipe(
@@ -209,7 +247,6 @@ export class ReporteEvaluacionesProgramadasComponent {
     constructor() {
         this.configurarReactividad();
         this.cargarEstados();
-        this.cargarCiclos();
     }
 
     protected manejarGridReady(evento: GridReadyEvent<EvaluacionProgramadaConsulta>): void {
@@ -280,28 +317,48 @@ export class ReporteEvaluacionesProgramadasComponent {
 
                 this.cargarConsultas(programacionId);
             });
+
+        this.consultas$
+            .pipe(takeUntilDestroyed())
+            .subscribe((consultas) => {
+                const opciones = {
+                    sedes: this.crearOpcionesFiltros(
+                        consultas.map((consulta) => consulta.sede),
+                        'sedes'
+                    ),
+                    ciclos: this.crearOpcionesFiltros(
+                        consultas.map((consulta) => consulta.ciclo),
+                        'ciclos'
+                    ),
+                    secciones: this.crearOpcionesFiltros(
+                        consultas.map((consulta) => consulta.seccion),
+                        'secciones'
+                    ),
+                } satisfies FiltrosRapidosOpciones;
+
+                this.filtrosRapidosOpcionesSubject.next(opciones);
+                this.asegurarValorFiltroValido('sede', opciones.sedes);
+                this.asegurarValorFiltroValido('ciclo', opciones.ciclos);
+                this.asegurarValorFiltroValido('seccion', opciones.secciones);
+            });
     }
 
     private actualizarModoBusqueda(modo: BusquedaModo): void {
-        const { fechaUnica, cicloId, fechaDesde, fechaHasta } = this.filtrosForm.controls;
+        const { fechaUnica, fechaDesde, fechaHasta } = this.filtrosForm.controls;
 
         if (modo === BusquedaModo.Rango) {
             fechaUnica.disable({ emitEvent: false });
-            cicloId.disable({ emitEvent: false });
             fechaDesde.enable({ emitEvent: false });
             fechaHasta.enable({ emitEvent: false });
 
             fechaUnica.setValue(null, { emitEvent: false });
-            cicloId.setValue(null, { emitEvent: false });
 
             fechaDesde.addValidators(Validators.required);
             fechaHasta.addValidators(Validators.required);
 
             fechaUnica.removeValidators(Validators.required);
-            cicloId.removeValidators(Validators.required);
         } else {
             fechaUnica.enable({ emitEvent: false });
-            cicloId.enable({ emitEvent: false });
             fechaDesde.disable({ emitEvent: false });
             fechaHasta.disable({ emitEvent: false });
 
@@ -309,14 +366,12 @@ export class ReporteEvaluacionesProgramadasComponent {
             fechaHasta.setValue(null, { emitEvent: false });
 
             fechaUnica.addValidators(Validators.required);
-            cicloId.addValidators(Validators.required);
 
             fechaDesde.removeValidators(Validators.required);
             fechaHasta.removeValidators(Validators.required);
         }
 
         fechaUnica.updateValueAndValidity({ emitEvent: false });
-        cicloId.updateValueAndValidity({ emitEvent: false });
         fechaDesde.updateValueAndValidity({ emitEvent: false });
         fechaHasta.updateValueAndValidity({ emitEvent: false });
 
@@ -352,15 +407,11 @@ export class ReporteEvaluacionesProgramadasComponent {
 
         this.rangoInvalido$.next(false);
 
-        if (!valor.fechaUnica || !valor.cicloId) {
+        if (!valor.fechaUnica) {
             return;
         }
 
-        this.cargarProgramacionesPorFechaYCiclo(
-            valor.estadoId,
-            valor.fechaUnica,
-            valor.cicloId
-        );
+        this.cargarProgramacionesPorFecha(valor.estadoId, valor.fechaUnica);
     }
 
     private cargarEstados(): void {
@@ -382,27 +433,6 @@ export class ReporteEvaluacionesProgramadasComponent {
                 takeUntilDestroyed(this.destroyRef)
             )
             .subscribe((estados) => this.estados$.next(estados));
-    }
-
-    private cargarCiclos(): void {
-        this.isLoadingCiclos$.next(true);
-        this.ciclosService
-            .listAll()
-            .pipe(
-                map((ciclos) =>
-                    ciclos
-                        .filter((ciclo) => ciclo.activo !== false)
-                        .sort((a, b) => a.nombre.localeCompare(b.nombre))
-                ),
-                finalize(() => this.isLoadingCiclos$.next(false)),
-                catchError((error) => {
-                    this.mostrarError('No se pudo obtener la lista de ciclos.');
-                    console.error('Error al cargar ciclos', error);
-                    return of([] as Ciclo[]);
-                }),
-                takeUntilDestroyed(this.destroyRef)
-            )
-            .subscribe((ciclos) => this.ciclos$.next(ciclos));
     }
 
     private cargarProgramacionesPorRango(
@@ -440,10 +470,9 @@ export class ReporteEvaluacionesProgramadasComponent {
             });
     }
 
-    private cargarProgramacionesPorFechaYCiclo(
+    private cargarProgramacionesPorFecha(
         estadoId: number,
-        fecha: Date,
-        cicloId: number
+        fecha: Date
     ): void {
         const fechaInicio = this.formatearFechaIso(fecha);
 
@@ -454,7 +483,7 @@ export class ReporteEvaluacionesProgramadasComponent {
 
         this.isLoadingProgramaciones$.next(true);
         this.evaluacionProgramadasService
-            .listByFechaYCiclo(fechaInicio, cicloId)
+            .listByFechaInicio(fechaInicio)
             .pipe(
                 map((programaciones) =>
                     this.filtrarProgramacionesPorEstado(programaciones, estadoId)
@@ -544,12 +573,171 @@ export class ReporteEvaluacionesProgramadasComponent {
             estadoId: null,
             modo: BusquedaModo.Rango,
             fechaUnica: null,
-            cicloId: null,
             fechaDesde: null,
             fechaHasta: null,
         });
 
         this.rangoInvalido$.next(false);
         this.resetProgramaciones();
+        this.filtrosRapidosForm.setValue(
+            {
+                sede: FILTRO_TODOS,
+                ciclo: FILTRO_TODOS,
+                seccion: FILTRO_TODOS,
+            },
+            { emitEvent: true }
+        );
+    }
+
+    protected abrirDialogAgregarAlumno(): void {
+        const evaluacionProgramadaId = this.programacionControl.value;
+
+        if (evaluacionProgramadaId === null) {
+            this.mostrarError('Selecciona una evaluación programada antes de agregar alumnos.');
+            return;
+        }
+
+        const filtrosSeleccionados = this.filtrosRapidosForm.getRawValue();
+        const opciones = this.filtrosRapidosOpcionesSubject.value;
+
+        void import('./agregar-alumno-dialog/agregar-alumno-evaluacion-dialog.component').then(
+            ({ AgregarAlumnoEvaluacionDialogComponent }) => {
+                const dialogRef = this.dialog.open(
+                    AgregarAlumnoEvaluacionDialogComponent,
+                    {
+                        width: '640px',
+                        disableClose: true,
+                        data: {
+                            evaluacionProgramadaId,
+                            sedeNombre: this.obtenerEtiquetaFiltro(
+                                filtrosSeleccionados.sede,
+                                opciones.sedes
+                            ),
+                            cicloNombre: this.obtenerEtiquetaFiltro(
+                                filtrosSeleccionados.ciclo,
+                                opciones.ciclos
+                            ),
+                            seccionNombre: this.obtenerEtiquetaFiltro(
+                                filtrosSeleccionados.seccion,
+                                opciones.secciones
+                            ),
+                        },
+                    }
+                );
+
+                dialogRef
+                    .afterClosed()
+                    .pipe(takeUntilDestroyed(this.destroyRef))
+                    .subscribe((resultado) => {
+                        if (!resultado?.creado) {
+                            return;
+                        }
+
+                        this.snackBar.open('Alumno agregado a la evaluación.', 'Cerrar', {
+                            duration: 4000,
+                            horizontalPosition: 'end',
+                            verticalPosition: 'bottom',
+                        });
+
+                        this.cargarConsultas(evaluacionProgramadaId);
+                    });
+            }
+        );
+    }
+
+    private crearOpcionesVacias(tipo: 'sedes' | 'ciclos' | 'secciones'): FiltroRapidoOpcion[] {
+        return [this.crearOpcionTodos(tipo)];
+    }
+
+    private crearOpcionesFiltros(
+        valores: (string | null)[],
+        tipo: 'sedes' | 'ciclos' | 'secciones'
+    ): FiltroRapidoOpcion[] {
+        const mapa = new Map<string, string>();
+
+        valores.forEach((valor) => {
+            const clave = this.normalizarValorFiltro(valor);
+            if (clave === FILTRO_VACIO) {
+                if (!mapa.has(FILTRO_VACIO)) {
+                    mapa.set(FILTRO_VACIO, 'Sin asignar');
+                }
+                return;
+            }
+
+            if (!mapa.has(clave)) {
+                mapa.set(clave, (valor ?? '').trim());
+            }
+        });
+
+        const opcionesOrdenadas = Array.from(mapa.entries())
+            .map(([value, label]) => ({ value, label }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+
+        return [this.crearOpcionTodos(tipo), ...opcionesOrdenadas];
+    }
+
+    private crearOpcionTodos(tipo: 'sedes' | 'ciclos' | 'secciones'): FiltroRapidoOpcion {
+        const etiquetas: Record<typeof tipo, string> = {
+            sedes: 'Todas las sedes',
+            ciclos: 'Todos los ciclos',
+            secciones: 'Todas las secciones',
+        };
+
+        return {
+            value: FILTRO_TODOS,
+            label: etiquetas[tipo],
+        };
+    }
+
+    private normalizarValorFiltro(valor: string | null): string {
+        if (!valor || valor.trim().length === 0) {
+            return FILTRO_VACIO;
+        }
+
+        return valor.trim().toLocaleLowerCase('es-PE');
+    }
+
+    private asegurarValorFiltroValido(
+        controlKey: 'sede' | 'ciclo' | 'seccion',
+        opciones: FiltroRapidoOpcion[]
+    ): void {
+        const control = this.filtrosRapidosForm.controls[controlKey];
+        const valoresValidos = new Set(opciones.map((opcion) => opcion.value));
+
+        if (!valoresValidos.has(control.value)) {
+            control.setValue(FILTRO_TODOS, { emitEvent: false });
+        }
+    }
+
+    private coincideConFiltrosRapidos(
+        consulta: EvaluacionProgramadaConsulta,
+        filtros: { sede: string; ciclo: string; seccion: string }
+    ): boolean {
+        return (
+            this.coincideFiltroIndividual(consulta.sede, filtros.sede) &&
+            this.coincideFiltroIndividual(consulta.ciclo, filtros.ciclo) &&
+            this.coincideFiltroIndividual(consulta.seccion, filtros.seccion)
+        );
+    }
+
+    private coincideFiltroIndividual(valor: string | null, filtroSeleccionado: string): boolean {
+        if (filtroSeleccionado === FILTRO_TODOS) {
+            return true;
+        }
+
+        const valorNormalizado = this.normalizarValorFiltro(valor);
+        return valorNormalizado === filtroSeleccionado;
+    }
+
+    private obtenerEtiquetaFiltro(
+        valorSeleccionado: string,
+        opciones: FiltroRapidoOpcion[]
+    ): string | null {
+        if (valorSeleccionado === FILTRO_TODOS) {
+            return null;
+        }
+
+        const opcion = opciones.find((item) => item.value === valorSeleccionado);
+        return opcion?.label ?? null;
     }
 }

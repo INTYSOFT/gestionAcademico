@@ -56,9 +56,9 @@
                                     aria-label="Buscar por rango">
                                     Rango de fechas
                                 </mat-button-toggle>
-                                <mat-button-toggle [value]="'fecha-ciclo'"
-                                    aria-label="Buscar por fecha y ciclo">
-                                    Fecha y ciclo
+                                <mat-button-toggle [value]="'fecha'"
+                                    aria-label="Buscar por fecha exacta">
+                                    Fecha exacta
                                 </mat-button-toggle>
                             </mat-button-toggle-group>
                         </div>
@@ -70,7 +70,8 @@
                         <mat-form-field appearance="outline"
                             class="filtro filtro--fecha">
                             <mat-label>Rango de inicio</mat-label>
-                            <mat-date-range-input [rangePicker]="rangoPicker">
+                            <mat-date-range-input
+                                [rangePicker]="rangoPicker">
                                 <input matStartDate formControlName="fechaDesde"
                                     placeholder="Desde" />
                                 <input matEndDate formControlName="fechaHasta"
@@ -81,6 +82,7 @@
                             <mat-date-range-picker
                                 #rangoPicker
                                 startView="multi-year"
+                                [startAt]="filtrosForm.controls.fechaDesde.value ?? filtrosForm.controls.fechaHasta.value ?? hoy"
                                 panelClass="filtro-date-range-picker"></mat-date-range-picker>
                             @if (rangoInvalido$ | async) {
                             <mat-error>La fecha inicial no puede ser mayor que
@@ -88,43 +90,21 @@
                             }
                         </mat-form-field>
                         } @else {
-                        <div class="filtros__row filtros__row--inline">
-                            <mat-form-field appearance="outline"
-                                class="filtro filtro--fecha">
-                                <mat-label>Fecha de inicio</mat-label>
-                                <input
-                                    matInput
-                                    formControlName="fechaUnica"
-                                    [matDatepicker]="fechaPicker"
-                                    placeholder="Selecciona una fecha" />
-                                <mat-datepicker-toggle matSuffix
-                                    [for]="fechaPicker"></mat-datepicker-toggle>
-                                <mat-datepicker #fechaPicker
-                                    startView="multi-year"></mat-datepicker>
-                            </mat-form-field>
-
-                            <mat-form-field appearance="outline"
-                                class="filtro filtro--ciclo">
-                                <mat-label>Ciclo</mat-label>
-                                <mat-select formControlName="cicloId"
-                                    placeholder="Selecciona un ciclo">
-                                    @if (isLoadingCiclos$ | async) {
-                                    <mat-option disabled>Cargando
-                                        ciclos...</mat-option>
-                                    }
-                                    @if (!(isLoadingCiclos$ | async) && (ciclos$
-                                    | async)?.length === 0) {
-                                    <mat-option disabled>No hay ciclos
-                                        disponibles</mat-option>
-                                    }
-                                    @for (ciclo of ciclos$ | async; track
-                                    trackPorId) {
-                                    <mat-option [value]="ciclo.id">{{
-                                        ciclo.nombre }}</mat-option>
-                                    }
-                                </mat-select>
-                            </mat-form-field>
-                        </div>
+                        <mat-form-field appearance="outline"
+                            class="filtro filtro--fecha">
+                            <mat-label>Fecha de inicio</mat-label>
+                            <input
+                                matInput
+                                formControlName="fechaUnica"
+                                [matDatepicker]="fechaPicker"
+                                placeholder="Selecciona una fecha" />
+                            <mat-datepicker-toggle matSuffix
+                                [for]="fechaPicker"></mat-datepicker-toggle>
+                            <mat-datepicker
+                                #fechaPicker
+                                startView="multi-year"
+                                [startAt]="filtrosForm.controls.fechaUnica.value ?? hoy"></mat-datepicker>
+                        </mat-form-field>
                         }
                     </div>
                 </section>
@@ -201,27 +181,99 @@
                                 @if (resumen[1] === 'rango') {
                                 Rango de fechas
                                 } @else {
-                                Fecha y ciclo
+                                Fecha exacta
                                 }
                             </span>
                         </div>
                         }
                     </header>
 
+                    <div class="resultados__acciones">
+                        @let opciones = filtrosRapidosOpciones$ | async;
+                        <div class="resultados__filtros-rapidos"
+                            [formGroup]="filtrosRapidosForm">
+                            <mat-form-field
+                                appearance="outline"
+                                class="resultado-filtro">
+                                <mat-label>Filtrar por sede</mat-label>
+                                <mat-select formControlName="sede">
+                                    @if (opciones?.sedes?.length) {
+                                    @for (opcion of opciones?.sedes ?? []; track
+                                    opcion.value) {
+                                    <mat-option [value]="opcion.value">
+                                        {{ opcion.label }}
+                                    </mat-option>
+                                    }
+                                    }
+                                </mat-select>
+                            </mat-form-field>
+
+                            <mat-form-field
+                                appearance="outline"
+                                class="resultado-filtro">
+                                <mat-label>Filtrar por ciclo</mat-label>
+                                <mat-select formControlName="ciclo">
+                                    @if (opciones?.ciclos?.length) {
+                                    @for (opcion of opciones?.ciclos ?? []; track
+                                    opcion.value) {
+                                    <mat-option [value]="opcion.value">
+                                        {{ opcion.label }}
+                                    </mat-option>
+                                    }
+                                    }
+                                </mat-select>
+                            </mat-form-field>
+
+                            <mat-form-field
+                                appearance="outline"
+                                class="resultado-filtro">
+                                <mat-label>Filtrar por sección</mat-label>
+                                <mat-select formControlName="seccion">
+                                    @if (opciones?.secciones?.length) {
+                                    @for (opcion of opciones?.secciones ?? []; track
+                                    opcion.value) {
+                                    <mat-option [value]="opcion.value">
+                                        {{ opcion.label }}
+                                    </mat-option>
+                                    }
+                                    }
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+
+                        <button
+                            mat-flat-button
+                            color="primary"
+                            type="button"
+                            class="resultados__agregar"
+                            (click)="abrirDialogAgregarAlumno()"
+                            [disabled]="programacionControl.value === null">
+                            <mat-icon>person_add</mat-icon>
+                            <span>Agregar alumno</span>
+                        </button>
+                    </div>
+
                     <div class="resultados__grid"
                         (window:resize)="manejarGridRedimension()">
-                        @let consultas = consultas$ | async;
+                        @let consultas = consultasFiltradas$ | async;
                         @if (isLoadingConsultas$ | async) {
                         <mat-progress-bar
                             mode="indeterminate"></mat-progress-bar>
                         }
 
-                        @if (!(isLoadingConsultas$ | async) && (!consultas ||
-                        consultas.length === 0)) {
+                        @if (!(isLoadingConsultas$ | async) &&
+                        (!consultas || consultas.length === 0)) {
                         <div class="resultados__vacio">
                             <mat-icon>groups</mat-icon>
-                            <p>Selecciona una programación para visualizar la
-                                lista de alumnos.</p>
+                            <p>
+                                @if (programacionControl.value === null) {
+                                Selecciona una programación para visualizar la
+                                lista de alumnos.
+                                } @else {
+                                No se encontraron alumnos con los filtros
+                                aplicados.
+                                }
+                            </p>
                         </div>
                         } @else {
                         <ag-grid-angular

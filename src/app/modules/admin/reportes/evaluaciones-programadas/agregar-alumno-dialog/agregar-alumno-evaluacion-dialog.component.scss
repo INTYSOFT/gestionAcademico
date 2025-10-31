@@ -1,0 +1,69 @@
+:host {
+    display: block;
+}
+
+mat-dialog-content {
+    min-width: min(90vw, 560px);
+}
+
+.dialog-loading {
+    padding: 1rem 0;
+}
+
+.dialog-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.dialog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.dialog-alumno {
+    display: flex;
+    flex-direction: column;
+}
+
+.alumno-field {
+    width: 100%;
+}
+
+.alumno-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+
+    &__nombre {
+        font-weight: 600;
+    }
+
+    &__dni {
+        font-size: 0.85rem;
+        color: rgba(15, 23, 42, 0.7);
+    }
+}
+
+mat-dialog-actions {
+    padding: 1.5rem 1rem 1rem;
+}
+
+mat-dialog-actions button[mat-flat-button] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+@media (max-width: 600px) {
+    mat-dialog-content {
+        min-width: 100%;
+    }
+
+    .dialog-grid {
+        grid-template-columns: 1fr;
+    }
+}
