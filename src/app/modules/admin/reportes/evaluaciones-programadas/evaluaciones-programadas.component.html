@@ -81,7 +81,7 @@
                                 [for]="rangoPicker"></mat-datepicker-toggle>
                             <mat-date-range-picker
                                 #rangoPicker
-                                startView="multi-year"
+                                startView="month"
                                 [startAt]="filtrosForm.controls.fechaDesde.value ?? filtrosForm.controls.fechaHasta.value ?? hoy"
                                 panelClass="filtro-date-range-picker"></mat-date-range-picker>
                             @if (rangoInvalido$ | async) {
@@ -102,7 +102,7 @@
                                 [for]="fechaPicker"></mat-datepicker-toggle>
                             <mat-datepicker
                                 #fechaPicker
-                                startView="multi-year"
+                                startView="month"
                                 [startAt]="filtrosForm.controls.fechaUnica.value ?? hoy"></mat-datepicker>
                         </mat-form-field>
                         }
