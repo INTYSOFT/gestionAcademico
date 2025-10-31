@@ -72,6 +72,8 @@ import type { CreateEvaluacionClavePayload } from 'app/core/models/centro-estudi
 import { MatriculasService } from 'app/core/services/centro-estudios/matriculas.service';
 import { Matricula } from 'app/core/models/centro-estudios/matricula.model';
 import { EvaluacionesService } from 'app/core/services/centro-estudios/evaluaciones.service';
+import { Evaluacion } from 'app/core/models/centro-estudios/evaluacion.model';
+import { EvaluacionAlumnosRegistradosDialogComponent } from './evaluacion-alumnos-registrados-dialog/evaluacion-alumnos-registrados-dialog.component';
 
 interface EvaluacionSeccionTabView {
     key: string;
@@ -80,6 +82,7 @@ interface EvaluacionSeccionTabView {
     evaluacionSeccion: EvaluacionProgramadaSeccion | null;
     detalles: EvaluacionDetalle[];
     hasClaves: boolean;
+    registeredCount: number | null;
 }
 
 interface DetalleImportContext {
@@ -138,12 +141,17 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         EvaluacionTipoPregunta[]
     >([]);
     private readonly detalleClaveCountsSubject = new BehaviorSubject<Map<number, number>>(new Map());
+    private readonly seccionRegisteredCountsSubject = new BehaviorSubject<Map<string, number>>(
+        new Map()
+    );
+    private readonly evaluacionesRegistradasSubject = new BehaviorSubject<Evaluacion[]>([]);
 
     private readonly isLoadingEvaluacionesSubject = new BehaviorSubject<boolean>(false);
     private readonly isLoadingSeccionesSubject = new BehaviorSubject<boolean>(false);
     private readonly isLoadingDetallesSubject = new BehaviorSubject<boolean>(false);
     private readonly isLoadingTipoEvaluacionSubject = new BehaviorSubject<boolean>(false);
     private readonly isLoadingClavesSubject = new BehaviorSubject<boolean>(false);
+    private readonly isLoadingRegisteredCountsSubject = new BehaviorSubject<boolean>(false);
 
     private readonly seccionesCatalogSubject = new BehaviorSubject<Seccion[]>([]);
     private readonly sedesCatalogSubject = new BehaviorSubject<Sede[]>([]);
@@ -190,6 +198,8 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     private readonly registeringTabKeys = signal<Set<string>>(new Set());
     private evaluacionesListElement: HTMLElement | null = null;
     private evaluacionesListResizeObserver?: ResizeObserver;
+    private lastRegisteredCountsKey: string | null = null;
+    private lastRegisteredCountsLoaded = false;
 
     protected readonly evaluaciones$ = this.evaluacionesSubject.asObservable();
     protected readonly selectedEvaluacion$ = this.selectedEvaluacionSubject.asObservable();
@@ -203,6 +213,8 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     protected readonly isLoadingDetalles$ = this.isLoadingDetallesSubject.asObservable();
     protected readonly isLoadingTipoEvaluacion$ = this.isLoadingTipoEvaluacionSubject.asObservable();
     protected readonly isLoadingClaves$ = this.isLoadingClavesSubject.asObservable();
+    protected readonly isLoadingRegisteredCounts$ =
+        this.isLoadingRegisteredCountsSubject.asObservable();
 
     protected readonly dateClass: MatCalendarCellClassFunction<unknown> = (date) =>
         this.calendarMarkedDateKeys.has(this.buildDateKey(date))
@@ -244,11 +256,27 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             this.evaluacionDetallesSubject,
             this.seccionesCatalogSubject,
             this.detalleClaveCountsSubject,
+            this.seccionRegisteredCountsSubject,
         ])
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(([secciones, detalles, catalog, claveCounts]) => {
-                const tabs = this.buildSeccionTabs(secciones, detalles, catalog, claveCounts);
+            .subscribe(([secciones, detalles, catalog, claveCounts, registrados]) => {
+                const tabs = this.buildSeccionTabs(
+                    secciones,
+                    detalles,
+                    catalog,
+                    claveCounts,
+                    registrados
+                );
                 this.seccionTabsSubject.next(tabs);
+            });
+
+        combineLatest([
+            this.selectedEvaluacionSubject,
+            this.seccionesEvaluacionSubject,
+        ])
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(([evaluacion, secciones]) => {
+                this.loadRegisteredCounts(evaluacion, secciones);
             });
 
         this.destroyRef.onDestroy(() => {
@@ -1047,6 +1075,8 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                     this.snackBar.open(messages.join(' '), 'Cerrar', {
                         duration: failed > 0 ? 8000 : 5000,
                     });
+
+                    this.reloadRegisteredCounts();
                 },
                 error: (error) => {
                     this.showError(
@@ -1055,6 +1085,79 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                     );
                 },
             });
+    }
+
+    protected getTabRegisteredCountLabel(tab: EvaluacionSeccionTabView): string {
+        if (tab.registeredCount === null) {
+            return '—';
+        }
+
+        return new Intl.NumberFormat('es-PE').format(tab.registeredCount);
+    }
+
+    protected canViewAlumnosRegistrados(tab: EvaluacionSeccionTabView): boolean {
+        if (tab.registeredCount === null) {
+            return false;
+        }
+
+        if (this.isLoadingRegisteredCountsSubject.value) {
+            return false;
+        }
+
+        const evaluacion = this.selectedEvaluacionSubject.value;
+
+        if (!evaluacion) {
+            return false;
+        }
+
+        if (evaluacion.sedeId === null || evaluacion.sedeId === undefined) {
+            return false;
+        }
+
+        if (evaluacion.cicloId === null || evaluacion.cicloId === undefined) {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected openAlumnosRegistradosDialog(tab: EvaluacionSeccionTabView): void {
+        if (!this.canViewAlumnosRegistrados(tab)) {
+            return;
+        }
+
+        const evaluacion = this.selectedEvaluacionSubject.value;
+
+        if (!evaluacion) {
+            return;
+        }
+
+        const evaluacionesRegistradas = this.evaluacionesRegistradasSubject.value;
+        let evaluacionesFiltradas: Evaluacion[];
+
+        if (tab.key === 'seccion-todos') {
+            evaluacionesFiltradas = evaluacionesRegistradas;
+        } else if (tab.seccionId === null) {
+            evaluacionesFiltradas = evaluacionesRegistradas.filter(
+                (item) => item.seccionId === null
+            );
+        } else {
+            evaluacionesFiltradas = evaluacionesRegistradas.filter(
+                (item) => item.seccionId === tab.seccionId
+            );
+        }
+
+        this.dialog.open(EvaluacionAlumnosRegistradosDialogComponent, {
+            width: '900px',
+            maxWidth: '95vw',
+            data: {
+                evaluacionNombre: evaluacion.nombre ?? 'Evaluación programada',
+                sedeNombre: this.getSedeLabel(evaluacion),
+                cicloNombre: this.getCicloLabel(evaluacion),
+                seccionNombre: tab.label,
+                evaluaciones: evaluacionesFiltradas,
+            },
+        });
     }
 
     private shiftSelectedDateBy(days: number): void {
@@ -1170,6 +1273,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         this.selectedEvaluacionSubject.next(evaluacion);
 
         if (evaluacion) {
+            this.invalidateRegisteredCounts();
             this.loadSecciones(evaluacion.id);
             this.loadDetalles(evaluacion.id);
             this.loadTipoEvaluacion(evaluacion.tipoEvaluacionId);
@@ -1179,6 +1283,10 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             this.tipoEvaluacionSubject.next(null);
             this.detalleClaveCountsSubject.next(new Map());
             this.isLoadingClavesSubject.next(false);
+            this.evaluacionesRegistradasSubject.next([]);
+            this.seccionRegisteredCountsSubject.next(new Map());
+            this.invalidateRegisteredCounts();
+            this.isLoadingRegisteredCountsSubject.next(false);
         }
     }
 
@@ -1273,6 +1381,110 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         }
 
         this.loadDetalles(evaluacion.id);
+    }
+
+    private reloadRegisteredCounts(): void {
+        const evaluacion = this.selectedEvaluacionSubject.value;
+        const secciones = this.seccionesEvaluacionSubject.value;
+
+        if (!evaluacion) {
+            return;
+        }
+
+        this.invalidateRegisteredCounts();
+        this.loadRegisteredCounts(evaluacion, secciones);
+    }
+
+    private loadRegisteredCounts(
+        evaluacion: EvaluacionProgramada | null,
+        secciones: EvaluacionProgramadaSeccion[]
+    ): void {
+        if (!evaluacion) {
+            this.seccionRegisteredCountsSubject.next(new Map());
+            this.evaluacionesRegistradasSubject.next([]);
+            this.invalidateRegisteredCounts();
+            return;
+        }
+
+        const sedeId = evaluacion.sedeId;
+        const cicloId = evaluacion.cicloId;
+
+        if (sedeId === null || sedeId === undefined || cicloId === null || cicloId === undefined) {
+            this.seccionRegisteredCountsSubject.next(new Map());
+            this.evaluacionesRegistradasSubject.next([]);
+            this.invalidateRegisteredCounts();
+            return;
+        }
+
+        const key = `${evaluacion.id ?? 'evaluacion'}|${sedeId}|${cicloId}`;
+
+        if (this.lastRegisteredCountsKey === key && this.lastRegisteredCountsLoaded) {
+            const counts = this.buildSeccionRegisteredCountsMap(
+                this.evaluacionesRegistradasSubject.value,
+                secciones
+            );
+            this.seccionRegisteredCountsSubject.next(counts);
+            return;
+        }
+
+        this.lastRegisteredCountsKey = key;
+        this.lastRegisteredCountsLoaded = false;
+        this.seccionRegisteredCountsSubject.next(new Map());
+        this.isLoadingRegisteredCountsSubject.next(true);
+
+        this.evaluacionesService
+            .listBySedeCiclo(sedeId, cicloId)
+            .pipe(finalize(() => this.isLoadingRegisteredCountsSubject.next(false)))
+            .subscribe({
+                next: (evaluaciones) => {
+                    this.lastRegisteredCountsLoaded = true;
+                    this.evaluacionesRegistradasSubject.next(evaluaciones);
+                    const counts = this.buildSeccionRegisteredCountsMap(
+                        evaluaciones,
+                        secciones
+                    );
+                    this.seccionRegisteredCountsSubject.next(counts);
+                },
+                error: (error) => {
+                    this.lastRegisteredCountsLoaded = false;
+                    this.evaluacionesRegistradasSubject.next([]);
+                    this.seccionRegisteredCountsSubject.next(new Map());
+                    this.showError(
+                        error.message ??
+                            'No fue posible obtener los alumnos registrados para la evaluación.'
+                    );
+                },
+            });
+    }
+
+    private buildSeccionRegisteredCountsMap(
+        evaluaciones: Evaluacion[],
+        secciones: EvaluacionProgramadaSeccion[]
+    ): Map<string, number> {
+        const countsBySeccion = new Map<number | null, number>();
+
+        for (const evaluacion of evaluaciones) {
+            const key = evaluacion.seccionId ?? null;
+            countsBySeccion.set(key, (countsBySeccion.get(key) ?? 0) + 1);
+        }
+
+        const result = new Map<string, number>();
+
+        for (const seccion of secciones) {
+            const key = `seccion-${seccion.id}`;
+            const seccionId = seccion.seccionId ?? null;
+            result.set(key, countsBySeccion.get(seccionId) ?? 0);
+        }
+
+        result.set('seccion-general', countsBySeccion.get(null) ?? 0);
+        result.set('seccion-todos', evaluaciones.length);
+
+        return result;
+    }
+
+    private invalidateRegisteredCounts(): void {
+        this.lastRegisteredCountsKey = null;
+        this.lastRegisteredCountsLoaded = false;
     }
 
     private importDetallesFromTab(
@@ -1450,7 +1662,8 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         secciones: EvaluacionProgramadaSeccion[],
         detalles: EvaluacionDetalle[],
         catalog: Seccion[],
-        detalleClaveCounts: Map<number, number>
+        detalleClaveCounts: Map<number, number>,
+        registeredCounts: Map<string, number>
     ): EvaluacionSeccionTabView[] {
         const seccionNombreMap = new Map<number, string>();
         catalog.forEach((seccion) => {
@@ -1479,14 +1692,18 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                     : 'Sin sección asignada';
 
             const detallesAsociados = detallesPorSeccion.get(seccionId) ?? [];
+            const key = `seccion-${seccion.id}`;
 
             return {
-                key: `seccion-${seccion.id}`,
+                key,
                 label,
                 seccionId,
                 evaluacionSeccion: seccion,
                 detalles: detallesAsociados,
                 hasClaves: this.hasClavesRegistradas(detallesAsociados, detalleClaveCounts),
+                registeredCount: registeredCounts.has(key)
+                    ? registeredCounts.get(key) ?? 0
+                    : null,
             };
         });
 
@@ -1501,6 +1718,9 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 evaluacionSeccion: null,
                 detalles: detallesGenerales,
                 hasClaves: this.hasClavesRegistradas(detallesGenerales, detalleClaveCounts),
+                registeredCount: registeredCounts.has('seccion-general')
+                    ? registeredCounts.get('seccion-general') ?? 0
+                    : null,
             });
         }
 
@@ -1516,6 +1736,9 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 evaluacionSeccion: null,
                 detalles: sortedDetalles,
                 hasClaves: this.hasClavesRegistradas(sortedDetalles, detalleClaveCounts),
+                registeredCount: registeredCounts.has('seccion-todos')
+                    ? registeredCounts.get('seccion-todos') ?? 0
+                    : null,
             });
         }
 

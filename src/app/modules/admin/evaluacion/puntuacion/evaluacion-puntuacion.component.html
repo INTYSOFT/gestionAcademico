@@ -154,11 +154,47 @@
                           [dynamicHeight]="true"
                           >
                           @for (tab of seccionTabs; track trackByTab($index, tab)) {
-                            <mat-tab
-                              [label]="tab.label"
-                              >
+                            <mat-tab>
+                              <ng-template mat-tab-label>
+                                <span class="flex items-center gap-2">
+                                  <span>{{ tab.label }}</span>
+                                  <span
+                                    class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700"
+                                    >{{ getTabRegisteredCountLabel(tab) }}</span
+                                  >
+                                </span>
+                              </ng-template>
                               <div class="mt-4 flex flex-col gap-4">
-                                <div class="flex flex-wrap justify-end gap-2">
+                                <div class="flex flex-wrap items-center justify-between gap-3">
+                                  <div class="flex items-center gap-3 text-sm text-gray-600">
+                                    <span class="font-medium text-gray-700">
+                                      Alumnos registrados:
+                                    </span>
+                                    <span class="rounded-full bg-primary-50 px-2 py-0.5 text-sm font-semibold text-primary-700">
+                                      {{ getTabRegisteredCountLabel(tab) }}
+                                    </span>
+                                    @if (isLoadingRegisteredCounts$ | async) {
+                                      <mat-progress-spinner
+                                        diameter="20"
+                                        mode="indeterminate"
+                                        strokeWidth="3"
+                                      ></mat-progress-spinner>
+                                    }
+                                  </div>
+                                  <div class="flex flex-wrap items-center gap-2">
+                                    <button
+                                      mat-icon-button
+                                      type="button"
+                                      color="primary"
+                                      class="bg-primary-50 text-primary-700"
+                                      [disabled]="!canViewAlumnosRegistrados(tab)"
+                                      matTooltip="Ver alumnos registrados"
+                                      (click)="openAlumnosRegistradosDialog(tab)"
+                                      aria-label="Ver alumnos registrados"
+                                      >
+                                      <mat-icon>groups</mat-icon>
+                                    </button>
+                                    <div class="h-6 w-px bg-gray-200"></div>
                                   @let registrarTooltip = getRegistrarAlumnosTooltip(tab);
                                   <button
                                     mat-flat-button

@@ -1,0 +1,56 @@
+<h2 mat-dialog-title class="flex items-center justify-between gap-4">
+  <span class="text-lg font-semibold text-gray-900">
+    Alumnos registrados · {{ seccionNombre }}
+  </span>
+  <button mat-icon-button type="button" (click)="cerrar()" matTooltip="Cerrar">
+    <mat-icon>close</mat-icon>
+  </button>
+</h2>
+
+<mat-dialog-content class="space-y-4">
+  <div class="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+    <div class="font-medium text-slate-700">{{ evaluacionNombre }}</div>
+    <div class="mt-2 grid gap-1 text-xs sm:grid-cols-2">
+      <div>
+        <span class="font-semibold text-slate-700">Sede:</span>
+        <span>{{ sedeNombre }}</span>
+      </div>
+      <div>
+        <span class="font-semibold text-slate-700">Ciclo:</span>
+        <span>{{ cicloNombre }}</span>
+      </div>
+    </div>
+  </div>
+
+  @if (isLoading$ | async) {
+    <div class="flex justify-center py-10">
+      <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+    </div>
+  } @else {
+    @if (rows$ | async; as rows) {
+      @if (rows.length > 0) {
+        <div class="ag-theme-quartz h-[24rem] w-full">
+          <ag-grid-angular
+            [theme]="'legacy'"
+            class="w-full"
+            [rowData]="rows"
+            [columnDefs]="columnDefs"
+            [defaultColDef]="defaultColDef"
+            [domLayout]="'normal'"
+            [rowHeight]="48"
+            [headerHeight]="44"
+            [animateRows]="true"
+            (gridReady)="onGridReady($event)"></ag-grid-angular>
+        </div>
+      } @else {
+        <div class="rounded-xl border border-dashed border-slate-200 p-10 text-center text-sm text-slate-500">
+          No se encontraron alumnos registrados para esta sección.
+        </div>
+      }
+    }
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="gap-2">
+  <button mat-button type="button" (click)="cerrar()">Cerrar</button>
+</mat-dialog-actions>

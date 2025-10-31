@@ -48,6 +48,47 @@ export class EvaluacionesService extends ApiMainService {
             );
     }
 
+    listBySedeCiclo(
+        sedeId: number,
+        cicloId: number
+    ): Observable<Evaluacion[]> {
+        const url = `${this.resourcePath}/sede/${sedeId}/ciclo/${cicloId}`;
+
+        return this.http
+            .get<EvaluacionApi[]>(this.buildUrl(url), this.createOptions())
+            .pipe(
+                map((response) => this.normalizeEvaluaciones(response)),
+                catchError((error: HttpErrorResponse) => {
+                    if (error.status === 404) {
+                        return of([]);
+                    }
+
+                    return this.handleError(error);
+                })
+            );
+    }
+
+    listBySedeCicloSeccion(
+        sedeId: number,
+        cicloId: number,
+        seccionId: number
+    ): Observable<Evaluacion[]> {
+        const url = `${this.resourcePath}/sede/${sedeId}/ciclo/${cicloId}/seccion/${seccionId}`;
+
+        return this.http
+            .get<EvaluacionApi[]>(this.buildUrl(url), this.createOptions())
+            .pipe(
+                map((response) => this.normalizeEvaluaciones(response)),
+                catchError((error: HttpErrorResponse) => {
+                    if (error.status === 404) {
+                        return of([]);
+                    }
+
+                    return this.handleError(error);
+                })
+            );
+    }
+
     create(payload: CreateEvaluacionPayload): Observable<Evaluacion> {
         const body = this.mapPayloadToApi(payload);
 
