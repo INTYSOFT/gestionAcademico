@@ -1,4 +1,4 @@
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -65,9 +65,8 @@ export interface AgregarAlumnoEvaluacionDialogResult {
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
     imports: [
+        CommonModule,
         AsyncPipe,
-        NgIf,
-        NgFor,
         ReactiveFormsModule,
         MatDialogModule,
         MatFormFieldModule,
