@@ -89,6 +89,44 @@ export class EvaluacionesService extends ApiMainService {
             );
     }
 
+    //[HttpGet("evaluacionProgramada/{evaluacionProgramadaId}/alumno/{alumnoId}")]
+    getByEvaluacionProgramadaAndAlumno(
+        evaluacionProgramadaId: number,
+        alumnoId: number
+    ): Observable<Evaluacion | null> {
+        const url = `${this.resourcePath}/evaluacionProgramada/${evaluacionProgramadaId}/alumno/${alumnoId}`;
+        return this.http
+            .get<EvaluacionApi>(this.buildUrl(url), this.createOptions())
+            .pipe(
+                map((response) => this.normalizeEvaluacion(response)),
+                catchError((error: HttpErrorResponse) => {
+                    if (error.status === 404) {
+                        return of(null);
+                    }
+                    return this.handleError(error);
+                })
+            );
+    }
+
+    //[HttpGet("evaluacionProgramada/{evaluacionProgramadaId}")]
+    listByEvaluacionProgramada(
+        evaluacionProgramadaId: number
+    ): Observable<Evaluacion[]> {
+        const url = `${this.resourcePath}/evaluacionProgramada/${evaluacionProgramadaId}`;
+        return this.http
+            .get<EvaluacionApi[]>(this.buildUrl(url), this.createOptions())
+            .pipe(
+                map((response) => this.normalizeEvaluaciones(response)),
+                catchError((error: HttpErrorResponse) => {
+                    if (error.status === 404) {
+                        return of([]);
+                    }
+                    return this.handleError(error);
+                })
+            );
+    }
+    
+
     create(payload: CreateEvaluacionPayload): Observable<Evaluacion> {
         const body = this.mapPayloadToApi(payload);
 

@@ -31,16 +31,15 @@
       @if (rows.length > 0) {
         <div class="ag-theme-quartz h-[24rem] w-full">
           <ag-grid-angular
-            [theme]="'legacy'"
-            class="w-full"
+            [theme]="'legacy'"            
             [rowData]="rows"
             [columnDefs]="columnDefs"
             [defaultColDef]="defaultColDef"
-            [domLayout]="'normal'"
+            domLayout="autoHeight"
             [rowHeight]="48"
             [headerHeight]="44"
             [animateRows]="true"
-            (gridReady)="onGridReady($event)"></ag-grid-angular>
+            ></ag-grid-angular>
         </div>
       } @else {
         <div class="rounded-xl border border-dashed border-slate-200 p-10 text-center text-sm text-slate-500">
