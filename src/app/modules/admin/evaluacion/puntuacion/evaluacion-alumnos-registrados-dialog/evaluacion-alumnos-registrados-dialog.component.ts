@@ -191,16 +191,13 @@ export class EvaluacionAlumnosRegistradosDialogComponent {
             return;
         }
 
-        const allColumnIds: string[] = [];
-        this.gridApi.getColumnModel()?.getColumns()?.forEach((column) => {
-            const columnId = column.getId();
-            if (columnId) {
-                allColumnIds.push(columnId);
-            }
-        });
+        const columns = this.gridApi.getColumns() ?? [];
+        const columnIds = columns
+            .map((column) => column.getColId())
+            .filter((columnId): columnId is string => Boolean(columnId?.length));
 
-        if (allColumnIds.length > 0) {
-            this.gridApi.autoSizeColumns(allColumnIds, false);
+        if (columnIds.length > 0) {
+            this.gridApi.autoSizeColumns(columnIds, false);
         }
     }
 

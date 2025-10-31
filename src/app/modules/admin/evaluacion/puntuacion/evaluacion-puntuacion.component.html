@@ -148,66 +148,79 @@
                     }
                     @if (seccionTabs$ | async; as seccionTabs) {
                       @if (seccionTabs.length > 0) {
-                        <mat-tab-group
-                          class="evaluacion-puntuacion__tabs"
-                          animationDuration="200ms"
-                          [dynamicHeight]="true"
-                          >
-                          @for (tab of seccionTabs; track trackByTab($index, tab)) {
-                            <mat-tab>
-                              <ng-template mat-tab-label>
-                                <span class="flex items-center gap-2">
-                                  <span>{{ tab.label }}</span>
-                                  <span
-                                    class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700"
-                                    >{{ getTabRegisteredCountLabel(tab) }}</span
-                                  >
+                        <div class="flex flex-col gap-6">
+                          <div class="flex flex-wrap items-center gap-2">
+                            @for (tab of seccionTabs; track trackByTab($index, tab)) {
+                              <button
+                                type="button"
+                                class="flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold transition-colors"
+                                [ngClass]="
+                                  isActiveTab(tab)
+                                    ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
+                                    : 'bg-gray-100 text-gray-700 border-transparent hover:bg-gray-200'
+                                "
+                                (click)="onSelectTab(tab)"
+                              >
+                                <span>{{ tab.label }}</span>
+                                <span
+                                  class="rounded-full px-2 py-0.5 text-xs font-semibold"
+                                  [ngClass]="
+                                    isActiveTab(tab)
+                                      ? 'bg-primary-500/40 text-white'
+                                      : 'bg-primary-50 text-primary-700'
+                                  "
+                                >
+                                  {{ getTabRegisteredCountLabel(tab) }}
                                 </span>
-                              </ng-template>
-                              <div class="mt-4 flex flex-col gap-4">
-                                <div class="flex flex-wrap items-center justify-between gap-3">
-                                  <div class="flex items-center gap-3 text-sm text-gray-600">
-                                    <span class="font-medium text-gray-700">
-                                      Alumnos registrados:
-                                    </span>
-                                    <span class="rounded-full bg-primary-50 px-2 py-0.5 text-sm font-semibold text-primary-700">
-                                      {{ getTabRegisteredCountLabel(tab) }}
-                                    </span>
-                                    @if (isLoadingRegisteredCounts$ | async) {
-                                      <mat-progress-spinner
-                                        diameter="20"
-                                        mode="indeterminate"
-                                        strokeWidth="3"
-                                      ></mat-progress-spinner>
-                                    }
-                                  </div>
-                                  <div class="flex flex-wrap items-center gap-2">
-                                    <button
-                                      mat-icon-button
-                                      type="button"
-                                      color="primary"
-                                      class="bg-primary-50 text-primary-700"
-                                      [disabled]="!canViewAlumnosRegistrados(tab)"
-                                      matTooltip="Ver alumnos registrados"
-                                      (click)="openAlumnosRegistradosDialog(tab)"
-                                      aria-label="Ver alumnos registrados"
-                                      >
-                                      <mat-icon>groups</mat-icon>
-                                    </button>
-                                    <div class="h-6 w-px bg-gray-200"></div>
-                                  @let registrarTooltip = getRegistrarAlumnosTooltip(tab);
+                              </button>
+                            }
+                          </div>
+                          @let activeTab = getActiveTab(seccionTabs);
+                          @if (activeTab) {
+                            <div class="flex flex-col gap-4">
+                              <div class="flex flex-wrap items-center justify-between gap-3">
+                                <div class="flex items-center gap-3 text-sm text-gray-600">
+                                  <span class="font-medium text-gray-700">
+                                    Alumnos registrados:
+                                  </span>
+                                  <span class="rounded-full bg-primary-50 px-2 py-0.5 text-sm font-semibold text-primary-700">
+                                    {{ getTabRegisteredCountLabel(activeTab) }}
+                                  </span>
+                                  @if (isLoadingRegisteredCounts$ | async) {
+                                    <mat-progress-spinner
+                                      diameter="20"
+                                      mode="indeterminate"
+                                      strokeWidth="3"
+                                    ></mat-progress-spinner>
+                                  }
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                  <button
+                                    mat-icon-button
+                                    type="button"
+                                    color="primary"
+                                    class="bg-primary-50 text-primary-700"
+                                    [disabled]="!canViewAlumnosRegistrados(activeTab)"
+                                    matTooltip="Ver alumnos registrados"
+                                    (click)="openAlumnosRegistradosDialog(activeTab)"
+                                    aria-label="Ver alumnos registrados"
+                                  >
+                                    <mat-icon>groups</mat-icon>
+                                  </button>
+                                  <div class="h-6 w-px bg-gray-200"></div>
+                                  @let registrarTooltip = getRegistrarAlumnosTooltip(activeTab);
                                   <button
                                     mat-flat-button
                                     color="primary"
                                     type="button"
-                                    (click)="registerAlumnos(tab)"
-                                    [disabled]="!canRegistrarAlumnos(tab)"
+                                    (click)="registerAlumnos(activeTab)"
+                                    [disabled]="!canRegistrarAlumnos(activeTab)"
                                     [matTooltip]="registrarTooltip ?? ''"
                                     [matTooltipDisabled]="!registrarTooltip"
                                     class="flex items-center"
-                                    >
+                                  >
                                     <span class="flex items-center gap-2">
-                                      @if (isRegisteringTab(tab)) {
+                                      @if (isRegisteringTab(activeTab)) {
                                         <mat-progress-spinner
                                           class="!m-0"
                                           diameter="16"
@@ -221,146 +234,144 @@
                                   <button
                                     mat-stroked-button
                                     type="button"
-                                    (click)="openDetalleImportDialog(tab)"
-                                    [disabled]="!canImportDetalles(tab)"
-                                    >
+                                    (click)="openDetalleImportDialog(activeTab)"
+                                    [disabled]="!canImportDetalles(activeTab)"
+                                  >
                                     Importar detalles
                                   </button>
                                   <button
                                     mat-stroked-button
                                     color="primary"
                                     type="button"
-                                    (click)="openDetalleDialogForCreate(tab)"
-                                    >
+                                    (click)="openDetalleDialogForCreate(activeTab)"
+                                  >
                                     Agregar detalle
                                   </button>
                                 </div>
-                                @if (tab.detalles.length > 0) {
-                                  <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                                      <thead class="bg-gray-50">
-                                        <tr>
-                                          <th class="px-4 py-3 text-left font-medium text-gray-600">
-                                            Rango
-                                          </th>
-                                          <th class="px-4 py-3 text-left font-medium text-gray-600">
-                                            Valor correcta
-                                          </th>
-                                          <th class="px-4 py-3 text-left font-medium text-gray-600">
-                                            Valor incorrecta
-                                          </th>
-                                          <th class="px-4 py-3 text-left font-medium text-gray-600">
-                                            Valor en blanco
-                                          </th>
-                                          <th class="px-4 py-3 text-left font-medium text-gray-600">
-                                            Tipo de pregunta
-                                          </th>
-                                          <th class="px-4 py-3 text-left font-medium text-gray-600">
-                                            Observación
-                                          </th>
-                                          <th class="px-4 py-3 text-center font-medium text-gray-600">
-                                            Estado
-                                          </th>
-                                          <th class="px-4 py-3 text-right font-medium text-gray-600">
-                                            Acciones
-                                          </th>
-                                        </tr>
-                                      </thead>
-                                      <tbody class="divide-y divide-gray-100">
-                                        @for (detalle of tab.detalles; track trackByDetalle($index, detalle)) {
-                                          <tr
-                                            class="hover:bg-gray-50"
-                                            >
-                                            <td class="px-4 py-3">
-                                              <div class="font-medium text-gray-900">
-                                                {{ detalle.rangoInicio }} -
-                                                {{ detalle.rangoFin }}
-                                              </div>
-                                            </td>
-                                            <td class="px-4 py-3">
-                                              {{ detalle.valorBuena | number: '1.2-2' }}
-                                            </td>
-                                            <td class="px-4 py-3">
-                                              {{ detalle.valorMala | number: '1.2-2' }}
-                                            </td>
-                                            <td class="px-4 py-3">
-                                              {{ detalle.valorBlanca | number: '1.2-2' }}
-                                            </td>
-                                            <td class="px-4 py-3">
-                                              {{
-                                                getEvaluacionTipoPreguntaLabel(
-                                                  detalle.evaluacionTipoPreguntaId
-                                                )
-                                              }}
-                                            </td>
-                                            <td class="px-4 py-3">
-                                              @if (detalle.observacion) {
-                                                <span
-                                                  class="line-clamp-2 text-sm text-gray-600"
-                                                  [matTooltip]="detalle.observacion || ''"
-                                                  matTooltipShowDelay="500"
-                                                  >
-                                                  {{ detalle.observacion }}
-                                                </span>
-                                              } @else {
-                                                <span class="text-sm text-gray-400">
-                                                  Sin observación
-                                                </span>
-                                              }
-                                            </td>
-                                            <td class="px-4 py-3 text-center">
-                                              <span
-                                                class="inline-flex items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold"
-                                                                                    [ngClass]="{
-                                                                                        'bg-emerald-100 text-emerald-700': detalle.activo,
-                                                                                        'bg-gray-200 text-gray-600': !detalle.activo
-                                                                                    }"
-                                                >
-                                                {{ detalle.activo ? 'Activo' : 'Inactivo' }}
-                                              </span>
-                                            </td>
-                                            <td class="px-4 py-3 text-right">
-                                              <button
-                                                mat-icon-button
-                                                type="button"
-                                                matTooltip="Editar detalle"
-                                                (click)="openDetalleDialogForEdit(detalle)"
-                                                >
-                                                <mat-icon>edit</mat-icon>
-                                              </button>
-                                              <button
-                                                mat-icon-button
-                                                type="button"
-                                                matTooltip="Claves"
-                                                (click)="openDetalleClavesDialog(detalle)"
-                                                >
-                                                <mat-icon>key</mat-icon>
-                                              </button>
-                                              <button
-                                                mat-icon-button
-                                                type="button"
-                                                color="warn"
-                                                matTooltip="Eliminar detalle"
-                                                (click)="confirmDeleteDetalle(detalle)"
-                                                [disabled]="isLoadingDetalles$ | async"
-                                                >
-                                                <mat-icon>delete</mat-icon>
-                                              </button>
-                                            </td>
-                                          </tr>
-                                        }
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                } @else {
-                                  <div class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6 text-sm text-gray-500">
-                                    No hay detalles registrados para esta sección.
-                                  </div>
-                                }
                               </div>
-                            </mat-tab>
+                              @if (activeTab.detalles.length > 0) {
+                                <div class="overflow-x-auto">
+                                  <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                    <thead class="bg-gray-50">
+                                      <tr>
+                                        <th class="px-4 py-3 text-left font-medium text-gray-600">
+                                          Rango
+                                        </th>
+                                        <th class="px-4 py-3 text-left font-medium text-gray-600">
+                                          Valor correcta
+                                        </th>
+                                        <th class="px-4 py-3 text-left font-medium text-gray-600">
+                                          Valor incorrecta
+                                        </th>
+                                        <th class="px-4 py-3 text-left font-medium text-gray-600">
+                                          Valor en blanco
+                                        </th>
+                                        <th class="px-4 py-3 text-left font-medium text-gray-600">
+                                          Tipo de pregunta
+                                        </th>
+                                        <th class="px-4 py-3 text-left font-medium text-gray-600">
+                                          Observación
+                                        </th>
+                                        <th class="px-4 py-3 text-center font-medium text-gray-600">
+                                          Estado
+                                        </th>
+                                        <th class="px-4 py-3 text-right font-medium text-gray-600">
+                                          Acciones
+                                        </th>
+                                      </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                      @for (detalle of activeTab.detalles; track trackByDetalle($index, detalle)) {
+                                        <tr class="hover:bg-gray-50">
+                                          <td class="px-4 py-3">
+                                            <div class="font-medium text-gray-900">
+                                              {{ detalle.rangoInicio }} -
+                                              {{ detalle.rangoFin }}
+                                            </div>
+                                          </td>
+                                          <td class="px-4 py-3">
+                                            {{ detalle.valorBuena | number: '1.2-2' }}
+                                          </td>
+                                          <td class="px-4 py-3">
+                                            {{ detalle.valorMala | number: '1.2-2' }}
+                                          </td>
+                                          <td class="px-4 py-3">
+                                            {{ detalle.valorBlanca | number: '1.2-2' }}
+                                          </td>
+                                          <td class="px-4 py-3">
+                                            {{
+                                              getEvaluacionTipoPreguntaLabel(
+                                                detalle.evaluacionTipoPreguntaId
+                                              )
+                                            }}
+                                          </td>
+                                          <td class="px-4 py-3">
+                                            @if (detalle.observacion) {
+                                              <span
+                                                class="line-clamp-2 text-sm text-gray-600"
+                                                [matTooltip]="detalle.observacion || ''"
+                                                matTooltipShowDelay="500"
+                                              >
+                                                {{ detalle.observacion }}
+                                              </span>
+                                            } @else {
+                                              <span class="text-sm text-gray-400">
+                                                Sin observación
+                                              </span>
+                                            }
+                                          </td>
+                                          <td class="px-4 py-3 text-center">
+                                            <span
+                                              class="inline-flex items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold"
+                                              [ngClass]="{
+                                                'bg-emerald-100 text-emerald-700': detalle.activo,
+                                                'bg-gray-200 text-gray-600': !detalle.activo
+                                              }"
+                                            >
+                                              {{ detalle.activo ? 'Activo' : 'Inactivo' }}
+                                            </span>
+                                          </td>
+                                          <td class="px-4 py-3 text-right">
+                                            <button
+                                              mat-icon-button
+                                              type="button"
+                                              matTooltip="Editar detalle"
+                                              (click)="openDetalleDialogForEdit(detalle)"
+                                            >
+                                              <mat-icon>edit</mat-icon>
+                                            </button>
+                                            <button
+                                              mat-icon-button
+                                              type="button"
+                                              matTooltip="Claves"
+                                              (click)="openDetalleClavesDialog(detalle)"
+                                            >
+                                              <mat-icon>key</mat-icon>
+                                            </button>
+                                            <button
+                                              mat-icon-button
+                                              type="button"
+                                              color="warn"
+                                              matTooltip="Eliminar detalle"
+                                              (click)="confirmDeleteDetalle(detalle)"
+                                              [disabled]="isLoadingDetalles$ | async"
+                                            >
+                                              <mat-icon>delete</mat-icon>
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      }
+                                    </tbody>
+                                  </table>
+                                </div>
+                              } @else {
+                                <div class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6 text-sm text-gray-500">
+                                  No hay detalles registrados para esta sección.
+                                </div>
+                              }
+                            </div>
                           }
-                        </mat-tab-group>
+                        </div>
                       } @else {
                         <div class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6 text-sm text-gray-500">
                           No hay secciones programadas para esta evaluación.
