@@ -2,15 +2,6 @@
     display: contents;
 }
 
-.evaluacion-puntuacion__tabs {
-    .mat-mdc-tab-body-content {
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-}
-
 mat-nav-list {
     a.mat-mdc-list-item {
         transition: background-color 150ms ease, color 150ms ease;

@@ -1,4 +1,4 @@
-import { AsyncPipe, DecimalPipe, NgClass } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import {
     AfterViewInit,
     ChangeDetectionStrategy,
@@ -17,7 +17,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCalendar, MatCalendarCellClassFunction, MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -98,16 +97,13 @@ interface DetalleImportContext {
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        AsyncPipe,
-        DecimalPipe,
-        NgClass,
+        CommonModule,
         ReactiveFormsModule,
         MatButtonModule,
         MatDatepickerModule,
         MatNativeDateModule,
         MatIconModule,
         MatListModule,
-        MatTabsModule,
         MatProgressSpinnerModule,
         MatDialogModule,
         MatSnackBarModule,
@@ -196,6 +192,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
     protected readonly evaluacionesListMaxHeight = signal<number | null>(null);
     private readonly registeringTabKeys = signal<Set<string>>(new Set());
+    private readonly selectedTabKey = signal<string | null>(null);
     private evaluacionesListElement: HTMLElement | null = null;
     private evaluacionesListResizeObserver?: ResizeObserver;
     private lastRegisteredCountsKey: string | null = null;
@@ -268,6 +265,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                     registrados
                 );
                 this.seccionTabsSubject.next(tabs);
+                this.ensureSelectedTab(tabs);
             });
 
         combineLatest([
@@ -1095,6 +1093,34 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         return new Intl.NumberFormat('es-PE').format(tab.registeredCount);
     }
 
+    protected onSelectTab(tab: EvaluacionSeccionTabView): void {
+        this.selectedTabKey.set(tab.key);
+    }
+
+    protected isActiveTab(tab: EvaluacionSeccionTabView): boolean {
+        return this.selectedTabKey() === tab.key;
+    }
+
+    protected getActiveTab(
+        tabs: EvaluacionSeccionTabView[]
+    ): EvaluacionSeccionTabView | null {
+        if (tabs.length === 0) {
+            return null;
+        }
+
+        const currentKey = this.selectedTabKey();
+
+        if (currentKey) {
+            const found = tabs.find((tab) => tab.key === currentKey);
+
+            if (found) {
+                return found;
+            }
+        }
+
+        return tabs[0] ?? null;
+    }
+
     protected canViewAlumnosRegistrados(tab: EvaluacionSeccionTabView): boolean {
         if (tab.registeredCount === null) {
             return false;
@@ -1393,6 +1419,19 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
         this.invalidateRegisteredCounts();
         this.loadRegisteredCounts(evaluacion, secciones);
+    }
+
+    private ensureSelectedTab(tabs: EvaluacionSeccionTabView[]): void {
+        if (tabs.length === 0) {
+            this.selectedTabKey.set(null);
+            return;
+        }
+
+        const currentKey = this.selectedTabKey();
+
+        if (!currentKey || !tabs.some((tab) => tab.key === currentKey)) {
+            this.selectedTabKey.set(tabs[0].key);
+        }
     }
 
     private loadRegisteredCounts(
