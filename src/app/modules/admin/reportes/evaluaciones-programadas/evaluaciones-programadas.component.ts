@@ -322,6 +322,7 @@ export class ReporteEvaluacionesProgramadasComponent {
         this.programacionControl.valueChanges
             .pipe(takeUntilDestroyed())
             .subscribe((programacionId) => {
+                this.restablecerFiltrosRapidos();
                 this.consultas$.next([]);
 
                 if (programacionId === null) {
@@ -592,10 +593,7 @@ export class ReporteEvaluacionesProgramadasComponent {
 
         this.rangoInvalido$.next(false);
         this.resetProgramaciones();
-        this.filtrosRapidosForm.setValue(
-            { ...this.filtrosRapidosPorDefecto },
-            { emitEvent: true }
-        );
+        this.restablecerFiltrosRapidos();
     }
 
     protected abrirDialogAgregarAlumno(): void {
@@ -758,5 +756,12 @@ export class ReporteEvaluacionesProgramadasComponent {
 
         const opcion = opciones.find((item) => item.value === valorSeleccionado);
         return opcion?.label ?? null;
+    }
+
+    private restablecerFiltrosRapidos(): void {
+        this.filtrosRapidosForm.setValue(
+            { ...this.filtrosRapidosPorDefecto },
+            { emitEvent: true }
+        );
     }
 }
