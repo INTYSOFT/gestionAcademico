@@ -94,6 +94,24 @@ export class MatriculasService extends ApiMainService {
             );
     }
 
+    //get matriculas by sede, ciclo, seccion.
+    getMatriculasBySedeCicloSeccion(sedeId: number, cicloId: number, seccionId: number): Observable<Matricula[]> {
+        const endpoint = `${this.resourcePath}/GetMatriculasBySedeCicloSeccion/${sedeId}/${cicloId}/${seccionId}`;
+
+        return this.http
+            .get<MatriculaApi[]>(this.buildUrl(endpoint), this.createOptions())
+            .pipe(
+                retry(this.config.retryAttempts),
+                map((response) =>
+                    Array.isArray(response)
+                        ? response
+                                .map((item) => this.normalizeMatricula(item))
+                                .filter((item): item is Matricula => item !== null)
+                        : []
+                ),
+            );
+    }
+
     getMatriculasBySedeYCiclo(sedeId: number, cicloId: number): Observable<Matricula[]> {
         const endpoint = `${this.resourcePath}/GetMatriculasBySedeCiclo/${sedeId}/${cicloId}`;
 
