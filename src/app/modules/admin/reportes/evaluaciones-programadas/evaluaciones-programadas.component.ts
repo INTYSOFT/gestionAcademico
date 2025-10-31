@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
+import { AsyncPipe, CommonModule, DatePipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -74,6 +74,12 @@ interface FiltrosRapidosOpciones {
     secciones: FiltroRapidoOpcion[];
 }
 
+type FiltrosRapidosValor = {
+    sede: string;
+    ciclo: string;
+    seccion: string;
+};
+
 const FILTRO_TODOS = '__all__';
 const FILTRO_VACIO = '__empty__';
 
@@ -85,6 +91,7 @@ const FILTRO_VACIO = '__empty__';
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        CommonModule,
         AsyncPipe,
         ReactiveFormsModule,
         MatCardModule,
@@ -102,7 +109,6 @@ const FILTRO_VACIO = '__empty__';
         MatTooltipModule,
         AgGridAngular,
         DatePipe,
-        NgIf,
     ],
 })
 export class ReporteEvaluacionesProgramadasComponent {
@@ -138,15 +144,22 @@ export class ReporteEvaluacionesProgramadasComponent {
     protected readonly estados$ = new BehaviorSubject<EstadoEvaluacionProgramada[]>([]);
     protected readonly programaciones$ = new BehaviorSubject<EvaluacionProgramada[]>([]);
     protected readonly consultas$ = new BehaviorSubject<EvaluacionProgramadaConsulta[]>([]);
+    private readonly filtrosRapidosPorDefecto: FiltrosRapidosValor = {
+        sede: FILTRO_TODOS,
+        ciclo: FILTRO_TODOS,
+        seccion: FILTRO_TODOS,
+    };
+
     protected readonly filtrosRapidosForm = this.fb.nonNullable.group({
-        sede: [FILTRO_TODOS],
-        ciclo: [FILTRO_TODOS],
-        seccion: [FILTRO_TODOS],
+        sede: [this.filtrosRapidosPorDefecto.sede],
+        ciclo: [this.filtrosRapidosPorDefecto.ciclo],
+        seccion: [this.filtrosRapidosPorDefecto.seccion],
     });
     protected readonly consultasFiltradas$ = combineLatest([
         this.consultas$,
         this.filtrosRapidosForm.valueChanges.pipe(
-            startWith(this.filtrosRapidosForm.getRawValue())
+            startWith(this.filtrosRapidosForm.getRawValue()),
+            map((filtros) => this.normalizarFiltrosRapidos(filtros))
         ),
     ]).pipe(
         map(([consultas, filtros]) =>
@@ -580,11 +593,7 @@ export class ReporteEvaluacionesProgramadasComponent {
         this.rangoInvalido$.next(false);
         this.resetProgramaciones();
         this.filtrosRapidosForm.setValue(
-            {
-                sede: FILTRO_TODOS,
-                ciclo: FILTRO_TODOS,
-                seccion: FILTRO_TODOS,
-            },
+            { ...this.filtrosRapidosPorDefecto },
             { emitEvent: true }
         );
     }
@@ -697,6 +706,16 @@ export class ReporteEvaluacionesProgramadasComponent {
         return valor.trim().toLocaleLowerCase('es-PE');
     }
 
+    private normalizarFiltrosRapidos(
+        filtros: Partial<FiltrosRapidosValor> | null
+    ): FiltrosRapidosValor {
+        return {
+            sede: filtros?.sede ?? this.filtrosRapidosPorDefecto.sede,
+            ciclo: filtros?.ciclo ?? this.filtrosRapidosPorDefecto.ciclo,
+            seccion: filtros?.seccion ?? this.filtrosRapidosPorDefecto.seccion,
+        };
+    }
+
     private asegurarValorFiltroValido(
         controlKey: 'sede' | 'ciclo' | 'seccion',
         opciones: FiltroRapidoOpcion[]
@@ -711,7 +730,7 @@ export class ReporteEvaluacionesProgramadasComponent {
 
     private coincideConFiltrosRapidos(
         consulta: EvaluacionProgramadaConsulta,
-        filtros: { sede: string; ciclo: string; seccion: string }
+        filtros: Readonly<FiltrosRapidosValor>
     ): boolean {
         return (
             this.coincideFiltroIndividual(consulta.sede, filtros.sede) &&
