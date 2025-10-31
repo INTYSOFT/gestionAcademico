@@ -698,6 +698,7 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
                     .map((item) => ({
                         fechaInicio: item.fechaInicio,
                         cicloId: item.cicloId ?? null,
+                        sedeId: item.sedeId ?? null,
                     }));
 
                 const secciones = evaluacion ? this.evaluacionSecciones.get(evaluacion.id) ?? [] : [];

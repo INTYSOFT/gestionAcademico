@@ -32,7 +32,11 @@ describe('EvaluacionProgramadaDialogComponent', () => {
 
         dialogRefSpy = jasmine.createSpyObj('MatDialogRef', ['close']);
         dialogRefSpy.disableClose = true;
-        evaluacionServiceSpy = jasmine.createSpyObj('EvaluacionProgramadasService', ['create', 'update']);
+        evaluacionServiceSpy = jasmine.createSpyObj('EvaluacionProgramadasService', [
+            'create',
+            'update',
+            'listByFechaSedeYCiclo',
+        ]);
         seccionesServiceSpy = jasmine.createSpyObj('EvaluacionProgramadaSeccionesService', ['create', 'update']);
 
         evaluacionServiceSpy.create.and.returnValue(
@@ -54,6 +58,7 @@ describe('EvaluacionProgramadaDialogComponent', () => {
                 usuaraioActualizacionId: null,
             } satisfies EvaluacionProgramada)
         );
+        evaluacionServiceSpy.listByFechaSedeYCiclo.and.returnValue(of([]));
 
         seccionesServiceSpy.create.and.callFake((payload) =>
             of({
@@ -125,12 +130,13 @@ describe('EvaluacionProgramadaDialogComponent', () => {
         expect(dialogRefSpy.close).toHaveBeenCalledTimes(1);
     }));
 
-    it('should flag fechaInicio as duplicated when same fecha and ciclo exist', fakeAsync(() => {
+    it('should flag fechaInicio as duplicated when same fecha, sede y ciclo exist', fakeAsync(() => {
         setupTestBed({
             existingProgramaciones: [
                 {
                     fechaInicio: '2024-06-10',
                     cicloId: 100,
+                    sedeId: 10,
                 },
             ],
         });
@@ -154,6 +160,43 @@ describe('EvaluacionProgramadaDialogComponent', () => {
         tick();
 
         expect(form.controls['fechaInicio'].hasError('fechaDuplicada')).toBeTrue();
+    }));
+
+    it('should allow fechaInicio when same fecha y ciclo pero diferente sede', fakeAsync(() => {
+        setupTestBed({
+            existingProgramaciones: [
+                {
+                    fechaInicio: '2024-06-10',
+                    cicloId: 100,
+                    sedeId: 11,
+                },
+            ],
+        });
+
+        const fixture = TestBed.createComponent(EvaluacionProgramadaDialogComponent);
+        const component = fixture.componentInstance as EvaluacionProgramadaDialogComponent & {
+            form: unknown;
+        };
+
+        fixture.detectChanges();
+        tick();
+
+        const form = (component as any).form as any;
+        form.controls['sedeId'].setValue(10);
+        tick();
+
+        form.controls['cicloId'].setValue(100);
+        tick();
+
+        form.controls['fechaInicio'].setValue(DateTime.fromISO('2024-06-10'));
+        tick(400);
+
+        expect(form.controls['fechaInicio'].hasError('fechaDuplicada')).toBeFalse();
+        expect(evaluacionServiceSpy.listByFechaSedeYCiclo).toHaveBeenCalledWith(
+            '2024-06-10',
+            10,
+            100
+        );
     }));
 });
 
