@@ -1438,24 +1438,14 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         evaluacion: EvaluacionProgramada | null,
         secciones: EvaluacionProgramadaSeccion[]
     ): void {
-        if (!evaluacion) {
+        if (!evaluacion || evaluacion.id === null || evaluacion.id === undefined) {
             this.seccionRegisteredCountsSubject.next(new Map());
             this.evaluacionesRegistradasSubject.next([]);
             this.invalidateRegisteredCounts();
             return;
         }
 
-        const sedeId = evaluacion.sedeId;
-        const cicloId = evaluacion.cicloId;
-
-        if (sedeId === null || sedeId === undefined || cicloId === null || cicloId === undefined) {
-            this.seccionRegisteredCountsSubject.next(new Map());
-            this.evaluacionesRegistradasSubject.next([]);
-            this.invalidateRegisteredCounts();
-            return;
-        }
-
-        const key = `${evaluacion.id ?? 'evaluacion'}|${sedeId}|${cicloId}`;
+        const key = `evaluacion-${evaluacion.id}`;
 
         if (this.lastRegisteredCountsKey === key && this.lastRegisteredCountsLoaded) {
             const counts = this.buildSeccionRegisteredCountsMap(
@@ -1472,7 +1462,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         this.isLoadingRegisteredCountsSubject.next(true);
 
         this.evaluacionesService
-            .listBySedeCiclo(sedeId, cicloId)
+            .listByEvaluacionProgramada(evaluacion.id)
             .pipe(finalize(() => this.isLoadingRegisteredCountsSubject.next(false)))
             .subscribe({
                 next: (evaluaciones) => {
