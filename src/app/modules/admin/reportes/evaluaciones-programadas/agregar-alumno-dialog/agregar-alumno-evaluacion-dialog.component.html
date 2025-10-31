@@ -1,0 +1,115 @@
+<h2 mat-dialog-title>Agregar alumno a la evaluación</h2>
+
+<mat-dialog-content>
+    @if (isLoadingInicial$ | async) {
+    <div class="dialog-loading">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </div>
+    } @else {
+    <form [formGroup]="form" class="dialog-form">
+        <div class="dialog-grid">
+            <mat-form-field appearance="outline">
+                <mat-label>Sede</mat-label>
+                <mat-select formControlName="sedeId" placeholder="Selecciona una sede">
+                    @let sedes = sedes$ | async;
+                    @if ((sedes?.length ?? 0) === 0) {
+                    <mat-option disabled>No hay sedes disponibles</mat-option>
+                    } @else {
+                    @for (sede of sedes ?? []; track sede.id) {
+                    <mat-option [value]="sede.id">{{ sede.nombre }}</mat-option>
+                    }
+                    }
+                </mat-select>
+                @if (form.controls.sedeId.touched && form.controls.sedeId.hasError('required')) {
+                <mat-error>Selecciona una sede.</mat-error>
+                }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Ciclo</mat-label>
+                <mat-select formControlName="cicloId" placeholder="Selecciona un ciclo">
+                    @let ciclos = ciclos$ | async;
+                    @if ((ciclos?.length ?? 0) === 0) {
+                    <mat-option disabled>No hay ciclos disponibles</mat-option>
+                    } @else {
+                    @for (ciclo of ciclos ?? []; track ciclo.id) {
+                    <mat-option [value]="ciclo.id">{{ ciclo.nombre }}</mat-option>
+                    }
+                    }
+                </mat-select>
+                @if (form.controls.cicloId.touched && form.controls.cicloId.hasError('required')) {
+                <mat-error>Selecciona un ciclo.</mat-error>
+                }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Sección</mat-label>
+                <mat-select formControlName="seccionId" placeholder="Selecciona una sección">
+                    @let secciones = seccionesDisponibles$ | async;
+                    @if (isCargandoSecciones$ | async) {
+                    <mat-option disabled>Cargando secciones...</mat-option>
+                    } @else if ((secciones?.length ?? 0) === 0) {
+                    <mat-option disabled>No hay secciones disponibles</mat-option>
+                    } @else {
+                    @for (seccion of secciones ?? []; track seccion.id) {
+                    <mat-option [value]="seccion.id">{{ seccion.nombre }}</mat-option>
+                    }
+                    }
+                </mat-select>
+                @if (form.controls.seccionId.touched && form.controls.seccionId.hasError('required')) {
+                <mat-error>Selecciona una sección.</mat-error>
+                }
+            </mat-form-field>
+        </div>
+
+        <div class="dialog-alumno">
+            <mat-form-field appearance="outline" class="alumno-field">
+                <mat-label>Alumno</mat-label>
+                <input
+                    matInput
+                    type="text"
+                    [formControl]="alumnoBusquedaControl"
+                    [matAutocomplete]="alumnoAuto"
+                    placeholder="Busca por DNI, nombres o apellidos" />
+                <mat-autocomplete
+                    #alumnoAuto="matAutocomplete"
+                    [displayWith]="displayAlumno">
+                    @let alumnos = alumnosFiltrados$ | async;
+                    @if ((alumnos?.length ?? 0) === 0) {
+                    <mat-option disabled>No se encontraron alumnos</mat-option>
+                    } @else {
+                    @for (alumno of alumnos ?? []; track alumno.id) {
+                    <mat-option [value]="alumno">
+                        <div class="alumno-option">
+                            <span class="alumno-option__nombre">
+                                {{ alumno.apellidos }} {{ alumno.nombres }}
+                            </span>
+                            <span class="alumno-option__dni">{{ alumno.dni }}</span>
+                        </div>
+                    </mat-option>
+                    }
+                    }
+                </mat-autocomplete>
+                @if (alumnoBusquedaControl.touched && alumnoBusquedaControl.hasError('required')) {
+                <mat-error>Selecciona un alumno.</mat-error>
+                }
+            </mat-form-field>
+        </div>
+    </form>
+    }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-stroked-button type="button" (click)="cancelar()">
+        Cancelar
+    </button>
+    <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="guardar()"
+        [disabled]="isGuardando$ | async">
+        <mat-icon>person_add</mat-icon>
+        <span>Agregar</span>
+    </button>
+</mat-dialog-actions>
