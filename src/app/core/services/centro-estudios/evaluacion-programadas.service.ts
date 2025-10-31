@@ -80,6 +80,27 @@ export class EvaluacionProgramadasService extends ApiMainService {
             );
     }
 
+    listByFechaSedeYCiclo(
+        fechaInicio: string,
+        sedeId: number,
+        cicloId: number
+    ): Observable<EvaluacionProgramada[]> {
+        const url = `${this.resourcePath}/fechaInicio/${fechaInicio}/sede/${sedeId}/ciclo/${cicloId}`;
+
+        return this.http
+            .get<EvaluacionProgramadaApi[]>(this.buildUrl(url), this.createOptions())
+            .pipe(
+                map((response) => this.normalizeEvaluacionProgramadas(response)),
+                catchError((error: HttpErrorResponse) => {
+                    if (error.status === 404) {
+                        return of([]);
+                    }
+
+                    return this.handleError(error);
+                })
+            );
+    }
+
     listByFechaInicioRange(
         fechaInicioDesde: string,
         fechaInicioHasta: string

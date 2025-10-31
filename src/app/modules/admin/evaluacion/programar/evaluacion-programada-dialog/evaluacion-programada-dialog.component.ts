@@ -74,14 +74,15 @@ import { SeccionesService } from 'app/core/services/centro-estudios/secciones.se
 import { AperturaCicloService } from 'app/core/services/centro-estudios/apertura-ciclo.service';
 import { SeccionCicloService } from 'app/core/services/centro-estudios/seccion-ciclo.service';
 
-interface FechaCicloRegistro {
+interface FechaCicloSedeRegistro {
     fechaInicio: string;
     cicloId: number | null;
+    sedeId: number | null;
 }
 
 export interface EvaluacionProgramadaDialogData {
     mode: 'create' | 'edit';
-    existingProgramaciones: FechaCicloRegistro[];
+    existingProgramaciones: FechaCicloSedeRegistro[];
     evaluacion: EvaluacionProgramada | null;
     secciones: EvaluacionProgramadaSeccion[];
 }
@@ -158,10 +159,12 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
 
     private readonly destroyRef = inject(DestroyRef);
     private readonly submit$ = new Subject<void>();
-    private readonly existingFechaCicloSet = new Set(
-        this.data.existingProgramaciones.map((item) => this.buildFechaCicloKey(item.fechaInicio, item.cicloId))
+    private readonly existingFechaSedeCicloSet = new Set(
+        this.data.existingProgramaciones.map((item) =>
+            this.buildFechaSedeCicloKey(item.fechaInicio, item.cicloId, item.sedeId)
+        )
     );
-    private readonly apiFechaCicloSet = new Set<string>();
+    private readonly apiFechaSedeCicloSet = new Set<string>();
     private ciclosCache: Ciclo[] = [];
     private initialSeccionRecords: EvaluacionProgramadaSeccion[] = [...this.data.secciones];
 
@@ -226,7 +229,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
         this.loadCatalogs();
         this.handleSedeChanges();
         this.handleCicloChanges();
-        this.handleFechaYCicloValidation();
+        this.handleFechaSedeYCicloValidation();
     }
 
     protected submitForm(): void {
@@ -278,6 +281,7 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
             .pipe(
                 takeUntilDestroyed(this.destroyRef),
                 switchMap((sedeId) => {
+                    this.revalidateFechaInicio();
                     this.form.controls['cicloId'].setValue(null);
                     this.form.controls['seccionCicloIds'].setValue([], { emitEvent: false });
                     this.form.controls['seccionCicloIds'].updateValueAndValidity({ onlySelf: true });
@@ -576,89 +580,105 @@ export class EvaluacionProgramadaDialogComponent implements OnInit {
             return null;
         }
 
-        const cicloId = this.form.getRawValue().cicloId ?? null;
+        const { cicloId = null, sedeId = null } = this.form.getRawValue();
 
         if (
             this.data.mode === 'edit' &&
             this.data.evaluacion?.fechaInicio === fecha &&
-            (this.data.evaluacion?.cicloId ?? null) === cicloId
+            (this.data.evaluacion?.cicloId ?? null) === cicloId &&
+            (this.data.evaluacion?.sedeId ?? null) === sedeId
         ) {
             return null;
         }
 
-        const key = this.buildFechaCicloKey(fecha, cicloId);
+        const key = this.buildFechaSedeCicloKey(fecha, cicloId, sedeId);
 
-        if (this.existingFechaCicloSet.has(key) || this.apiFechaCicloSet.has(key)) {
+        if (this.existingFechaSedeCicloSet.has(key) || this.apiFechaSedeCicloSet.has(key)) {
             return { fechaDuplicada: true };
         }
 
         return null;
     }
 
-    private buildFechaCicloKey(fecha: string, cicloId: number | null): string {
-        return `${fecha}__${cicloId ?? 'null'}`;
+    private buildFechaSedeCicloKey(
+        fecha: string,
+        cicloId: number | null,
+        sedeId: number | null
+    ): string {
+        return `${fecha}__${cicloId ?? 'null'}__${sedeId ?? 'null'}`;
     }
 
-    private handleFechaYCicloValidation(): void {
+    private handleFechaSedeYCicloValidation(): void {
         const fechaControl = this.form.controls['fechaInicio'];
         const cicloControl = this.form.controls['cicloId'];
+        const sedeControl = this.form.controls['sedeId'];
 
         combineLatest([
             fechaControl.valueChanges.pipe(startWith(fechaControl.value)),
             cicloControl.valueChanges.pipe(startWith(cicloControl.value)),
+            sedeControl.valueChanges.pipe(startWith(sedeControl.value)),
         ])
             .pipe(
                 debounceTime(300),
-                map(([fechaValue, cicloId]) => ({
+                map(([fechaValue, cicloId, sedeId]) => ({
                     fecha: this.formatDate(fechaValue as DateTime | Date | string | null),
                     cicloId: cicloId ?? null,
+                    sedeId: sedeId ?? null,
                 })),
-                distinctUntilChanged((prev, curr) => prev.fecha === curr.fecha && prev.cicloId === curr.cicloId),
-                switchMap(({ fecha, cicloId }) => {
-                    if (!fecha || cicloId === null) {
+                distinctUntilChanged(
+                    (prev, curr) =>
+                        prev.fecha === curr.fecha &&
+                        prev.cicloId === curr.cicloId &&
+                        prev.sedeId === curr.sedeId
+                ),
+                switchMap(({ fecha, cicloId, sedeId }) => {
+                    if (!fecha || cicloId === null || sedeId === null) {
                         return of<{ key: string | null; hasDuplicate: boolean }>({ key: null, hasDuplicate: false });
                     }
 
                     if (
                         this.data.mode === 'edit' &&
                         this.data.evaluacion?.fechaInicio === fecha &&
-                        (this.data.evaluacion?.cicloId ?? null) === cicloId
+                        (this.data.evaluacion?.cicloId ?? null) === cicloId &&
+                        (this.data.evaluacion?.sedeId ?? null) === sedeId
                     ) {
                         return of<{ key: string | null; hasDuplicate: boolean }>({
-                            key: this.buildFechaCicloKey(fecha, cicloId),
+                            key: this.buildFechaSedeCicloKey(fecha, cicloId, sedeId),
                             hasDuplicate: false,
                         });
                     }
 
-                    const key = this.buildFechaCicloKey(fecha, cicloId);
+                    const key = this.buildFechaSedeCicloKey(fecha, cicloId, sedeId);
 
-                    return this.evaluacionProgramadasService.listByFechaYCiclo(fecha, cicloId).pipe(
-                        map((evaluaciones) =>
-                            evaluaciones.some((evaluacion) => evaluacion.id !== this.data.evaluacion?.id)
-                        ),
-                        catchError((error) => {
-                            this.snackBar.open(
-                                error.message ?? 'No fue posible validar la fecha seleccionada.',
-                                'Cerrar',
-                                { duration: 5000 }
-                            );
-                            return of(false);
-                        }),
-                        map((hasDuplicate) => ({ key, hasDuplicate }))
-                    );
+                    return this.evaluacionProgramadasService
+                        .listByFechaSedeYCiclo(fecha, sedeId, cicloId)
+                        .pipe(
+                            map((evaluaciones) =>
+                                evaluaciones.some((evaluacion) => evaluacion.id !== this.data.evaluacion?.id)
+                            ),
+                            catchError((error) => {
+                                this.snackBar.open(
+                                    error.message ?? 'No fue posible validar la fecha seleccionada.',
+                                    'Cerrar',
+                                    { duration: 5000 }
+                                );
+                                return of(false);
+                            }),
+                            map((hasDuplicate) => ({ key, hasDuplicate }))
+                        );
                 }),
                 takeUntilDestroyed(this.destroyRef)
             )
             .subscribe(({ key, hasDuplicate }) => {
-                this.updateApiFechaCicloDuplicates(key, hasDuplicate);
+                this.updateApiFechaSedeCicloDuplicates(key, hasDuplicate);
             });
     }
 
-    private updateApiFechaCicloDuplicates(key: string | null, hasDuplicate: boolean): void {
-        this.apiFechaCicloSet.clear();
+    private updateApiFechaSedeCicloDuplicates(key: string | null, hasDuplicate: boolean): void {
+        this.apiFechaSedeCicloSet.clear();
 
         if (key && hasDuplicate) {
-            this.apiFechaCicloSet.add(key);
+            this.apiFechaSedeCicloSet.add(key);
         }
 
         this.revalidateFechaInicio();
