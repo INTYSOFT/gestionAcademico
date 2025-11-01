@@ -1015,6 +1015,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
         this.setTabRegistering(tab.key, true);
 
+        // Obtener las matrículas de la sede, ciclo y sección
         this.matriculasService
             .getMatriculasBySedeCicloSeccion(sedeId, cicloId, tab.seccionId)
             .pipe(
