@@ -1,37 +1,29 @@
-<svg
-    width="32"
-    height="32"
-    viewBox="0 0 32 32"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg">
-    <path
-        d="M16 6.75556V0L1.02839 14.6389C0.462304 15.1924 0.457197 16.1016 1.01703 16.6615L3.55556 19.2"
-        fill="#2196F3"/>
-    <path
-        d="M16 6.75556V0L30.9716 14.6389C31.5377 15.1924 31.5428 16.1016 30.983 16.6615L28.4444 19.2"
-        fill="#1878C6"/>
-    <path
-        d="M3.55556 19.2L9.6 13.1556H16V19.2"
-        fill="#1565C0"/>
-    <path
-        d="M28.4444 19.2L22.4 13.1556H16V19.2"
-        fill="#10519D"/>
-    <path
-        d="M16 25.9556H9.95555L12.9778 22.7556L16 25.9556Z"
-        fill="#1565C0"/>
-    <path
-        d="M16 32L22.0444 25.9556L16 25.9556V32Z"
-        fill="#1878C6"/>
-    <path
-        d="M16 32L9.95555 25.9556H16V32Z"
-        fill="#2196F3"/>
-    <path
-        d="M16 25.9556H22.0444L19.0222 22.7556L16 25.9556Z"
-        fill="#10519D"/>
-    <path
-        d="M7.72363 21.7502C7.18605 22.3085 7.19441 23.1944 7.74243 23.7424L9.95556 25.9556L16 19.5556V13.1556"
-        fill="#2196F3"/>
-    <path
-        d="M24.2764 21.7502C24.814 22.3085 24.8056 23.1944 24.2576 23.7424L22.0444 25.9556L16 19.5556V13.1556"
-        fill="#1878C6"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="468" height="277" viewBox="0 0 468 277" role="img" aria-label="GLUMBRERAS - Academia Preuniversitaria">
+  <title>GLUMBRERAS - Academia Preuniversitaria</title>
+  <!-- Red chevron banner background -->
+  <path d="M0,0 H468 V243 L234.0,277 0,243 Z" fill="#E5191B"/>
+  
+  <!-- White divider line -->
+  <rect x="24" y="170" width="420" height="4" fill="#FFFFFF" rx="2" ry="2"/>
+
+  <!-- Gear (white) -->
+  <path d="M 139.000,95.000 L 127.501,106.388 L 131.765,122.000 L 116.113,126.113 L 112.000,141.765 L 96.388,137.501 L 85.000,149.000 L 73.612,137.501 L 58.000,141.765 L 53.887,126.113 L 38.235,122.000 L 42.499,106.388 L 31.000,95.000 L 42.499,83.612 L 38.235,68.000 L 53.887,63.887 L 58.000,48.235 L 73.612,52.499 L 85.000,41.000 L 96.388,52.499 L 112.000,48.235 L 116.113,63.887 L 131.765,68.000 L 127.501,83.612 Z" fill="#FFFFFF"/>
+  <!-- Inner red disc to match the logo style -->
+  <circle cx="85" cy="95" r="42" fill="#E5191B"/>
+  <!-- Inner bore (small white circle) -->
+  <circle cx="85" cy="95" r="26" fill="#FFFFFF"/>
+
+  <!-- White 'G' letter placed over the red inner disc -->
+  <text x="85" y="113" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="64" fill="#FFFFFF">G</text>
+
+  <!-- Brand text to the right of the mark -->
+  <text x="155" y="103" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="44" fill="#FFFFFF" letter-spacing="1.5">
+    LUMBRERAS
+  </text>
+
+  <!-- Subtitle -->
+  <text x="155" y="131" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="16" fill="#FFFFFF" letter-spacing="2">
+    ACADEMIA PREUNIVERSITARIA
+  </text>
 </svg>
