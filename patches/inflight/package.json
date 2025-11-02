@@ -1,0 +1,11 @@
+{
+  "name": "inflight",
+  "version": "1.0.7",
+  "description": "Drop-in replacement for deprecated inflight with fixed resource cleanup",
+  "main": "inflight.js",
+  "license": "ISC",
+  "dependencies": {
+    "once": "^1.4.0",
+    "wrappy": "^1.0.2"
+  }
+}
