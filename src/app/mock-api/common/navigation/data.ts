@@ -2,13 +2,7 @@
 import { FuseNavigationItem } from '@fuse/components/navigation';
 
 export const defaultNavigation: FuseNavigationItem[] = [
-    {
-        id   : 'example',
-        title: 'Example',
-        type : 'basic',
-        icon : 'heroicons_outline:chart-pie',
-        link : '/example'
-    },
+  
     {
         id      : 'evaluacion',
         title   : 'Evaluación',
@@ -130,13 +124,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon : 'heroicons_outline:squares-2x2',
                 link : '/mantenimiento/seccion-ciclo'
             },
-            {
-                id   : 'mantenimiento.niveles',
-                title: 'Niveles',
-                type : 'basic',
-                icon : 'heroicons_outline:rectangle-group',
-                link : '/mantenimiento/niveles'
-            },
+        
             {
                 id   : 'mantenimiento.nivel-seccion',
                 title: 'Nivel Sección',
@@ -212,13 +200,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
     }
 ];
 export const compactNavigation: FuseNavigationItem[] = [
-    {
-        id   : 'example',
-        title: 'Example',
-        type : 'basic',
-        icon : 'heroicons_outline:chart-pie',
-        link : '/example'
-    },
+   
     {
         id   : 'evaluacion',
         title: 'Evaluación',
@@ -250,14 +232,7 @@ export const compactNavigation: FuseNavigationItem[] = [
         icon : 'heroicons_outline:user-group'
     }
 ];
-export const futuristicNavigation: FuseNavigationItem[] = [
-    {
-        id   : 'example',
-        title: 'Example',
-        type : 'basic',
-        icon : 'heroicons_outline:chart-pie',
-        link : '/example'
-    },
+export const futuristicNavigation: FuseNavigationItem[] = [   
     {
         id   : 'evaluacion',
         title: 'Evaluación',
@@ -290,13 +265,7 @@ export const futuristicNavigation: FuseNavigationItem[] = [
     }
 ];
 export const horizontalNavigation: FuseNavigationItem[] = [
-    {
-        id   : 'example',
-        title: 'Example',
-        type : 'basic',
-        icon : 'heroicons_outline:chart-pie',
-        link : '/example'
-    },
+   
     {
         id   : 'matricula',
         title: 'Matricula',
@@ -417,14 +386,7 @@ export const horizontalNavigation: FuseNavigationItem[] = [
                 type : 'basic',
                 icon : 'heroicons_outline:squares-2x2',
                 link : '/mantenimiento/seccion-ciclo'
-            },
-            {
-                id   : 'mantenimiento.niveles',
-                title: 'Niveles',
-                type : 'basic',
-                icon : 'heroicons_outline:rectangle-group',
-                link : '/mantenimiento/niveles'
-            },
+            },          
             {
                 id   : 'mantenimiento.nivel-seccion',
                 title: 'Nivel Sección',
