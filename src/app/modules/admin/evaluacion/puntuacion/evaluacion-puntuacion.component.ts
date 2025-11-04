@@ -1043,8 +1043,11 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
                     const messages: string[] = [];
 
-                    if (registered > 0) {
+                    if (registered > 0 || duplicates > 0) {
                         this.updateSelectedEvaluacionEstado(2);
+                    }
+
+                    if (registered > 0) {
                         messages.push(
                             registered === 1
                                 ? '1 alumno registrado correctamente.'
@@ -1055,8 +1058,8 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                     if (duplicates > 0) {
                         messages.push(
                             duplicates === 1
-                                ? '1 alumno ya estaba registrado para esta sede y ciclo.'
-                                : `${duplicates} alumnos ya estaban registrados para esta sede y ciclo.`
+                                ? '1 alumno ya estaba registrado en esta evaluación.'
+                                : `${duplicates} alumnos ya estaban registrados en esta evaluación.`
                         );
                     }
 
@@ -1998,11 +2001,10 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         seccionId: number | null;
     }): Observable<'created' | 'duplicate'> {
         return this.evaluacionesService
-            .listBySedeCicloAlumno(sedeId, cicloId, alumnoId)
+            .getByEvaluacionProgramadaAndAlumno(evaluacion.id, alumnoId)
             .pipe(
-                map((evaluaciones) => evaluaciones.length > 0),
-                switchMap((exists) => {
-                    if (exists) {
+                switchMap((existingEvaluacion) => {
+                    if (existingEvaluacion) {
                         return of<'duplicate'>('duplicate');
                     }
 
