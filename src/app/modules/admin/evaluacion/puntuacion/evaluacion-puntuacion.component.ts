@@ -2009,8 +2009,8 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         return this.evaluacionesService
             .getByEvaluacionProgramadaAndAlumno(evaluacion.id, alumnoId)
             .pipe(
-                switchMap((existingEvaluacion) => {
-                    if (existingEvaluacion) {
+                switchMap((existingEvaluaciones) => {
+                    if (existingEvaluaciones.length > 0) {
                         return of<'duplicate'>('duplicate');
                     }
 
