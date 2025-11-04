@@ -108,11 +108,11 @@ export class EvaluacionesService extends ApiMainService {
             );
     }
 
-    //[HttpGet("evaluacionProgramada/{evaluacionProgramadaId}")]
+    //[HttpGet("evaluacionProgramadaId/{evaluacionProgramadaId}")]
     listByEvaluacionProgramada(
         evaluacionProgramadaId: number
     ): Observable<Evaluacion[]> {
-        const url = `${this.resourcePath}/evaluacionProgramada/${evaluacionProgramadaId}`;
+        const url = `${this.resourcePath}/evaluacionProgramadaId/${evaluacionProgramadaId}`;
         return this.http
             .get<EvaluacionApi[]>(this.buildUrl(url), this.createOptions())
             .pipe(
@@ -125,7 +125,6 @@ export class EvaluacionesService extends ApiMainService {
                 })
             );
     }
-    
 
     create(payload: CreateEvaluacionPayload): Observable<Evaluacion> {
         const body = this.mapPayloadToApi(payload);
