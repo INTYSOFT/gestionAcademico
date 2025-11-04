@@ -167,17 +167,59 @@ export class EvaluacionProgramadasService extends ApiMainService {
         );
     }
 
-    updateEstado(id: number, estadoId: number): Observable<EvaluacionProgramada> {
-        const body: EvaluacionProgramadaApi = {
-            id,
-            Id: id,
+    updateEstado(
+        evaluacion: EvaluacionProgramada,
+        estadoId: number
+    ): Observable<EvaluacionProgramada> {
+        const targetId = evaluacion.id;
+        const body = this.mapEvaluacionProgramadaToApi({
+            ...evaluacion,
             estadoId,
-            EstadoId: estadoId,
-        };
+        });
 
-        return this.patch<unknown>(`${this.resourcePath}/${id}`, body).pipe(
-            switchMap(() => this.getEvaluacionProgramada(id))
+        body.id = targetId;
+        body.Id = targetId;
+
+        return this.patch<unknown>(`${this.resourcePath}/${targetId}`, body).pipe(
+            switchMap(() => this.getEvaluacionProgramada(targetId))
         );
+    }
+
+    private mapEvaluacionProgramadaToApi(
+        evaluacion: EvaluacionProgramada
+    ): EvaluacionProgramadaApi {
+        return {
+            id: evaluacion.id,
+            Id: evaluacion.id,
+            sedeId: evaluacion.sedeId,
+            SedeId: evaluacion.sedeId,
+            cicloId: evaluacion.cicloId,
+            CicloId: evaluacion.cicloId,
+            estadoId: evaluacion.estadoId,
+            EstadoId: evaluacion.estadoId,
+            tipoEvaluacionId: evaluacion.tipoEvaluacionId,
+            TipoEvaluacionId: evaluacion.tipoEvaluacionId,
+            nombre: evaluacion.nombre,
+            Nombre: evaluacion.nombre,
+            fechaInicio: evaluacion.fechaInicio,
+            FechaInicio: evaluacion.fechaInicio,
+            horaInicio: evaluacion.horaInicio,
+            HoraInicio: evaluacion.horaInicio,
+            horaFin: evaluacion.horaFin,
+            HoraFin: evaluacion.horaFin,
+            carreraId: evaluacion.carreraId,
+            CarreraId: evaluacion.carreraId,
+            activo: evaluacion.activo,
+            Activo: evaluacion.activo,
+            fechaRegistro: evaluacion.fechaRegistro ?? null,
+            FechaRegistro: evaluacion.fechaRegistro ?? null,
+            fechaActualizacion: evaluacion.fechaActualizacion ?? null,
+            FechaActualizacion: evaluacion.fechaActualizacion ?? null,
+            usuaraioRegistroId: evaluacion.usuaraioRegistroId ?? null,
+            UsuaraioRegistroId: evaluacion.usuaraioRegistroId ?? null,
+            usuaraioActualizacionId: evaluacion.usuaraioActualizacionId ?? null,
+            UsuaraioActualizacionId: evaluacion.usuaraioActualizacionId ?? null,
+        };
     }
 
     private mapPayloadToApi(
