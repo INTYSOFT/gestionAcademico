@@ -1043,8 +1043,14 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
 
                     const messages: string[] = [];
 
-                    if (registered > 0 || duplicates > 0) {
-                        this.updateSelectedEvaluacionEstado(2);
+                    const shouldUpdateEvaluacionEstado = registered > 0;
+
+                    if (shouldUpdateEvaluacionEstado && evaluacion.estadoId !== 2) {
+                        this.updateSelectedEvaluacionEstado(2, evaluacion.estadoId ?? null);
+                        this.replaceEvaluacionProgramada({
+                            ...evaluacion,
+                            estadoId: 2,
+                        });
                     }
 
                     if (registered > 0) {
@@ -2022,7 +2028,10 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
             );
     }
 
-    private updateSelectedEvaluacionEstado(estadoId: number): void {
+    private updateSelectedEvaluacionEstado(
+        estadoId: number,
+        previousEstadoId?: number | null
+    ): void {
         const selectedEvaluacion = this.selectedEvaluacionSubject.value;
 
         if (
@@ -2042,6 +2051,12 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                     this.replaceEvaluacionProgramada(updatedEvaluacion);
                 },
                 error: (error) => {
+                    if (previousEstadoId !== undefined) {
+                        this.replaceEvaluacionProgramada({
+                            ...selectedEvaluacion,
+                            estadoId: previousEstadoId,
+                        });
+                    }
                     this.showError(
                         error.message ??
                             'No fue posible actualizar el estado de la evaluación programada.'
