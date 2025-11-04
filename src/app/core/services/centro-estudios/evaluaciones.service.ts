@@ -93,16 +93,18 @@ export class EvaluacionesService extends ApiMainService {
     getByEvaluacionProgramadaAndAlumno(
         evaluacionProgramadaId: number,
         alumnoId: number
-    ): Observable<Evaluacion | null> {
+    ): Observable<Evaluacion[]> {
         const url = `${this.resourcePath}/evaluacionProgramada/${evaluacionProgramadaId}/alumno/${alumnoId}`;
+
         return this.http
-            .get<EvaluacionApi>(this.buildUrl(url), this.createOptions())
+            .get<EvaluacionApi[]>(this.buildUrl(url), this.createOptions())
             .pipe(
-                map((response) => this.normalizeEvaluacion(response)),
+                map((response) => this.normalizeEvaluaciones(response)),
                 catchError((error: HttpErrorResponse) => {
                     if (error.status === 404) {
-                        return of(null);
+                        return of([]);
                     }
+
                     return this.handleError(error);
                 })
             );
