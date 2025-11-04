@@ -1044,6 +1044,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                     const messages: string[] = [];
 
                     if (registered > 0) {
+                        this.updateSelectedEvaluacionEstado(2);
                         messages.push(
                             registered === 1
                                 ? '1 alumno registrado correctamente.'
@@ -2017,6 +2018,52 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                         .pipe(map(() => 'created' as const));
                 })
             );
+    }
+
+    private updateSelectedEvaluacionEstado(estadoId: number): void {
+        const selectedEvaluacion = this.selectedEvaluacionSubject.value;
+
+        if (
+            !selectedEvaluacion ||
+            selectedEvaluacion.id === null ||
+            selectedEvaluacion.id === undefined ||
+            selectedEvaluacion.estadoId === estadoId
+        ) {
+            return;
+        }
+
+        this.evaluacionProgramadasService
+            .update(selectedEvaluacion.id, { estadoId })
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (updatedEvaluacion) => {
+                    this.replaceEvaluacionProgramada(updatedEvaluacion);
+                },
+                error: (error) => {
+                    this.showError(
+                        error.message ??
+                            'No fue posible actualizar el estado de la evaluación programada.'
+                    );
+                },
+            });
+    }
+
+    private replaceEvaluacionProgramada(
+        updatedEvaluacion: EvaluacionProgramada
+    ): void {
+        const evaluaciones = this.evaluacionesSubject.getValue();
+        const index = evaluaciones.findIndex((item) => item.id === updatedEvaluacion.id);
+
+        if (index !== -1) {
+            const nextEvaluaciones = [...evaluaciones];
+            nextEvaluaciones[index] = updatedEvaluacion;
+            this.evaluacionesSubject.next(nextEvaluaciones);
+        }
+
+        const currentSelected = this.selectedEvaluacionSubject.value;
+        if (currentSelected?.id === updatedEvaluacion.id) {
+            this.selectedEvaluacionSubject.next(updatedEvaluacion);
+        }
     }
 
     private setTabRegistering(tabKey: string, registering: boolean): void {
