@@ -2044,7 +2044,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         }
 
         this.evaluacionProgramadasService
-            .update(selectedEvaluacion.id, { estadoId })
+            .updateEstado(selectedEvaluacion.id, estadoId)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
                 next: (updatedEvaluacion) => {

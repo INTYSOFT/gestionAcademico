@@ -167,6 +167,19 @@ export class EvaluacionProgramadasService extends ApiMainService {
         );
     }
 
+    updateEstado(id: number, estadoId: number): Observable<EvaluacionProgramada> {
+        const body: EvaluacionProgramadaApi = {
+            id,
+            Id: id,
+            estadoId,
+            EstadoId: estadoId,
+        };
+
+        return this.patch<unknown>(`${this.resourcePath}/${id}`, body).pipe(
+            switchMap(() => this.getEvaluacionProgramada(id))
+        );
+    }
+
     private mapPayloadToApi(
         payload: CreateEvaluacionProgramadaPayload | UpdateEvaluacionProgramadaPayload
     ): EvaluacionProgramadaApi {
