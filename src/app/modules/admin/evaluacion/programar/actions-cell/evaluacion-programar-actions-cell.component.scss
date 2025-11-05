@@ -1,9 +1,14 @@
 :host {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.5rem;
 }
 
 :host button {
     color: var(--mat-sys-primary);
+}
+
+:host button.mat-warn {
+    color: var(--mat-sys-error);
 }

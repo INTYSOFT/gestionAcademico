@@ -9,6 +9,7 @@ import type { EvaluacionProgramacionRow } from '../evaluacion-programar.componen
 export interface EvaluacionProgramarActionsCellParams
     extends ICellRendererParams<EvaluacionProgramacionRow> {
     onEdit?: (row: EvaluacionProgramacionRow) => void;
+    onDelete?: (row: EvaluacionProgramacionRow) => void;
 }
 
 @Component({
@@ -38,5 +39,13 @@ export class EvaluacionProgramarActionsCellComponent implements ICellRendererAng
         }
 
         this.params.onEdit?.(this.params.data);
+    }
+
+    protected deleteProgramacion(): void {
+        if (!this.params?.data) {
+            return;
+        }
+
+        this.params.onDelete?.(this.params.data);
     }
 }
