@@ -10,95 +10,96 @@
     </div>
 
     @if (isLoading$ | async) {
-    <div class="flex justify-center py-6">
-      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-    </div>
-    } @else {
-    <form [formGroup]="form" class="space-y-4">
-      <div formArrayName="claves">
-        @if (clavesForm.length === 0) {
-        <div class="flex h-48 items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 px-6 text-center text-sm text-gray-500">
-          No hay claves registradas. Usa el botón "Agregar registro" para crear una nueva clave.
-        </div>
-        } @else {
-        <mat-table
-          [dataSource]="clavesForm.controls"
-          class="mat-elevation-z0 w-full overflow-hidden rounded border border-gray-200"
-        >
-          <ng-container matColumnDef="{{ columnas.PreguntaOrden }}">
-            <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Pregunta
-            </th>
-            <td mat-cell *matCellDef="let group; let rowIndex = index" class="px-4 py-2">
-              <ng-container [formGroup]="group">
-                <mat-form-field appearance="outline" class="w-32">
-                  <mat-label>Orden</mat-label>
-                  <input
-                    #preguntaOrdenInput
-                    matInput
-                    type="number"
-                    formControlName="preguntaOrden"
-                    (keydown.enter)="onEnterKey($event, rowIndex, columnas.PreguntaOrden)"
-                  />
-                  @if (group.controls.preguntaOrden.invalid && (group.controls.preguntaOrden.dirty || group.controls.preguntaOrden.touched)) {
-                  <mat-error>Ingresa un número válido.</mat-error>
-                  }
-                </mat-form-field>
-              </ng-container>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="{{ columnas.Respuesta }}">
-            <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Respuesta
-            </th>
-            <td mat-cell *matCellDef="let group; let rowIndex = index" class="px-4 py-2">
-              <ng-container [formGroup]="group">
-                <mat-form-field appearance="outline" class="w-36">
-                  <mat-label>Respuesta</mat-label>
-                  <mat-select
-                    #respuestaSelect
-                    formControlName="respuesta"
-                    (keydown.enter)="onEnterKey($event, rowIndex, columnas.Respuesta)"
-                    (keydown.arrowDown)="onRespuestaArrowKey($event, rowIndex, 1)"
-                    (keydown.arrowUp)="onRespuestaArrowKey($event, rowIndex, -1)"
-                  >
-                    @for (respuesta of respuestas; track respuesta) {
-                    <mat-option [value]="respuesta">{{ respuesta }}</mat-option>
-                    }
-                  </mat-select>
-                  @if (group.controls.respuesta.invalid && (group.controls.respuesta.dirty || group.controls.respuesta.touched)) {
-                  <mat-error>Selecciona una respuesta entre A y H.</mat-error>
-                  }
-                </mat-form-field>
-              </ng-container>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="{{ columnas.Acciones }}">
-            <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Acciones
-            </th>
-            <td mat-cell *matCellDef="let _; let rowIndex = index" class="px-4 py-2">
-              <button
-                mat-icon-button
-                color="warn"
-                type="button"
-                (click)="removeClaveByIndex(rowIndex)"
-                [disabled]="isSaving$ | async"
-                matTooltip="Eliminar registro"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </mat-table>
-        }
+      <div class="flex justify-center py-6">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
       </div>
-    </form>
+    } @else {
+      <form [formGroup]="form" class="space-y-4">
+        <div formArrayName="claves">
+          @if (clavesForm.length === 0) {
+            <div
+              class="flex h-48 items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 px-6 text-center text-sm text-gray-500">
+              No hay claves registradas. Usa el botón "Agregar registro" para crear una nueva clave.
+            </div>
+          } @else {
+
+            <!-- MatTable reescrita con <table mat-table> -->
+            <table mat-table [dataSource]="clavesForm.controls"
+                   class="mat-elevation-z0 w-full overflow-hidden rounded border border-gray-200 my-mat-table">
+
+              <!-- Columnas generadas con @for -->
+              @for (col of displayedColumns; track col) {
+                <ng-container [matColumnDef]="col">
+                  <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    {{ headerMap[col] }}
+                  </th>
+
+                  <td mat-cell *matCellDef="let group; let rowIndex = index" class="px-4 py-2">
+                    <ng-container [formGroup]="group">
+
+                      @if (col === columnas.PreguntaOrden) {
+                        <mat-form-field appearance="outline" class="w-32">
+                          <mat-label>Orden</mat-label>
+                          <input
+                            #ordenInput
+                            matInput
+                            type="number"
+                            formControlName="preguntaOrden"
+                            (focus)="setActiveRow(rowIndex)"
+                            (keydown.enter)="onOrdenEnter($event, rowIndex)"
+                          />
+                          @if (group.controls.preguntaOrden.invalid && (group.controls.preguntaOrden.dirty || group.controls.preguntaOrden.touched)) {
+                            <mat-error>Ingresa un número válido.</mat-error>
+                          }
+                        </mat-form-field>
+                      } @else if (col === columnas.Respuesta) {
+                        <mat-form-field appearance="outline" class="w-28">
+                          <mat-label>Respuesta (A–H)</mat-label>
+                          <input
+                            #respuestaInput
+                            matInput
+                            type="text"
+                            inputmode="latin"
+                            maxlength="1"
+                            autocomplete="off"
+                            autocapitalize="characters"
+                            formControlName="respuesta"
+                            (focus)="setActiveRow(rowIndex)"
+                            (keydown)="onRespuestaKeydown($event)"
+                            (input)="onRespuestaInput($event, rowIndex)"
+                            (keydown.enter)="onRespuestaEnter($event, rowIndex)"
+                          />
+                          @if (group.controls.respuesta.invalid && (group.controls.respuesta.dirty || group.controls.respuesta.touched)) {
+                            <mat-error>Solo letras A–H.</mat-error>
+                          }
+                        </mat-form-field>
+                      } @else if (col === columnas.Acciones) {
+                        <button
+                          mat-icon-button
+                          color="warn"
+                          type="button"
+                          (click)="removeClaveByIndex(rowIndex)"
+                          [disabled]="isSaving$ | async"
+                          matTooltip="Eliminar registro">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      }
+
+                    </ng-container>
+                  </td>
+                </ng-container>
+              }
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row
+                  *matRowDef="let row; let rowIndex = index; columns: displayedColumns"
+                  [class.is-active-row]="activeRowIndex === rowIndex">
+              </tr>
+            </table>
+
+          }
+        </div>
+      </form>
     }
   </div>
 </mat-dialog-content>
@@ -114,8 +115,7 @@
     color="primary"
     type="button"
     (click)="save()"
-    [disabled]="isSaving$ | async"
-  >
+    [disabled]="isSaving$ | async">
     Guardar
   </button>
 </mat-dialog-actions>

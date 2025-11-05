@@ -2,31 +2,33 @@
   display: block;
 }
 
-mat-dialog-content {
-  max-height: 70vh;
-  overflow: auto;
+.my-mat-table {
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
-mat-dialog-actions {
-  padding: 16px 24px;
-}
+tr.mat-mdc-row.is-active-row {
+  position: relative;
+  background: rgba(25, 118, 210, 0.08); // tinte suave
+  transition: background 120ms ease;
 
-mat-table {
-  background-color: transparent;
-}
-
-mat-header-cell {
-  border-bottom: 1px solid rgb(229 231 235 / 1);
-}
-
-mat-cell {
-  border-bottom: 1px solid rgb(243 244 246 / 1);
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 2px;
+    bottom: 2px;
+    width: 3px;
+    border-radius: 2px;
+    background: rgb(25, 118, 210);
+  }
 }
 
 mat-form-field {
   margin: 0;
 }
 
-button[mat-icon-button][disabled] {
-  opacity: 0.4;
-}
+.w-32 { width: 8rem; }
+.w-28 { width: 7rem; }
+
+.space-y-4 > * + * { margin-top: 1rem; }
