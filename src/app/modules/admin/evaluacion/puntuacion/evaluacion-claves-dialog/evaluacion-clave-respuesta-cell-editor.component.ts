@@ -113,10 +113,38 @@ export class EvaluacionClaveRespuestaCellEditorComponent
         }
     }
 
+    moveSelection(offset: number): string | null {
+        if (!Number.isInteger(offset) || this.options.length === 0) {
+            return null;
+        }
+
+        const currentIndex = this.options.indexOf(this.value);
+        const safeCurrentIndex = currentIndex >= 0 ? currentIndex : 0;
+        const targetIndex = Math.min(
+            Math.max(safeCurrentIndex + offset, 0),
+            this.options.length - 1
+        );
+
+        const targetValue = this.options[targetIndex];
+        this.onValueChange(targetValue);
+        this.syncSelectElementValue(this.value);
+
+        return this.value;
+    }
+
     private normalizeValue(value: unknown): string {
         return (value ?? '')
             .toString()
             .trim()
             .toUpperCase();
+    }
+
+    private syncSelectElementValue(value: string): void {
+        const element = this.selectElement?.nativeElement;
+        if (!element) {
+            return;
+        }
+
+        element.value = value;
     }
 }
