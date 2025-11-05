@@ -427,7 +427,7 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
             return;
         }
 
-        if (this.isRespuestaCellEditing(event)) {
+        if (this.isCellBeingEdited(event.api, event.rowIndex, columnId)) {
             return;
         }
 
@@ -443,22 +443,18 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
         }
 
         const columnId = this.getColumnId(event.column);
-        if (columnId !== 'respuesta') {
-            return;
-        }
-
         const keyboardEvent = event.event;
         if (!this.isKeyboardEvent(keyboardEvent)) {
             return;
         }
 
-        const isEditingRespuesta = this.isRespuestaCellEditing(event);
-
         if (keyboardEvent.key === 'Enter') {
             keyboardEvent.preventDefault();
             keyboardEvent.stopPropagation();
 
-            if (!isEditingRespuesta) {
+            const isEditing = this.isCellBeingEdited(event.api, event.rowIndex, columnId);
+
+            if (!isEditing) {
                 event.api.startEditingCell({
                     rowIndex: event.rowIndex,
                     colKey: columnId,
@@ -473,9 +469,15 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
                 return;
             }
 
-            this.focusRespuestaCell(event.api, targetRowIndex, 'bottom');
+            this.focusCellForEditing(event.api, targetRowIndex, columnId, 'bottom');
             return;
         }
+
+        if (columnId !== 'respuesta') {
+            return;
+        }
+
+        const isEditingRespuesta = this.isCellBeingEdited(event.api, event.rowIndex, columnId);
 
         if (!isEditingRespuesta) {
             return;
@@ -494,23 +496,6 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
         event: Event | undefined | null
     ): event is KeyboardEvent {
         return !!event && 'key' in event;
-    }
-
-    private isRespuestaCellEditing(event: CellFocusedEvent<ClaveGridRow> | CellKeyDownEvent<ClaveGridRow>): boolean {
-        if (!event.api || !event.column || event.rowIndex === undefined || event.rowIndex === null) {
-            return false;
-        }
-
-        const columnId = this.getColumnId(event.column);
-        if (!columnId) {
-            return false;
-        }
-        return event.api
-            .getEditingCells()
-            .some(
-                (cell) =>
-                    cell.rowIndex === event.rowIndex && cell.column.getColId() === columnId
-            );
     }
 
     private tryMoveRespuestaOption(
@@ -547,21 +532,6 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
         );
     }
 
-    private focusRespuestaCell(
-        api: GridApi<ClaveGridRow>,
-        rowIndex: number,
-        scrollPosition: 'top' | 'bottom'
-    ): void {
-        queueMicrotask(() => {
-            api.ensureIndexVisible(rowIndex, scrollPosition);
-            api.setFocusedCell(rowIndex, 'respuesta');
-            api.startEditingCell({
-                rowIndex,
-                colKey: 'respuesta',
-            });
-        });
-    }
-
     private getColumnId(
         column: string | Column<ClaveGridRow> | null | undefined
     ): string | undefined {
@@ -570,6 +540,36 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
         }
 
         return typeof column === 'string' ? column : column.getColId();
+    }
+
+    private isCellBeingEdited(
+        api: GridApi<ClaveGridRow> | undefined,
+        rowIndex: number | null | undefined,
+        columnId: string
+    ): boolean {
+        if (!api || rowIndex === undefined || rowIndex === null) {
+            return false;
+        }
+
+        return api
+            .getEditingCells()
+            .some((cell) => cell.rowIndex === rowIndex && cell.column.getColId() === columnId);
+    }
+
+    private focusCellForEditing(
+        api: GridApi<ClaveGridRow>,
+        rowIndex: number,
+        columnId: string,
+        scrollPosition: 'top' | 'bottom'
+    ): void {
+        queueMicrotask(() => {
+            api.ensureIndexVisible(rowIndex, scrollPosition);
+            api.setFocusedCell(rowIndex, columnId);
+            api.startEditingCell({
+                rowIndex,
+                colKey: columnId,
+            });
+        });
     }
 
 
