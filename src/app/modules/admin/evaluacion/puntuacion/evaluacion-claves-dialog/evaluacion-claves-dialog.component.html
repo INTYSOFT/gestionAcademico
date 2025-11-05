@@ -19,7 +19,7 @@
           @if (clavesForm.length === 0) {
             <div
               class="flex h-48 items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 px-6 text-center text-sm text-gray-500">
-              No hay claves registradas. Usa el botón "Agregar registro" para crear una nueva clave.
+              No hay claves registradas para el rango configurado.
             </div>
           } @else {
 
@@ -73,16 +73,6 @@
                             <mat-error>Solo letras A–H.</mat-error>
                           }
                         </mat-form-field>
-                      } @else if (col === columnas.Acciones) {
-                        <button
-                          mat-icon-button
-                          color="warn"
-                          type="button"
-                          (click)="removeClaveByIndex(rowIndex)"
-                          [disabled]="isSaving$ | async"
-                          matTooltip="Eliminar registro">
-                          <mat-icon>delete</mat-icon>
-                        </button>
                       }
 
                     </ng-container>
@@ -105,10 +95,6 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end" class="gap-2">
-  <button mat-stroked-button type="button" (click)="addClave()">
-    Agregar registro
-  </button>
-  <span class="flex-1"></span>
   <button mat-button type="button" (click)="cancel()">Cancelar</button>
   <button
     mat-flat-button

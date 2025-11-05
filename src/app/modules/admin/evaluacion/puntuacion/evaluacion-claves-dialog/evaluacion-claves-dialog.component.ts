@@ -22,9 +22,7 @@ import {
 } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { BehaviorSubject, Subscription, finalize, forkJoin, switchMap, take } from 'rxjs';
 import { MatTableModule } from '@angular/material/table';
@@ -45,7 +43,6 @@ type InvalidRespuesta = { type: 'pregunta' | 'registro'; value: number };
 enum TablaColumna {
   PreguntaOrden = 'preguntaOrden',
   Respuesta = 'respuesta',
-  Acciones = 'actions',
 }
 
 export interface EvaluacionClavesDialogData {
@@ -102,9 +99,7 @@ interface EvaluacionClaveFormValue {
     ReactiveFormsModule,
     MatDialogModule,
     MatButtonModule,
-    MatIconModule,
     MatSnackBarModule,
-    MatTooltipModule,
     MatProgressBarModule,
     MatTableModule,
     MatFormFieldModule,
@@ -125,12 +120,10 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
   protected readonly displayedColumns: TablaColumna[] = [
     TablaColumna.PreguntaOrden,
     TablaColumna.Respuesta,
-    TablaColumna.Acciones,
   ];
   protected readonly headerMap: Record<TablaColumna, string> = {
     [TablaColumna.PreguntaOrden]: 'Pregunta',
     [TablaColumna.Respuesta]: 'Respuesta',
-    [TablaColumna.Acciones]: 'Acciones',
   };
 
   protected readonly isLoading$ = new BehaviorSubject<boolean>(false);
