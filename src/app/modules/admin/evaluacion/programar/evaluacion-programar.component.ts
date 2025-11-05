@@ -41,6 +41,7 @@ import {
 } from 'rxjs';
 import { DateTime } from 'luxon';
 import { blurActiveElement } from 'app/core/utils/focus.util';
+import { FuseConfirmationService } from '@fuse/services/confirmation';
 import { EvaluacionProgramada } from 'app/core/models/centro-estudios/evaluacion-programada.model';
 import { EvaluacionProgramadaSeccion } from 'app/core/models/centro-estudios/evaluacion-programada-seccion.model';
 import { Sede } from 'app/core/models/centro-estudios/sede.model';
@@ -230,11 +231,13 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
             filter: false,
             resizable: false,
         },
-        {
+        { 
             headerName: 'Acciones',
             cellRenderer: EvaluacionProgramarActionsCellComponent,
             cellRendererParams: {
                 onEdit: (row: EvaluacionProgramacionRow) => this.editProgramacion(row.id),
+                onDelete: (row: EvaluacionProgramacionRow) =>
+                    this.confirmDeleteProgramacion(row),
             },
             minWidth: 156,
             width: 168,
@@ -285,7 +288,8 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
         private readonly ciclosService: CiclosService,
         private readonly tipoEvaluacionesService: TipoEvaluacionesService,
         private readonly carrerasService: CarrerasService,
-        private readonly seccionesService: SeccionesService
+        private readonly seccionesService: SeccionesService,
+        private readonly confirmationService: FuseConfirmationService
     ) {}
 
     ngOnInit(): void {
@@ -322,6 +326,40 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
         }
 
         this.openProgramacionDialog(evaluacion);
+    }
+
+    protected confirmDeleteProgramacion(row: EvaluacionProgramacionRow): void {
+        blurActiveElement();
+
+        const dialogRef = this.confirmationService.open({
+            title: 'Eliminar programación',
+            message: `¿Estás seguro de que deseas eliminar la programación <strong>${row.nombre}</strong>? Esta acción no se puede deshacer.`,
+            icon: {
+                show: true,
+                name: 'heroicons_outline:trash',
+                color: 'warn',
+            },
+            actions: {
+                confirm: {
+                    show: true,
+                    label: 'Eliminar',
+                    color: 'warn',
+                },
+                cancel: {
+                    show: true,
+                    label: 'Cancelar',
+                },
+            },
+        });
+
+        dialogRef
+            .afterClosed()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((result) => {
+                if (result === 'confirmed') {
+                    this.deleteProgramacion(row.id);
+                }
+            });
     }
 
     protected formatDateControlValue(date: Date | null): string {
@@ -539,6 +577,29 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
                     this.snackBar.open(error.message ?? fallbackErrorMessage, 'Cerrar', {
                         duration: 5000,
                     });
+                },
+            });
+    }
+
+    private deleteProgramacion(evaluacionId: number): void {
+        this.evaluacionProgramadasService
+            .delete(evaluacionId)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+                next: () => {
+                    this.snackBar.open('La programación se eliminó correctamente.', 'Cerrar', {
+                        duration: 4000,
+                    });
+                    this.triggerFilter(true);
+                },
+                error: (error) => {
+                    this.snackBar.open(
+                        error.message ?? 'No fue posible eliminar la programación seleccionada.',
+                        'Cerrar',
+                        {
+                            duration: 5000,
+                        }
+                    );
                 },
             });
     }
