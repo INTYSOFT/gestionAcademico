@@ -30,9 +30,11 @@ import {
     CellFocusedEvent,
     CellKeyDownEvent,
     ColDef,
+    Column,
     FirstDataRenderedEvent,
     GridApi,
     GridReadyEvent,
+    ICellEditor,
     ValueGetterParams,
     ValueSetterParams,
 } from 'ag-grid-community';
@@ -420,21 +422,12 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const columnId =
-            typeof event.column === 'string' ? event.column : event.column?.getColId();
+        const columnId = this.getColumnId(event.column);
         if (columnId !== 'respuesta') {
             return;
         }
 
-        const isEditing = event.api
-            .getEditingCells()
-            .some(
-                (cell) =>
-                    cell.rowIndex === event.rowIndex &&
-                    cell.column.getColId() === columnId
-            );
-
-        if (isEditing) {
+        if (this.isRespuestaCellEditing(event)) {
             return;
         }
 
@@ -449,7 +442,7 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const columnId = event.column.getColId();
+        const columnId = this.getColumnId(event.column);
         if (columnId !== 'respuesta') {
             return;
         }
@@ -459,50 +452,124 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const { key } = keyboardEvent;
+        const isEditingRespuesta = this.isRespuestaCellEditing(event);
 
-        if (key !== 'ArrowDown' && key !== 'ArrowUp') {
+        if (keyboardEvent.key === 'Enter') {
+            keyboardEvent.preventDefault();
+            keyboardEvent.stopPropagation();
+
+            if (!isEditingRespuesta) {
+                event.api.startEditingCell({
+                    rowIndex: event.rowIndex,
+                    colKey: columnId,
+                });
+                return;
+            }
+
+            event.api.stopEditing(false);
+
+            const targetRowIndex = event.rowIndex + 1;
+            if (targetRowIndex >= this.clavesForm.length) {
+                return;
+            }
+
+            this.focusRespuestaCell(event.api, targetRowIndex, 'bottom');
             return;
         }
-
-        const isEditingRespuesta = event.api
-            .getEditingCells()
-            .some(
-                (cell) =>
-                    cell.rowIndex === event.rowIndex && cell.column.getColId() === columnId
-            );
 
         if (!isEditingRespuesta) {
             return;
         }
 
-        const direction = key === 'ArrowDown' ? 1 : -1;
-        const targetRowIndex = event.rowIndex + direction;
+        if (keyboardEvent.key === 'ArrowDown' || keyboardEvent.key === 'ArrowUp') {
+            keyboardEvent.preventDefault();
+            keyboardEvent.stopPropagation();
 
-        if (targetRowIndex < 0 || targetRowIndex >= this.clavesForm.length) {
-            return;
+            const direction: 1 | -1 = keyboardEvent.key === 'ArrowDown' ? 1 : -1;
+            this.tryMoveRespuestaOption(event, direction);
         }
-
-
-        keyboardEvent.preventDefault();
-        keyboardEvent.stopPropagation();
-
-        event.api.stopEditing(false);
-
-        queueMicrotask(() => {
-            event.api.ensureIndexVisible(targetRowIndex, direction > 0 ? 'bottom' : 'top');
-            event.api.setFocusedCell(targetRowIndex, columnId);
-            event.api.startEditingCell({
-                rowIndex: targetRowIndex,
-                colKey: columnId,
-            });
-        });
     }
 
     private isKeyboardEvent(
         event: Event | undefined | null
     ): event is KeyboardEvent {
         return !!event && 'key' in event;
+    }
+
+    private isRespuestaCellEditing(event: CellFocusedEvent<ClaveGridRow> | CellKeyDownEvent<ClaveGridRow>): boolean {
+        if (!event.api || !event.column || event.rowIndex === undefined || event.rowIndex === null) {
+            return false;
+        }
+
+        const columnId = this.getColumnId(event.column);
+        if (!columnId) {
+            return false;
+        }
+        return event.api
+            .getEditingCells()
+            .some(
+                (cell) =>
+                    cell.rowIndex === event.rowIndex && cell.column.getColId() === columnId
+            );
+    }
+
+    private tryMoveRespuestaOption(
+        event: CellKeyDownEvent<ClaveGridRow>,
+        direction: 1 | -1
+    ): void {
+        if (!event.api || !event.node) {
+            return;
+        }
+
+        const editors = event.api.getCellEditorInstances({
+            rowNodes: [event.node],
+            columns: [event.column],
+        });
+
+        if (editors.length === 0) {
+            return;
+        }
+
+        const editor = editors[0];
+        if (!this.isEvaluacionClaveRespuestaEditor(editor)) {
+            return;
+        }
+
+        editor.moveSelection(direction);
+    }
+
+    private isEvaluacionClaveRespuestaEditor(
+        editor: ICellEditor | undefined
+    ): editor is EvaluacionClaveRespuestaCellEditorComponent & ICellEditor {
+        return (
+            !!editor &&
+            typeof (editor as EvaluacionClaveRespuestaCellEditorComponent).moveSelection === 'function'
+        );
+    }
+
+    private focusRespuestaCell(
+        api: GridApi<ClaveGridRow>,
+        rowIndex: number,
+        scrollPosition: 'top' | 'bottom'
+    ): void {
+        queueMicrotask(() => {
+            api.ensureIndexVisible(rowIndex, scrollPosition);
+            api.setFocusedCell(rowIndex, 'respuesta');
+            api.startEditingCell({
+                rowIndex,
+                colKey: 'respuesta',
+            });
+        });
+    }
+
+    private getColumnId(
+        column: string | Column<ClaveGridRow> | null | undefined
+    ): string | undefined {
+        if (!column) {
+            return undefined;
+        }
+
+        return typeof column === 'string' ? column : column.getColId();
     }
 
 
