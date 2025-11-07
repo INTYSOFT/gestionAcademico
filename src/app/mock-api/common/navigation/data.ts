@@ -18,7 +18,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
             },
             {
                 id   : 'evaluacion.puntuacion',
-                title: 'Datos por defecto Puntuación',
+                title: 'Puntuación',
                 type : 'basic',
                 icon : 'heroicons_outline:calculator',
                 link : '/evaluacion/puntuacion'
@@ -332,7 +332,7 @@ export const horizontalNavigation: FuseNavigationItem[] = [
             },
             {
                 id   : 'evaluacion.puntuacion',
-                title: 'Datos por defecto Puntuación',
+                title: 'Puntuación',
                 type : 'basic',
                 icon : 'heroicons_outline:calculator',
                 link : '/evaluacion/puntuacion'

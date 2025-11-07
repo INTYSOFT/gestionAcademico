@@ -9,7 +9,6 @@ export const CENTRO_ESTUDIOS_API = {
     evaluacionProgramadas: '/api/EvaluacionProgramadums',
     evaluacionProgramadaSecciones: '/api/EvaluacionProgramadaSeccions',
     evaluacionDetalles: '/api/EvaluacionDetalles',
-    evaluacionDetalleDefatults: '/api/EvaluacionDetalleDefatults',
     evaluacionClaves: '/api/EvaluacionClaves',
     evaluaciones: '/api/Evaluacions',
     estadoEvaluacionProgramadas: '/api/EstadoEvaluacionProgramadums',

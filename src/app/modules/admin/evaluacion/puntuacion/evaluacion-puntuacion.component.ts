@@ -23,8 +23,6 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatNativeDateModule } from '@angular/material/core';
-import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
     BehaviorSubject,
@@ -55,12 +53,6 @@ import { EvaluacionTipoPregunta } from 'app/core/models/centro-estudios/evaluaci
 import { EvaluacionTipoPreguntasService } from 'app/core/services/centro-estudios/evaluacion-tipo-preguntas.service';
 import { EvaluacionDetalleFormDialogComponent } from './evaluacion-detalle-form-dialog/evaluacion-detalle-form-dialog.component';
 import type { EvaluacionDetalleFormDialogResult } from './evaluacion-detalle-form-dialog/evaluacion-detalle-form-dialog.component';
-import { EvaluacionDetalleDefatult } from 'app/core/models/centro-estudios/evaluacion-detalle-defatult.model';
-import { EvaluacionDetalleDefatultsService } from 'app/core/services/centro-estudios/evaluacion-detalle-defatults.service';
-import {
-    EvaluacionDetalleDefatultFormDialogComponent,
-    type EvaluacionDetalleDefatultFormDialogResult,
-} from './evaluacion-detalle-defatult-form-dialog/evaluacion-detalle-defatult-form-dialog.component';
 import {
     EvaluacionDetalleImportDialogComponent,
     EvaluacionDetalleImportDialogResult,
@@ -81,7 +73,6 @@ import { Matricula } from 'app/core/models/centro-estudios/matricula.model';
 import { EvaluacionesService } from 'app/core/services/centro-estudios/evaluaciones.service';
 import { Evaluacion } from 'app/core/models/centro-estudios/evaluacion.model';
 import { EvaluacionAlumnosRegistradosDialogComponent } from './evaluacion-alumnos-registrados-dialog/evaluacion-alumnos-registrados-dialog.component';
-import { EvaluacionDetalleDefatultActionsCellComponent } from './evaluacion-detalle-defatult-actions-cell/evaluacion-detalle-defatult-actions-cell.component';
 
 interface EvaluacionSeccionTabView {
     key: string;
@@ -98,11 +89,6 @@ interface DetalleImportContext {
     payload: CreateEvaluacionDetallePayload;
 }
 
-interface EvaluacionDetalleDefatultView extends EvaluacionDetalleDefatult {
-    evaluacionTipoPreguntaNombre: string;
-    rangoLabel: string;
-}
-
 @Component({
     selector: 'app-evaluacion-puntuacion',
     standalone: true,
@@ -112,7 +98,6 @@ interface EvaluacionDetalleDefatultView extends EvaluacionDetalleDefatult {
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         CommonModule,
-        AgGridAngular,
         ReactiveFormsModule,
         MatButtonModule,
         MatDatepickerModule,
@@ -137,69 +122,6 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     ) => this.buildEvaluacionTrackKey(evaluacion);
     protected readonly trackByTab = (_: number, tab: EvaluacionSeccionTabView) => tab.key;
     protected readonly trackByDetalle = (_: number, detalle: EvaluacionDetalle) => detalle.id;
-    protected readonly evaluacionDetalleDefatultColumnDefs: ColDef<
-        EvaluacionDetalleDefatultView
-    >[] = [
-        {
-            headerName: 'Rango',
-            field: 'rangoLabel',
-            minWidth: 140,
-        },
-        {
-            headerName: 'Valor buena',
-            field: 'valorBuena',
-            minWidth: 160,
-            valueFormatter: (params) => this.formatDecimal(params.value),
-        },
-        {
-            headerName: 'Valor mala',
-            field: 'valorMala',
-            minWidth: 160,
-            valueFormatter: (params) => this.formatDecimal(params.value),
-        },
-        {
-            headerName: 'Valor blanca',
-            field: 'valorBlanca',
-            minWidth: 160,
-            valueFormatter: (params) => this.formatDecimal(params.value),
-        },
-        {
-            headerName: 'Tipo de pregunta',
-            field: 'evaluacionTipoPreguntaNombre',
-            minWidth: 220,
-        },
-        {
-            headerName: 'Activo',
-            field: 'activo',
-            minWidth: 120,
-            valueFormatter: (params) => this.formatBoolean(params.value),
-        },
-        {
-            headerName: 'Observación',
-            field: 'observacion',
-            minWidth: 220,
-            flex: 1,
-        },
-        {
-            headerName: 'Acciones',
-            cellRenderer: EvaluacionDetalleDefatultActionsCellComponent,
-            cellRendererParams: {
-                onEdit: (detalle: EvaluacionDetalleDefatult) =>
-                    this.openEvaluacionDetalleDefatultDialog(detalle),
-            },
-            width: 120,
-            sortable: false,
-            filter: false,
-            resizable: false,
-            pinned: 'right',
-        },
-    ];
-    protected readonly evaluacionDetalleDefatultDefaultColDef: ColDef = {
-        sortable: true,
-        resizable: true,
-        filter: true,
-        flex: 1,
-    };
 
     private readonly evaluacionesSubject = new BehaviorSubject<EvaluacionProgramada[]>([]);
     private readonly selectedEvaluacionSubject = new BehaviorSubject<
@@ -214,12 +136,6 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     private readonly evaluacionTipoPreguntasSubject = new BehaviorSubject<
         EvaluacionTipoPregunta[]
     >([]);
-    private readonly evaluacionDetalleDefatultsSubject = new BehaviorSubject<
-        EvaluacionDetalleDefatult[]
-    >([]);
-    private readonly evaluacionDetalleDefatultViewSubject = new BehaviorSubject<
-        EvaluacionDetalleDefatultView[]
-    >([]);
     private readonly detalleClaveCountsSubject = new BehaviorSubject<Map<number, number>>(new Map());
     private readonly seccionRegisteredCountsSubject = new BehaviorSubject<Map<string, number>>(
         new Map()
@@ -232,7 +148,6 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     private readonly isLoadingTipoEvaluacionSubject = new BehaviorSubject<boolean>(false);
     private readonly isLoadingClavesSubject = new BehaviorSubject<boolean>(false);
     private readonly isLoadingRegisteredCountsSubject = new BehaviorSubject<boolean>(false);
-    private readonly isLoadingEvaluacionDetalleDefatultsSubject = new BehaviorSubject<boolean>(false);
 
     private readonly seccionesCatalogSubject = new BehaviorSubject<Seccion[]>([]);
     private readonly sedesCatalogSubject = new BehaviorSubject<Sede[]>([]);
@@ -282,7 +197,6 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     private evaluacionesListResizeObserver?: ResizeObserver;
     private lastRegisteredCountsKey: string | null = null;
     private lastRegisteredCountsLoaded = false;
-    private evaluacionDetalleDefatultGridApi?: GridApi<EvaluacionDetalleDefatultView>;
 
     protected readonly evaluaciones$ = this.evaluacionesSubject.asObservable();
     protected readonly selectedEvaluacion$ = this.selectedEvaluacionSubject.asObservable();
@@ -290,8 +204,6 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     protected readonly tipoEvaluacion$ = this.tipoEvaluacionSubject.asObservable();
     protected readonly evaluacionTipoPreguntas$ =
         this.evaluacionTipoPreguntasSubject.asObservable();
-    protected readonly evaluacionDetalleDefatultView$ =
-        this.evaluacionDetalleDefatultViewSubject.asObservable();
 
     protected readonly isLoadingEvaluaciones$ = this.isLoadingEvaluacionesSubject.asObservable();
     protected readonly isLoadingSecciones$ = this.isLoadingSeccionesSubject.asObservable();
@@ -300,8 +212,6 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     protected readonly isLoadingClaves$ = this.isLoadingClavesSubject.asObservable();
     protected readonly isLoadingRegisteredCounts$ =
         this.isLoadingRegisteredCountsSubject.asObservable();
-    protected readonly isLoadingEvaluacionDetalleDefatults$ =
-        this.isLoadingEvaluacionDetalleDefatultsSubject.asObservable();
 
     protected readonly dateClass: MatCalendarCellClassFunction<unknown> = (date) =>
         this.calendarMarkedDateKeys.has(this.buildDateKey(date))
@@ -324,7 +234,6 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         private readonly evaluacionProgramadasService: EvaluacionProgramadasService,
         private readonly evaluacionProgramadaSeccionesService: EvaluacionProgramadaSeccionesService,
         private readonly evaluacionDetallesService: EvaluacionDetallesService,
-        private readonly evaluacionDetalleDefatultsService: EvaluacionDetalleDefatultsService,
         private readonly evaluacionClavesService: EvaluacionClavesService,
         private readonly matriculasService: MatriculasService,
         private readonly evaluacionesService: EvaluacionesService,
@@ -371,7 +280,6 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         this.destroyRef.onDestroy(() => {
             this.calendarStateChangesSubscription?.unsubscribe();
             this.monthEvaluacionesSubscription?.unsubscribe();
-            this.evaluacionDetalleDefatultGridApi?.destroy();
         });
     }
 
@@ -380,7 +288,6 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         this.loadSedesCatalog();
         this.loadCiclosCatalog();
         this.loadEvaluacionTipoPreguntas();
-        this.loadEvaluacionDetalleDefatults();
 
         const initialDate = this.normalizeDateInput(this.dateControl.value) ?? new Date();
         this.dateControl.setValue(initialDate, { emitEvent: false });        
@@ -819,21 +726,6 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         );
     }
 
-    protected formatDecimal(value: number | null | undefined): string {
-        if (value === null || value === undefined || Number.isNaN(value)) {
-            return '0.00';
-        }
-
-        return new Intl.NumberFormat('es-PE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(value);
-    }
-
-    protected formatBoolean(value: boolean | null | undefined): string {
-        return value ? 'Sí' : 'No';
-    }
-
     protected formatFecha(fecha: string | null | undefined): string {
         if (!fecha) {
             return 'Sin fecha';
@@ -845,17 +737,6 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         }
 
         return parsed.toFormat('dd/MM/yyyy');
-    }
-
-    protected createEvaluacionDetalleDefatult(): void {
-        this.openEvaluacionDetalleDefatultDialog();
-    }
-
-    protected onEvaluacionDetalleDefatultGridReady(
-        event: GridReadyEvent<EvaluacionDetalleDefatultView>
-    ): void {
-        this.evaluacionDetalleDefatultGridApi = event.api;
-        event.api.sizeColumnsToFit();
     }
 
     protected openDetalleDialogForCreate(tab: EvaluacionSeccionTabView): void {
@@ -1377,7 +1258,6 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 records.forEach((item) => {
                     this.evaluacionTipoPreguntaNombreMap.set(item.id, item.nombre);
                 });
-                this.refreshEvaluacionDetalleDefatultViewRecords();
             },
             error: (error) => {
                 this.showError(
@@ -1386,77 +1266,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
                 );
                 this.evaluacionTipoPreguntasSubject.next([]);
                 this.evaluacionTipoPreguntaNombreMap.clear();
-                this.refreshEvaluacionDetalleDefatultViewRecords();
             },
-        });
-    }
-
-    private loadEvaluacionDetalleDefatults(): void {
-        this.isLoadingEvaluacionDetalleDefatultsSubject.next(true);
-
-        this.evaluacionDetalleDefatultsService
-            .listAll()
-            .pipe(finalize(() => this.isLoadingEvaluacionDetalleDefatultsSubject.next(false)))
-            .subscribe({
-                next: (records) => {
-                    this.evaluacionDetalleDefatultsSubject.next(records);
-                    this.refreshEvaluacionDetalleDefatultViewRecords();
-                },
-                error: (error) => {
-                    this.showError(
-                        error.message ??
-                            'No fue posible obtener los detalles por defecto de puntuación.'
-                    );
-                    this.evaluacionDetalleDefatultsSubject.next([]);
-                    this.refreshEvaluacionDetalleDefatultViewRecords();
-                },
-            });
-    }
-
-    private refreshEvaluacionDetalleDefatultViewRecords(): void {
-        const records = this.evaluacionDetalleDefatultsSubject.value;
-        const mapped = records.map((detalle) => this.mapEvaluacionDetalleDefatultToView(detalle));
-        this.evaluacionDetalleDefatultViewSubject.next(mapped);
-
-        queueMicrotask(() => this.evaluacionDetalleDefatultGridApi?.sizeColumnsToFit());
-    }
-
-    private mapEvaluacionDetalleDefatultToView(
-        detalle: EvaluacionDetalleDefatult
-    ): EvaluacionDetalleDefatultView {
-        return {
-            ...detalle,
-            evaluacionTipoPreguntaNombre: this.getEvaluacionTipoPreguntaLabel(
-                detalle.evaluacionTipoPreguntaId
-            ),
-            rangoLabel: this.formatDetalleRangeLabel(detalle.rangoInicio, detalle.rangoFin),
-        };
-    }
-
-    private openEvaluacionDetalleDefatultDialog(
-        detalle?: EvaluacionDetalleDefatult | null
-    ): void {
-        const dialogRef = this.dialog.open<
-            EvaluacionDetalleDefatultFormDialogComponent,
-            {
-                mode: 'create' | 'edit';
-                detalle: EvaluacionDetalleDefatult | null;
-                evaluacionTipoPreguntas: EvaluacionTipoPregunta[];
-            },
-            EvaluacionDetalleDefatultFormDialogResult | undefined
-        >(EvaluacionDetalleDefatultFormDialogComponent, {
-            width: '520px',
-            data: {
-                mode: detalle ? 'edit' : 'create',
-                detalle: detalle ?? null,
-                evaluacionTipoPreguntas: this.evaluacionTipoPreguntasSubject.value,
-            },
-        });
-
-        dialogRef.afterClosed().subscribe((result) => {
-            if (result?.action === 'created' || result?.action === 'updated') {
-                this.loadEvaluacionDetalleDefatults();
-            }
         });
     }
 
