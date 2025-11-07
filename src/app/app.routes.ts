@@ -97,6 +97,13 @@ export const appRoutes: Route[] = [
                             ).then((m) => m.evaluacionPuntuacionRoutes),
                     },
                     {
+                        path: 'datos-por-defecto-puntuacion',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/evaluacion/datos-por-defecto-puntuacion/datos-por-defecto-puntuacion.routes'
+                            ).then((m) => m.datosPorDefectoPuntuacionRoutes),
+                    },
+                    {
                         path: 'tipo-evaluacion',
                         loadChildren: () =>
                             import(

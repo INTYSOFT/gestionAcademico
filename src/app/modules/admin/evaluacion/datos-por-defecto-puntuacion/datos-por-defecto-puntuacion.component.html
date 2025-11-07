@@ -1,0 +1,37 @@
+<div class="flex min-w-0 flex-auto flex-col">
+    <div class="flex-auto p-6 sm:p-10">
+        <section class="datos-defecto">
+            <header class="datos-defecto__header">
+                <mat-form-field appearance="outline" class="datos-defecto__search-field">
+                    <mat-label>Buscar configuración</mat-label>
+                    <input
+                        matInput
+                        type="search"
+                        [formControl]="searchControl"
+                        placeholder="Tipo de pregunta, rangos o valores"
+                    />
+                </mat-form-field>
+
+                <button mat-raised-button color="primary" type="button" (click)="create()">
+                    <mat-icon svgIcon="heroicons_outline:plus"></mat-icon>
+                    Nuevo registro
+                </button>
+            </header>
+
+            @if (isLoading$ | async) {
+                <mat-progress-bar mode="indeterminate" color="primary"></mat-progress-bar>
+            }
+
+            <ag-grid-angular
+                class="ag-theme-material datos-defecto__grid"
+                [theme]="'legacy'"
+                [rowData]="filteredDetalles$ | async"
+                [columnDefs]="columnDefs"
+                [defaultColDef]="defaultColDef"
+                [animateRows]="true"
+                [domLayout]="'autoHeight'"
+                (gridReady)="onGridReady($event)"
+            ></ag-grid-angular>
+        </section>
+    </div>
+</div>

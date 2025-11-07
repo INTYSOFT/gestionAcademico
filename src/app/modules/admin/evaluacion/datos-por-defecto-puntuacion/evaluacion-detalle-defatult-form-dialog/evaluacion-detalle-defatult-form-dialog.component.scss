@@ -1,0 +1,21 @@
+mat-dialog-content {
+    padding-top: 0;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+
+    &__full {
+        grid-column: 1 / -1;
+    }
+}
+
+.error-banner {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background-color: var(--fuse-warn-50);
+    color: var(--fuse-warn-700);
+}
