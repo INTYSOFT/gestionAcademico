@@ -217,6 +217,7 @@ export class DatosPorDefectoPuntuacionComponent implements OnInit, OnDestroy {
                     mode: detalle ? 'edit' : 'create',
                     detalle: detalle ?? null,
                     evaluacionTipoPreguntas: this.evaluacionTipoPreguntas$.value,
+                    detalles: this.detalles$.value,
                 };
 
                 const dialogRef = this.dialog.open(
