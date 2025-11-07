@@ -313,7 +313,7 @@ export class DatosPorDefectoPuntuacionComponent implements OnInit, OnDestroy {
         this.isLoading$.next(true);
 
         this.evaluacionDetalleDefatultsService
-            .delete(id)
+            .deleteById(id)
             .pipe(finalize(() => this.isLoading$.next(false)), takeUntil(this.destroy$))
             .subscribe({
                 next: () => {

@@ -337,7 +337,7 @@ export class EvaluacionClavesDialogComponent implements OnInit, OnDestroy {
     const requests = [
       ...creations.map((v) => this.evaluacionClavesService.create(this.mapToCreatePayload(v))),
       ...updates.map((v) => this.evaluacionClavesService.update(v.id!, this.mapToUpdatePayload(v))),
-      ...deletions.map((id) => this.evaluacionClavesService.delete(id)),
+      ...deletions.map((id) => this.evaluacionClavesService.deleteById(id)),
     ];
 
     this.isSaving$.next(true);

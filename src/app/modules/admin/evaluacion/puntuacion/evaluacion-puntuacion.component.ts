@@ -2299,7 +2299,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         this.isLoadingDetallesSubject.next(true);
 
         this.evaluacionDetallesService
-            .delete(detalleId)
+            .deleteById(detalleId)
             .pipe(finalize(() => this.isLoadingDetallesSubject.next(false)))
             .subscribe({
                 next: () => {

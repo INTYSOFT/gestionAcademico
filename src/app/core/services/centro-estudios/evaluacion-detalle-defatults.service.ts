@@ -72,7 +72,7 @@ export class EvaluacionDetalleDefatultsService extends ApiMainService {
         );
     }
 
-    delete(id: number): Observable<void> {
+    deleteById(id: number): Observable<void> {
         return super.delete<void>(`${this.resourcePath}/${id}`);
     }
 
