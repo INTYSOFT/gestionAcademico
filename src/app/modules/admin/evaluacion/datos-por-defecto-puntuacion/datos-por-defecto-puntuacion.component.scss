@@ -1,0 +1,31 @@
+.datos-defecto {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    &__header {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+
+        @media (min-width: 768px) {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+    }
+
+    &__search-field {
+        width: 100%;
+
+        @media (min-width: 768px) {
+            max-width: 420px;
+        }
+    }
+
+    &__grid {
+        width: 100%;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+}

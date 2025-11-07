@@ -24,6 +24,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 link : '/evaluacion/puntuacion'
             },
             {
+                id   : 'evaluacion.datos-por-defecto-puntuacion',
+                title: 'Datos por defecto Puntuación',
+                type : 'basic',
+                icon : 'heroicons_outline:adjustments-horizontal',
+                link : '/evaluacion/datos-por-defecto-puntuacion'
+            },
+            {
                 id   : 'evaluacion.tipo-evaluacion',
                 title: 'Tipo evaluación',
                 type : 'basic',
