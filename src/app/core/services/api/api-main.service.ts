@@ -111,4 +111,16 @@ export class ApiMainService {
                 catchError((error) => this.handleError(error))
             );
     }
+
+    protected delete<T>(
+        endpoint: string,
+        options?: Parameters<typeof this.createOptions>[0]
+    ): Observable<T> {
+        return this.http
+            .delete<T>(this.buildUrl(endpoint), this.createOptions(options))
+            .pipe(
+                retry(this.config.retryAttempts),
+                catchError((error) => this.handleError(error))
+            );
+    }
 }
