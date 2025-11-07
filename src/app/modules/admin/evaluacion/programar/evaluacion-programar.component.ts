@@ -583,7 +583,7 @@ export class EvaluacionProgramarComponent implements OnInit, OnDestroy {
 
     private deleteProgramacion(evaluacionId: number): void {
         this.evaluacionProgramadasService
-            .delete(evaluacionId)
+            .deleteById(evaluacionId)
             .pipe(takeUntil(this.destroy$))
             .subscribe({
                 next: () => {

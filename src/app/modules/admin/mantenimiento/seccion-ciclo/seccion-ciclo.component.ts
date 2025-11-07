@@ -798,7 +798,7 @@ export class SeccionCicloComponent implements OnInit, OnDestroy {
         this.isLoadingSeccionCiclos$.next(true);
 
         this.seccionCicloService
-            .delete(seccionCiclo.id)
+            .deleteById(seccionCiclo.id)
             .pipe(
                 takeUntil(this.destroy$),
                 finalize(() => this.isLoadingSeccionCiclos$.next(false))

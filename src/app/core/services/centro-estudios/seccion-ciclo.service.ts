@@ -78,10 +78,8 @@ export class SeccionCicloService extends ApiMainService {
         );
     }
 
-    delete(id: number): Observable<void> {
-        return this.http
-            .delete<void>(this.buildUrl(`${this.resourcePath}/${id}`), this.createOptions())
-            .pipe(catchError((error) => this.handleError(error)));
+    deleteById(id: number): Observable<void> {
+        return super.delete<void>(`${this.resourcePath}/${id}`);
     }
 
     private getSeccionCiclo(id: number): Observable<SeccionCiclo> {

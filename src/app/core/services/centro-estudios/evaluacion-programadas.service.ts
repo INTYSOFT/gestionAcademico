@@ -1,6 +1,6 @@
 import { HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, catchError, map, of, retry, switchMap } from 'rxjs';
+import { Observable, catchError, map, of, switchMap } from 'rxjs';
 import { ApiMainService } from '../api/api-main.service';
 import {
     CreateEvaluacionProgramadaPayload,
@@ -185,13 +185,8 @@ export class EvaluacionProgramadasService extends ApiMainService {
         );
     }
 
-    delete(id: number): Observable<void> {
-        return this.http
-            .delete<void>(this.buildUrl(`${this.resourcePath}/${id}`), this.createOptions())
-            .pipe(
-                retry(this.config.retryAttempts),
-                catchError((error: HttpErrorResponse) => this.handleError(error))
-            );
+    deleteById(id: number): Observable<void> {
+        return super.delete<void>(`${this.resourcePath}/${id}`);
     }
 
     private mapEvaluacionProgramadaToApi(
