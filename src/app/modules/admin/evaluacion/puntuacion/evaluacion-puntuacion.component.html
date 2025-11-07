@@ -139,31 +139,66 @@
                 @if (seccionTabs$ | async; as seccionTabs) {
                 @if (seccionTabs.length > 0) {
                 <div class="flex flex-col gap-6">
-                  <div class="flex flex-wrap items-center gap-2">
-                    @for (tab of seccionTabs; track trackByTab($index, tab)) {
-                    <button
-                      type="button"
-                      class="flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold transition-colors"
-                      [ngClass]="
-                                  isActiveTab(tab)
-                                    ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
-                                    : 'bg-gray-100 text-gray-700 border-transparent hover:bg-gray-200'
-                                "
-                      (click)="onSelectTab(tab)">
-                      <span>{{ tab.label }}</span>
-                      <span
-                        class="rounded-full px-2 py-0.5 text-xs font-semibold"
+                  @let activeTab = getActiveTab(seccionTabs);
+                  @let applyingDefaults = isApplyingDefaultDetalles$ | async;
+                  @let loadingDetalles = isLoadingDetalles$ | async;
+                  <div
+                    class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div class="flex flex-wrap items-center gap-2">
+                      @for (tab of seccionTabs; track trackByTab($index, tab)) {
+                      <button
+                        type="button"
+                        class="flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold transition-colors"
                         [ngClass]="
                                     isActiveTab(tab)
-                                      ? 'bg-primary-500/40 text-white'
-                                      : 'bg-primary-50 text-primary-700'
-                                  ">
-                        {{ getTabRegisteredCountLabel(tab) }}
-                      </span>
+                                      ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
+                                      : 'bg-gray-100 text-gray-700 border-transparent hover:bg-gray-200'
+                                  "
+                        (click)="onSelectTab(tab)">
+                        <span>{{ tab.label }}</span>
+                        <span
+                          class="rounded-full px-2 py-0.5 text-xs font-semibold"
+                          [ngClass]="
+                                      isActiveTab(tab)
+                                        ? 'bg-primary-500/40 text-white'
+                                        : 'bg-primary-50 text-primary-700'
+                                    ">
+                          {{ getTabRegisteredCountLabel(tab) }}
+                        </span>
+                      </button>
+                      }
+                    </div>
+                    @if (activeTab) {
+                    <button
+                      mat-flat-button
+                      color="primary"
+                      type="button"
+                      class="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                      [disabled]="applyingDefaults || loadingDetalles"
+                      (click)="applyDefaultDetalles(activeTab)">
+                      @if (applyingDefaults) {
+                      <mat-progress-spinner
+                        class="!m-0"
+                        diameter="16"
+                        mode="indeterminate"
+                        strokeWidth="3"></mat-progress-spinner>
+                      } @else {
+                      <mat-icon>auto_awesome</mat-icon>
+                      }
+                      <span>Valores por defecto</span>
+                    </button>
+                    } @else {
+                    <button
+                      mat-flat-button
+                      color="primary"
+                      type="button"
+                      class="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-sm"
+                      disabled>
+                      <mat-icon>auto_awesome</mat-icon>
+                      <span>Valores por defecto</span>
                     </button>
                     }
                   </div>
-                  @let activeTab = getActiveTab(seccionTabs);
                   @if (activeTab) {
                   <div class="flex flex-col gap-4">
                     <div

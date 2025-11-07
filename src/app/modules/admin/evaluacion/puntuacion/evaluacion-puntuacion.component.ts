@@ -73,6 +73,7 @@ import { Matricula } from 'app/core/models/centro-estudios/matricula.model';
 import { EvaluacionesService } from 'app/core/services/centro-estudios/evaluaciones.service';
 import { Evaluacion } from 'app/core/models/centro-estudios/evaluacion.model';
 import { EvaluacionAlumnosRegistradosDialogComponent } from './evaluacion-alumnos-registrados-dialog/evaluacion-alumnos-registrados-dialog.component';
+import { EvaluacionDetalleDefatultsService } from 'app/core/services/centro-estudios/evaluacion-detalle-defatults.service';
 
 interface EvaluacionSeccionTabView {
     key: string;
@@ -141,6 +142,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         new Map()
     );
     private readonly evaluacionesRegistradasSubject = new BehaviorSubject<Evaluacion[]>([]);
+    private readonly isApplyingDefaultDetallesSubject = new BehaviorSubject<boolean>(false);
 
     private readonly isLoadingEvaluacionesSubject = new BehaviorSubject<boolean>(false);
     private readonly isLoadingSeccionesSubject = new BehaviorSubject<boolean>(false);
@@ -212,6 +214,8 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
     protected readonly isLoadingClaves$ = this.isLoadingClavesSubject.asObservable();
     protected readonly isLoadingRegisteredCounts$ =
         this.isLoadingRegisteredCountsSubject.asObservable();
+    protected readonly isApplyingDefaultDetalles$ =
+        this.isApplyingDefaultDetallesSubject.asObservable();
 
     protected readonly dateClass: MatCalendarCellClassFunction<unknown> = (date) =>
         this.calendarMarkedDateKeys.has(this.buildDateKey(date))
@@ -234,6 +238,7 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         private readonly evaluacionProgramadasService: EvaluacionProgramadasService,
         private readonly evaluacionProgramadaSeccionesService: EvaluacionProgramadaSeccionesService,
         private readonly evaluacionDetallesService: EvaluacionDetallesService,
+        private readonly evaluacionDetalleDefatultsService: EvaluacionDetalleDefatultsService,
         private readonly evaluacionClavesService: EvaluacionClavesService,
         private readonly matriculasService: MatriculasService,
         private readonly evaluacionesService: EvaluacionesService,
@@ -829,6 +834,190 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         return this.seccionTabsSubject.value.some(
             (other) => other.key !== tab.key && other.detalles.length > 0
         );
+    }
+
+    protected applyDefaultDetalles(tab: EvaluacionSeccionTabView): void {
+        if (this.isApplyingDefaultDetallesSubject.value) {
+            return;
+        }
+
+        const evaluacion = this.selectedEvaluacionSubject.value;
+
+        if (!evaluacion || evaluacion.id === null || evaluacion.id === undefined) {
+            this.showError('Selecciona una evaluación válida para agregar valores por defecto.');
+            return;
+        }
+
+        this.isApplyingDefaultDetallesSubject.next(true);
+
+        this.evaluacionDetalleDefatultsService
+            .list()
+            .pipe(
+                map((detalles) => detalles.filter((detalle) => detalle.activo)),
+                map((activeDefaults) => {
+                    const existingSignatures = new Set<string>();
+
+                    for (const detalle of tab.detalles) {
+                        existingSignatures.add(
+                            this.buildEvaluacionDetalleSignature(
+                                detalle.rangoInicio,
+                                detalle.rangoFin,
+                                detalle.evaluacionTipoPreguntaId ?? null
+                            )
+                        );
+                    }
+
+                    const toCreate = activeDefaults.filter((detalle) => {
+                        const signature = this.buildEvaluacionDetalleSignature(
+                            detalle.rangoInicio,
+                            detalle.rangoFin,
+                            detalle.evaluacionTipoPreguntaId
+                        );
+
+                        if (existingSignatures.has(signature)) {
+                            return false;
+                        }
+
+                        existingSignatures.add(signature);
+
+                        return true;
+                    });
+
+                    return { activeDefaults, toCreate };
+                }),
+                switchMap(({ activeDefaults, toCreate }) => {
+                    if (activeDefaults.length === 0) {
+                        return of({
+                            total: 0,
+                            created: 0,
+                            failed: 0,
+                            skipped: 0,
+                            lastError: null as string | null,
+                        });
+                    }
+
+                    if (toCreate.length === 0) {
+                        return of({
+                            total: activeDefaults.length,
+                            created: 0,
+                            failed: 0,
+                            skipped: activeDefaults.length,
+                            lastError: null as string | null,
+                        });
+                    }
+
+                    let lastError: string | null = null;
+
+                    return from(toCreate).pipe(
+                        concatMap((detalle) =>
+                            this.evaluacionDetallesService
+                                .create({
+                                    evaluacionProgramadaId: evaluacion.id!,
+                                    seccionId: tab.seccionId ?? null,
+                                    evaluacionTipoPreguntaId: detalle.evaluacionTipoPreguntaId,
+                                    rangoInicio: detalle.rangoInicio,
+                                    rangoFin: detalle.rangoFin,
+                                    valorBuena: detalle.valorBuena,
+                                    valorMala: detalle.valorMala,
+                                    valorBlanca: detalle.valorBlanca,
+                                    observacion: detalle.observacion ?? null,
+                                    activo: detalle.activo,
+                                })
+                                .pipe(
+                                    map(() => 'created' as const),
+                                    catchError((error: any) => {
+                                        lastError =
+                                            error?.message ??
+                                            'No fue posible agregar algunos valores por defecto.';
+                                        return of<'failed'>('failed');
+                                    })
+                                )
+                        ),
+                        reduce(
+                            (acc, status) => {
+                                if (status === 'created') {
+                                    acc.created += 1;
+                                } else if (status === 'failed') {
+                                    acc.failed += 1;
+                                }
+
+                                return acc;
+                            },
+                            { created: 0, failed: 0 }
+                        ),
+                        map((result) => ({
+                            total: activeDefaults.length,
+                            skipped: activeDefaults.length - toCreate.length,
+                            created: result.created,
+                            failed: result.failed,
+                            lastError,
+                        }))
+                    );
+                }),
+                finalize(() => this.isApplyingDefaultDetallesSubject.next(false))
+            )
+            .subscribe({
+                next: ({ total, created, failed, skipped, lastError }) => {
+                    if (total === 0) {
+                        this.snackBar.open('No hay valores por defecto configurados.', 'Cerrar', {
+                            duration: 4000,
+                        });
+                        return;
+                    }
+
+                    if (created === 0 && failed === 0) {
+                        const message =
+                            skipped > 0
+                                ? 'Todos los valores por defecto ya se encuentran registrados.'
+                                : 'No hay valores por defecto nuevos para agregar.';
+                        this.snackBar.open(message, 'Cerrar', { duration: 5000 });
+                        return;
+                    }
+
+                    const messages: string[] = [];
+
+                    if (created > 0) {
+                        messages.push(
+                            created === 1
+                                ? '1 valor por defecto agregado correctamente.'
+                                : `${created} valores por defecto agregados correctamente.`
+                        );
+                    }
+
+                    if (skipped > 0) {
+                        messages.push(
+                            skipped === 1
+                                ? '1 valor por defecto ya estaba registrado.'
+                                : `${skipped} valores por defecto ya estaban registrados.`
+                        );
+                    }
+
+                    if (failed > 0) {
+                        messages.push(
+                            failed === 1
+                                ? 'No se pudo agregar 1 valor por defecto.'
+                                : `No se pudieron agregar ${failed} valores por defecto.`
+                        );
+
+                        if (lastError) {
+                            messages.push(lastError);
+                        }
+                    }
+
+                    this.snackBar.open(messages.join(' '), 'Cerrar', {
+                        duration: failed > 0 ? 7000 : 5000,
+                    });
+
+                    if (created > 0) {
+                        this.reloadDetalles();
+                    }
+                },
+                error: (error) => {
+                    this.showError(
+                        error?.message ?? 'No fue posible obtener los valores por defecto.'
+                    );
+                },
+            });
     }
 
     protected openDetalleDialogForEdit(detalle: EvaluacionDetalle): void {
@@ -1915,6 +2104,15 @@ export class EvaluacionPuntuacionComponent implements OnInit, AfterViewInit {
         }
 
         return this.cicloNombreMap.get(cicloId) ?? `Ciclo #${cicloId}`;
+    }
+
+    private buildEvaluacionDetalleSignature(
+        rangoInicio: number,
+        rangoFin: number,
+        evaluacionTipoPreguntaId: number | null | undefined
+    ): string {
+        const tipoPregunta = evaluacionTipoPreguntaId ?? -1;
+        return `${rangoInicio}|${rangoFin}|${tipoPregunta}`;
     }
 
     private refreshSedeNombreMap(sedes: Sede[]): void {
