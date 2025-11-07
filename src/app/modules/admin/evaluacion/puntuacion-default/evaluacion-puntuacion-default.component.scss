@@ -1,0 +1,14 @@
+:host {
+  display: flex;
+  min-height: 100%;
+}
+
+.ag-theme-material {
+  --ag-font-size: 14px;
+  --ag-header-height: 44px;
+  --ag-row-height: 44px;
+}
+
+button[mat-flat-button] mat-icon {
+  margin-right: 0.5rem;
+}

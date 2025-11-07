@@ -91,10 +91,20 @@ export const appRoutes: Route[] = [
                     },
                     {
                         path: 'puntuacion',
-                        loadChildren: () =>
-                            import(
-                                'app/modules/admin/evaluacion/puntuacion/evaluacion-puntuacion.routes'
-                            ).then((m) => m.evaluacionPuntuacionRoutes),
+                        children: [
+                            {
+                                path: 'datos-por-defecto',
+                                loadChildren: () =>
+                                    import(
+                                        'app/modules/admin/evaluacion/puntuacion-default/evaluacion-puntuacion-default.routes'
+                                    ).then((m) => m.evaluacionPuntuacionDefaultRoutes),
+                            },
+                            {
+                                path: '',
+                                pathMatch: 'full',
+                                redirectTo: 'datos-por-defecto',
+                            },
+                        ],
                     },
                     {
                         path: 'tipo-evaluacion',
