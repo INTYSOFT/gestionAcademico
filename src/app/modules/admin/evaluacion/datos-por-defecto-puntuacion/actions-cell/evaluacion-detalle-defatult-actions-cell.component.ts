@@ -9,6 +9,7 @@ import { EvaluacionDetalleDefatult } from 'app/core/models/centro-estudios/evalu
 export interface EvaluacionDetalleDefatultActionsCellParams
     extends ICellRendererParams<EvaluacionDetalleDefatult> {
     onEdit?: (detalle: EvaluacionDetalleDefatult) => void;
+    onDelete?: (detalle: EvaluacionDetalleDefatult) => void;
 }
 
 @Component({
@@ -40,5 +41,13 @@ export class EvaluacionDetalleDefatultActionsCellComponent
         }
 
         this.params.onEdit?.(this.params.data);
+    }
+
+    protected delete(): void {
+        if (!this.params?.data) {
+            return;
+        }
+
+        this.params.onDelete?.(this.params.data);
     }
 }

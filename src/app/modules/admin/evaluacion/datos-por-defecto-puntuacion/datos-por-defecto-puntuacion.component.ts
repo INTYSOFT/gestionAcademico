@@ -21,6 +21,7 @@ import { EvaluacionDetalleDefatult } from 'app/core/models/centro-estudios/evalu
 import { EvaluacionTipoPregunta } from 'app/core/models/centro-estudios/evaluacion-tipo-pregunta.model';
 import { EvaluacionDetalleDefatultsService } from 'app/core/services/centro-estudios/evaluacion-detalle-defatults.service';
 import { EvaluacionTipoPreguntasService } from 'app/core/services/centro-estudios/evaluacion-tipo-preguntas.service';
+import { FuseConfirmationService } from '@fuse/services/confirmation';
 import { blurActiveElement } from 'app/core/utils/focus.util';
 import { EvaluacionDetalleDefatultActionsCellComponent } from './actions-cell/evaluacion-detalle-defatult-actions-cell.component';
 import type {
@@ -102,8 +103,9 @@ export class DatosPorDefectoPuntuacionComponent implements OnInit, OnDestroy {
             cellRenderer: EvaluacionDetalleDefatultActionsCellComponent,
             cellRendererParams: {
                 onEdit: (detalle: EvaluacionDetalleDefatult) => this.openFormDialog(detalle),
+                onDelete: (detalle: EvaluacionDetalleDefatult) => this.confirmDelete(detalle),
             },
-            width: 120,
+            width: 160,
             sortable: false,
             filter: false,
             resizable: false,
@@ -126,7 +128,8 @@ export class DatosPorDefectoPuntuacionComponent implements OnInit, OnDestroy {
         private readonly dialog: MatDialog,
         private readonly snackBar: MatSnackBar,
         private readonly evaluacionDetalleDefatultsService: EvaluacionDetalleDefatultsService,
-        private readonly evaluacionTipoPreguntasService: EvaluacionTipoPreguntasService
+        private readonly evaluacionTipoPreguntasService: EvaluacionTipoPreguntasService,
+        private readonly confirmationService: FuseConfirmationService
     ) {}
 
     ngOnInit(): void {
@@ -213,11 +216,17 @@ export class DatosPorDefectoPuntuacionComponent implements OnInit, OnDestroy {
 
         import('./evaluacion-detalle-defatult-form-dialog/evaluacion-detalle-defatult-form-dialog.component').then(
             ({ EvaluacionDetalleDefatultFormDialogComponent }) => {
+                const detalles = this.detalles$.value.map(
+                    ({ evaluacionTipoPreguntaNombre, ...detalle }) => ({
+                        ...detalle,
+                    })
+                );
+
                 const data: EvaluacionDetalleDefatultFormDialogData = {
                     mode: detalle ? 'edit' : 'create',
                     detalle: detalle ?? null,
                     evaluacionTipoPreguntas: this.evaluacionTipoPreguntas$.value,
-                    detalles: this.detalles$.value,
+                    detalles,
                 };
 
                 const dialogRef = this.dialog.open(
@@ -247,6 +256,41 @@ export class DatosPorDefectoPuntuacionComponent implements OnInit, OnDestroy {
         );
     }
 
+    protected confirmDelete(detalle: EvaluacionDetalleDefatult): void {
+        const detalleView = this.detalles$.value.find((item) => item.id === detalle.id);
+        const tipoNombre = detalleView?.evaluacionTipoPreguntaNombre ?? 'el tipo seleccionado';
+
+        const dialogRef = this.confirmationService.open({
+            title: 'Eliminar rango de puntuación',
+            message: `¿Deseas eliminar el rango <strong>${detalle.rangoInicio} - ${detalle.rangoFin}</strong> del tipo <strong>${tipoNombre}</strong>? Esta acción no se puede deshacer.`,
+            icon: {
+                show: true,
+                name: 'heroicons_outline:trash',
+                color: 'warn',
+            },
+            actions: {
+                confirm: {
+                    show: true,
+                    label: 'Eliminar',
+                    color: 'warn',
+                },
+                cancel: {
+                    show: true,
+                    label: 'Cancelar',
+                },
+            },
+        });
+
+        dialogRef
+            .afterClosed()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((result) => {
+                if (result === 'confirmed') {
+                    this.deleteDetalle(detalle.id);
+                }
+            });
+    }
+
     private handleCreated(detalle: EvaluacionDetalleDefatult): void {
         const tipos = this.evaluacionTipoPreguntas$.value;
         const viewDetalle = this.toView([detalle], tipos)[0];
@@ -263,6 +307,33 @@ export class DatosPorDefectoPuntuacionComponent implements OnInit, OnDestroy {
         );
         this.detalles$.next(updated);
         this.applyFilter(this.searchControl.value);
+    }
+
+    private deleteDetalle(id: number): void {
+        this.isLoading$.next(true);
+
+        this.evaluacionDetalleDefatultsService
+            .delete(id)
+            .pipe(finalize(() => this.isLoading$.next(false)), takeUntil(this.destroy$))
+            .subscribe({
+                next: () => {
+                    const updated = this.detalles$.value.filter((item) => item.id !== id);
+                    this.detalles$.next(updated);
+                    this.applyFilter(this.searchControl.value);
+                    this.snackBar.open('Valores eliminados correctamente.', 'Cerrar', {
+                        duration: 4000,
+                    });
+                },
+                error: (error) => {
+                    this.snackBar.open(
+                        error.message ?? 'No fue posible eliminar los valores seleccionados.',
+                        'Cerrar',
+                        {
+                            duration: 5000,
+                        }
+                    );
+                },
+            });
     }
 
     private toView(

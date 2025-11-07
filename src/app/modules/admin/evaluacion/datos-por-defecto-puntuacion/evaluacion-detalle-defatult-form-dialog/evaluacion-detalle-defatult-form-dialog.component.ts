@@ -83,23 +83,38 @@ function createRangoDisponibleValidator(
         }
 
         const currentDetalle = currentDetalleProvider();
+        const errors: ValidationErrors = {};
 
-        const hasOverlap = detallesProvider().some((detalle) => {
+        for (const detalle of detallesProvider()) {
             if (currentDetalle && detalle.id === currentDetalle.id) {
-                return false;
+                continue;
             }
 
             if (detalle.evaluacionTipoPreguntaId !== evaluacionTipoPreguntaId) {
-                return false;
+                continue;
             }
 
             const detalleInicio = Number(detalle.rangoInicio);
             const detalleFin = Number(detalle.rangoFin);
 
-            return rangoInicio <= detalleFin && rangoFin >= detalleInicio;
-        });
+            const inicioDuplicado = detalleInicio === rangoInicio;
+            const finDuplicado = detalleFin === rangoFin;
+            const seSuperpone = rangoInicio <= detalleFin && rangoFin >= detalleInicio;
 
-        return hasOverlap ? { rangoOcupado: true } : null;
+            if (inicioDuplicado) {
+                errors['rangoInicioDuplicado'] = true;
+            }
+
+            if (finDuplicado) {
+                errors['rangoFinDuplicado'] = true;
+            }
+
+            if (seSuperpone && !inicioDuplicado && !finDuplicado) {
+                errors['rangoOcupado'] = true;
+            }
+        }
+
+        return Object.keys(errors).length > 0 ? errors : null;
     };
 }
 
@@ -234,6 +249,14 @@ export class EvaluacionDetalleDefatultFormDialogComponent {
 
     protected get rangoOcupado(): boolean {
         return this.form.touched && this.form.hasError('rangoOcupado');
+    }
+
+    protected get rangoInicioDuplicado(): boolean {
+        return this.form.touched && this.form.hasError('rangoInicioDuplicado');
+    }
+
+    protected get rangoFinDuplicado(): boolean {
+        return this.form.touched && this.form.hasError('rangoFinDuplicado');
     }
 
     private patchForm(detalle: EvaluacionDetalleDefatult): void {

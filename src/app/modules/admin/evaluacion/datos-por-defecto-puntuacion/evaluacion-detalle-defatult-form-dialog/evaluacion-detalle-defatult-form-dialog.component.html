@@ -12,6 +12,18 @@
         </div>
     }
 
+    @if (rangoInicioDuplicado) {
+        <div class="error-banner">
+            Ya existe un registro con el mismo rango inicial. Define un valor inicial diferente.
+        </div>
+    }
+
+    @if (rangoFinDuplicado) {
+        <div class="error-banner">
+            Ya existe un registro con el mismo rango final. Ajusta el valor final para continuar.
+        </div>
+    }
+
     <div class="form-grid">
         <mat-form-field appearance="outline">
             <mat-label>Tipo de pregunta</mat-label>

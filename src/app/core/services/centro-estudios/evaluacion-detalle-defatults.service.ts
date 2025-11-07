@@ -72,6 +72,10 @@ export class EvaluacionDetalleDefatultsService extends ApiMainService {
         );
     }
 
+    delete(id: number): Observable<void> {
+        return super.delete<void>(`${this.resourcePath}/${id}`);
+    }
+
     private fetchDetalle(id: number): Observable<EvaluacionDetalleDefatult> {
         return this.get<EvaluacionDetalleDefatultApi>(`${this.resourcePath}/${id}`).pipe(
             map((response) => this.normalizeEvaluacionDetalleDefatultOrThrow(response))
