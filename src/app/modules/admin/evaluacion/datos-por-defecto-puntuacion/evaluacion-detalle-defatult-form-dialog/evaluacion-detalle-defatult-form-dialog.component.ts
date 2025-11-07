@@ -68,17 +68,10 @@ function createRangoDisponibleValidator(
             return null;
         }
 
-        const evaluacionTipoPreguntaId = Number(
-            control.get('evaluacionTipoPreguntaId')?.value ?? 0
-        );
         const rangoInicio = Number(control.get('rangoInicio')?.value ?? 0);
         const rangoFin = Number(control.get('rangoFin')?.value ?? 0);
 
-        if (
-            Number.isNaN(evaluacionTipoPreguntaId) ||
-            Number.isNaN(rangoInicio) ||
-            Number.isNaN(rangoFin)
-        ) {
+        if (Number.isNaN(rangoInicio) || Number.isNaN(rangoFin)) {
             return null;
         }
 
@@ -90,16 +83,17 @@ function createRangoDisponibleValidator(
                 continue;
             }
 
-            if (detalle.evaluacionTipoPreguntaId !== evaluacionTipoPreguntaId) {
-                continue;
-            }
-
             const detalleInicio = Number(detalle.rangoInicio);
             const detalleFin = Number(detalle.rangoFin);
 
+            if (Number.isNaN(detalleInicio) || Number.isNaN(detalleFin)) {
+                continue;
+            }
+
             const inicioDuplicado = detalleInicio === rangoInicio;
             const finDuplicado = detalleFin === rangoFin;
-            const seSuperpone = rangoInicio <= detalleFin && rangoFin >= detalleInicio;
+            const seSuperpone =
+                rangoInicio <= detalleFin && rangoFin >= detalleInicio;
 
             if (inicioDuplicado) {
                 errors['rangoInicioDuplicado'] = true;
