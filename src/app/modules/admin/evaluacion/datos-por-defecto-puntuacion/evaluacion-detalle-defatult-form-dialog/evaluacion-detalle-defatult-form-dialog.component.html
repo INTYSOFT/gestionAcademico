@@ -5,6 +5,13 @@
         <div class="error-banner">El rango final debe ser mayor o igual al rango inicial.</div>
     }
 
+    @if (rangoOcupado) {
+        <div class="error-banner">
+            El rango seleccionado se superpone con otro registro existente. Ajusta los valores
+            ingresados.
+        </div>
+    }
+
     <div class="form-grid">
         <mat-form-field appearance="outline">
             <mat-label>Tipo de pregunta</mat-label>

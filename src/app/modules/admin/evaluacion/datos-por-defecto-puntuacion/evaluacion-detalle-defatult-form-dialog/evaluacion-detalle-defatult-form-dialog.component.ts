@@ -37,6 +37,7 @@ export interface EvaluacionDetalleDefatultFormDialogData {
     mode: 'create' | 'edit';
     detalle: EvaluacionDetalleDefatult | null;
     evaluacionTipoPreguntas: EvaluacionTipoPregunta[];
+    detalles: EvaluacionDetalleDefatult[];
 }
 
 export type EvaluacionDetalleDefatultFormDialogResult =
@@ -56,6 +57,50 @@ function rangoValidator(control: AbstractControl): ValidationErrors | null {
     }
 
     return rangoFin < rangoInicio ? { rangoInvalido: true } : null;
+}
+
+function createRangoDisponibleValidator(
+    detallesProvider: () => readonly EvaluacionDetalleDefatult[],
+    currentDetalleProvider: () => EvaluacionDetalleDefatult | null
+): (control: AbstractControl) => ValidationErrors | null {
+    return (control: AbstractControl): ValidationErrors | null => {
+        if (!(control instanceof FormGroup)) {
+            return null;
+        }
+
+        const evaluacionTipoPreguntaId = Number(
+            control.get('evaluacionTipoPreguntaId')?.value ?? 0
+        );
+        const rangoInicio = Number(control.get('rangoInicio')?.value ?? 0);
+        const rangoFin = Number(control.get('rangoFin')?.value ?? 0);
+
+        if (
+            Number.isNaN(evaluacionTipoPreguntaId) ||
+            Number.isNaN(rangoInicio) ||
+            Number.isNaN(rangoFin)
+        ) {
+            return null;
+        }
+
+        const currentDetalle = currentDetalleProvider();
+
+        const hasOverlap = detallesProvider().some((detalle) => {
+            if (currentDetalle && detalle.id === currentDetalle.id) {
+                return false;
+            }
+
+            if (detalle.evaluacionTipoPreguntaId !== evaluacionTipoPreguntaId) {
+                return false;
+            }
+
+            const detalleInicio = Number(detalle.rangoInicio);
+            const detalleFin = Number(detalle.rangoFin);
+
+            return rangoInicio <= detalleFin && rangoFin >= detalleInicio;
+        });
+
+        return hasOverlap ? { rangoOcupado: true } : null;
+    };
 }
 
 @Component({
@@ -87,6 +132,7 @@ export class EvaluacionDetalleDefatultFormDialogComponent {
     protected readonly form: FormGroup;
     protected readonly isSaving$ = new BehaviorSubject<boolean>(false);
     protected readonly evaluacionTipoPreguntas: EvaluacionTipoPregunta[];
+    private readonly detallesRegistrados: EvaluacionDetalleDefatult[];
 
     constructor(
         @Inject(MAT_DIALOG_DATA)
@@ -100,6 +146,9 @@ export class EvaluacionDetalleDefatultFormDialogComponent {
         private readonly evaluacionDetalleDefatultsService: EvaluacionDetalleDefatultsService
     ) {
         this.evaluacionTipoPreguntas = [...this.data.evaluacionTipoPreguntas];
+        this.detallesRegistrados = this.data.detalles.map((detalle) => ({
+            ...detalle,
+        }));
 
         this.form = this.fb.group(
             {
@@ -112,7 +161,15 @@ export class EvaluacionDetalleDefatultFormDialogComponent {
                 observacion: ['', [Validators.maxLength(500)]],
                 activo: [true],
             },
-            { validators: [rangoValidator] }
+            {
+                validators: [
+                    rangoValidator,
+                    createRangoDisponibleValidator(
+                        () => this.detallesRegistrados,
+                        () => this.data.detalle
+                    ),
+                ],
+            }
         );
 
         if (data.detalle) {
@@ -173,6 +230,10 @@ export class EvaluacionDetalleDefatultFormDialogComponent {
 
     protected get rangoInvalido(): boolean {
         return this.form.touched && this.form.hasError('rangoInvalido');
+    }
+
+    protected get rangoOcupado(): boolean {
+        return this.form.touched && this.form.hasError('rangoOcupado');
     }
 
     private patchForm(detalle: EvaluacionDetalleDefatult): void {
