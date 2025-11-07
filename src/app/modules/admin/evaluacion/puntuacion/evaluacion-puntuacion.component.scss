@@ -61,3 +61,69 @@ mat-nav-list {
     font-weight: 600;
     transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
 }
+
+.evaluacion-puntuacion__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: linear-gradient(145deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.95));
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease,
+        background-color 150ms ease, color 150ms ease;
+
+    &:hover {
+        transform: translateY(-1px);
+        background: linear-gradient(145deg, rgba(241, 245, 249, 1), rgba(226, 232, 240, 1));
+        box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+    }
+
+    &:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35), 0 6px 14px rgba(15, 23, 42, 0.2);
+        border-color: rgba(37, 99, 235, 0.45);
+    }
+}
+
+.evaluacion-puntuacion__tab-label {
+    white-space: nowrap;
+}
+
+.evaluacion-puntuacion__tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.625rem;
+    background-color: rgba(37, 99, 235, 0.08);
+    color: #1d4ed8;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1rem;
+}
+
+.evaluacion-puntuacion__tab--active {
+    border-color: rgba(37, 99, 235, 0.5);
+    background: linear-gradient(150deg, rgba(37, 99, 235, 0.92), rgba(59, 130, 246, 0.88));
+    color: #ffffff;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.35);
+
+    .evaluacion-puntuacion__tab-count {
+        background-color: rgba(255, 255, 255, 0.18);
+        color: #ffffff;
+    }
+}
+
+@media (max-width: 640px) {
+    .evaluacion-puntuacion__tab {
+        flex: 1 1 calc(50% - 0.75rem);
+        justify-content: space-between;
+    }
+}

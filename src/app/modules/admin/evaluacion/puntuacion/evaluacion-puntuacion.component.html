@@ -144,25 +144,16 @@
                   @let loadingDetalles = isLoadingDetalles$ | async;
                   <div
                     class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-3">
                       @for (tab of seccionTabs; track trackByTab($index, tab)) {
                       <button
                         type="button"
-                        class="flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold transition-colors"
-                        [ngClass]="
-                                    isActiveTab(tab)
-                                      ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
-                                      : 'bg-gray-100 text-gray-700 border-transparent hover:bg-gray-200'
-                                  "
+                        class="evaluacion-puntuacion__tab"
+                        [class.evaluacion-puntuacion__tab--active]="isActiveTab(tab)"
+                        [attr.aria-pressed]="isActiveTab(tab)"
                         (click)="onSelectTab(tab)">
-                        <span>{{ tab.label }}</span>
-                        <span
-                          class="rounded-full px-2 py-0.5 text-xs font-semibold"
-                          [ngClass]="
-                                      isActiveTab(tab)
-                                        ? 'bg-primary-500/40 text-white'
-                                        : 'bg-primary-50 text-primary-700'
-                                    ">
+                        <span class="evaluacion-puntuacion__tab-label">{{ tab.label }}</span>
+                        <span class="evaluacion-puntuacion__tab-count">
                           {{ getTabRegisteredCountLabel(tab) }}
                         </span>
                       </button>
