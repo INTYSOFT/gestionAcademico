@@ -127,7 +127,7 @@ export const appConfig: ApplicationConfig = {
             },
         }),
         provideApiConfig({
-            baseUrl: 'http://192.168.1.50:5000',
+            baseUrl: 'http://192.168.0.200:5000',
             retryAttempts: 0,
             defaultHeaders: {
                 'Content-Type': 'application/json',
